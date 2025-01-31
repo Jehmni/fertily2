@@ -2,7 +2,7 @@ import { ChatWindow } from "@/components/ChatWindow";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/lib/supabase";
 import { useToast } from "@/components/ui/use-toast";
-import { Heading2 } from "lucide-react";
+import { Stethoscope } from "lucide-react";
 
 const Index = () => {
   const { toast } = useToast();
@@ -29,13 +29,16 @@ const Index = () => {
           </Button>
         </div>
         <div className="text-center mb-8 animate-fadeIn">
-          <h1 className="text-4xl font-bold text-primary mb-4">
-            Fertily
-          </h1>
-          <h2 className="text-4xl font-bold text-primary mb-4">
+          <div className="flex items-center justify-center gap-2 mb-2">
+            <Stethoscope className="w-12 h-12 text-primary" />
+            <h1 className="text-5xl font-bold text-primary">
+              Fertily
+            </h1>
+          </div>
+          <h2 className="text-3xl font-semibold text-primary/80 mb-4">
             Your Personal Fertility Assistant
           </h2>
-          <p className="text-lg text-gray-600">
+          <p className="text-lg text-gray-600 max-w-2xl mx-auto">
             Get personalized insights and support on your fertility journey
           </p>
         </div>
