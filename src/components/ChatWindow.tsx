@@ -20,6 +20,17 @@ export const ChatWindow = () => {
 
   const loadChatHistory = async () => {
     try {
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      if (!user) {
+        toast({
+          title: "Error",
+          description: "You must be logged in to view chat history",
+          variant: "destructive",
+        });
+        return;
+      }
+
       const { data, error } = await supabase
         .from('chat_history')
         .select('*')
@@ -46,12 +57,24 @@ export const ChatWindow = () => {
 
   const handleSend = async (message: string) => {
     try {
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      if (!user) {
+        toast({
+          title: "Error",
+          description: "You must be logged in to send messages",
+          variant: "destructive",
+        });
+        return;
+      }
+
       setMessages((prev) => [...prev, { text: message, isBot: false }]);
       
       // Store user message in Supabase
       const { error: chatError } = await supabase
         .from('chat_history')
         .insert({
+          user_id: user.id,
           message: message,
           response: "I understand you have a question about fertility. Let me help you with that.", // This will be replaced with actual AI response
         });
@@ -80,7 +103,7 @@ export const ChatWindow = () => {
 
   return (
     <Card className="w-full max-w-2xl mx-auto h-[600px] flex flex-col">
-      <div className="flex-1 overflow-y-auto p-4 space-y-4">
+      <div className="flex-1 overflow-y-auto p-4 space-y-4 scrollbar-hide">
         {messages.map((msg, idx) => (
           <ChatMessage key={idx} message={msg.text} isBot={msg.isBot} />
         ))}
