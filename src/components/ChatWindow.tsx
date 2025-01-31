@@ -12,6 +12,7 @@ export const ChatWindow = () => {
       isBot: true,
     },
   ]);
+  const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -57,6 +58,7 @@ export const ChatWindow = () => {
 
   const handleSend = async (message: string) => {
     try {
+      setIsLoading(true);
       const { data: { user } } = await supabase.auth.getUser();
       
       if (!user) {
@@ -68,29 +70,32 @@ export const ChatWindow = () => {
         return;
       }
 
+      // Add user message to chat
       setMessages((prev) => [...prev, { text: message, isBot: false }]);
+
+      // Get AI response
+      const { data, error } = await supabase.functions.invoke('chat', {
+        body: { message }
+      });
+
+      if (error) throw error;
+
+      const aiResponse = data.response;
+
+      // Add AI response to chat
+      setMessages((prev) => [...prev, { text: aiResponse, isBot: true }]);
       
-      // Store user message in Supabase
+      // Store conversation in database
       const { error: chatError } = await supabase
         .from('chat_history')
         .insert({
           user_id: user.id,
           message: message,
-          response: "I understand you have a question about fertility. Let me help you with that.", // This will be replaced with actual AI response
+          response: aiResponse,
         });
 
       if (chatError) throw chatError;
 
-      // Add bot response
-      setTimeout(() => {
-        setMessages((prev) => [
-          ...prev,
-          {
-            text: "I understand you have a question about fertility. Let me help you with that.",
-            isBot: true,
-          },
-        ]);
-      }, 1000);
     } catch (error) {
       console.error('Error sending message:', error);
       toast({
@@ -98,6 +103,13 @@ export const ChatWindow = () => {
         description: "Failed to send message",
         variant: "destructive",
       });
+      // Add error message to chat
+      setMessages((prev) => [...prev, { 
+        text: "I apologize, but I encountered an error processing your message. Please try again.",
+        isBot: true 
+      }]);
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -109,7 +121,7 @@ export const ChatWindow = () => {
         ))}
       </div>
       <div className="p-4 border-t">
-        <ChatInput onSend={handleSend} />
+        <ChatInput onSend={handleSend} disabled={isLoading} />
       </div>
     </Card>
   );
