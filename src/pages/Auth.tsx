@@ -49,8 +49,8 @@ const Auth = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-secondary to-white flex items-center justify-center p-4">
-      <Card className="w-full max-w-md p-6 space-y-6">
+    <div className="min-h-screen bg-gradient-to-b from-primary/20 to-background flex items-center justify-center p-4">
+      <Card className="w-full max-w-md p-8 space-y-6 shadow-lg">
         <h1 className="text-3xl font-bold text-center text-primary">
           {isSignUp ? "Create Account" : "Welcome Back"}
         </h1>
@@ -62,6 +62,7 @@ const Auth = () => {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
+              className="bg-white/50"
             />
           </div>
           <div className="space-y-2">
@@ -71,9 +72,14 @@ const Auth = () => {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
+              className="bg-white/50"
             />
           </div>
-          <Button type="submit" className="w-full" disabled={loading}>
+          <Button 
+            type="submit" 
+            className="w-full bg-primary hover:bg-primary/90" 
+            disabled={loading}
+          >
             {loading
               ? "Loading..."
               : isSignUp

@@ -25,11 +25,11 @@ export default {
         background: "hsl(var(--background))",
         foreground: "hsl(var(--foreground))",
         primary: {
-          DEFAULT: "#4A90A0",
+          DEFAULT: "#FF8FB1", // Flo's signature pink
           foreground: "#FFFFFF",
         },
         secondary: {
-          DEFAULT: "#FFE5EC",
+          DEFAULT: "#FDE1D3", // Soft peach
           foreground: "#1A1A1A",
         },
         destructive: {
@@ -37,12 +37,12 @@ export default {
           foreground: "hsl(var(--destructive-foreground))",
         },
         muted: {
-          DEFAULT: "hsl(var(--muted))",
-          foreground: "hsl(var(--muted-foreground))",
+          DEFAULT: "#F1F0FB", // Soft gray
+          foreground: "#666666",
         },
         accent: {
-          DEFAULT: "hsl(var(--accent))",
-          foreground: "hsl(var(--accent-foreground))",
+          DEFAULT: "#E5DEFF", // Soft purple
+          foreground: "#1A1A1A",
         },
         popover: {
           DEFAULT: "hsl(var(--popover))",
