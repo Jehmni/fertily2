@@ -2,6 +2,7 @@ import { ChatWindow } from "@/components/ChatWindow";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/lib/supabase";
 import { useToast } from "@/components/ui/use-toast";
+import { Heading2 } from "lucide-react";
 
 const Index = () => {
   const { toast } = useToast();
@@ -29,8 +30,11 @@ const Index = () => {
         </div>
         <div className="text-center mb-8 animate-fadeIn">
           <h1 className="text-4xl font-bold text-primary mb-4">
-            Your Personal Fertility Assistant
+            Fertily
           </h1>
+          <h2 className="text-4xl font-bold text-primary mb-4">
+            Your Personal Fertility Assistant
+          </h2>
           <p className="text-lg text-gray-600">
             Get personalized insights and support on your fertility journey
           </p>
