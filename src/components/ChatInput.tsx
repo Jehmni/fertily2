@@ -5,9 +5,10 @@ import { useState } from "react";
 
 interface ChatInputProps {
   onSend: (message: string) => void;
+  disabled?: boolean;
 }
 
-export const ChatInput = ({ onSend }: ChatInputProps) => {
+export const ChatInput = ({ onSend, disabled }: ChatInputProps) => {
   const [message, setMessage] = useState("");
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -25,8 +26,9 @@ export const ChatInput = ({ onSend }: ChatInputProps) => {
         onChange={(e) => setMessage(e.target.value)}
         placeholder="Type your message..."
         className="flex-1"
+        disabled={disabled}
       />
-      <Button type="submit" size="icon">
+      <Button type="submit" size="icon" disabled={disabled}>
         <Send className="h-4 w-4" />
       </Button>
     </form>

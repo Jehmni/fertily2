@@ -31,6 +31,7 @@ serve(async (req) => {
           },
           { role: 'user', content: message }
         ],
+        max_tokens: 500, // Add a reasonable limit to avoid excessive token usage
       }),
     })
 
