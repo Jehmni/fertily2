@@ -14,14 +14,10 @@ export const ChatService = {
 
     if (error) throw error;
 
-    if (data) {
-      return data.map(chat => ([
-        { text: chat.message, isBot: false },
-        { text: chat.response, isBot: true }
-      ])).flat();
-    }
-
-    return [];
+    return data.map(msg => ({
+      text: msg.isBot ? msg.response : msg.message,
+      isBot: !!msg.response,
+    }));
   },
 
   async sendMessage(message: string): Promise<string> {
@@ -34,17 +30,9 @@ export const ChatService = {
   },
 
   async saveChatMessage(message: string, response: string): Promise<void> {
-    const { data: { user } } = await supabase.auth.getUser();
-    
-    if (!user) throw new Error("User must be logged in");
-
     const { error } = await supabase
       .from('chat_history')
-      .insert({
-        user_id: user.id,
-        message: message,
-        response: response,
-      });
+      .insert([{ message, response }]);
 
     if (error) throw error;
   }

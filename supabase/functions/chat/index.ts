@@ -7,7 +7,6 @@ const corsHeaders = {
 }
 
 serve(async (req) => {
-  // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders })
   }
@@ -16,7 +15,6 @@ serve(async (req) => {
     const { message } = await req.json()
     console.log('Received message:', message)
 
-    // Call OpenAI API
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
       headers: {
@@ -32,7 +30,7 @@ serve(async (req) => {
           },
           { role: 'user', content: message }
         ],
-        max_tokens: 150, // Reduced token limit to avoid excessive usage
+        max_tokens: 150,
         temperature: 0.7
       }),
     })

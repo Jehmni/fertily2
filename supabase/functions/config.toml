@@ -1,5 +1,8 @@
 project_id = "fgbhxuvdobmkqojfmboa"
 
+[chat]
+verify_jwt = true
+
 [voice-to-text]
 verify_jwt = true
 

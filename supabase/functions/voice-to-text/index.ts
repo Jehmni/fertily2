@@ -37,7 +37,7 @@ function processBase64Chunks(base64String: string, chunkSize = 32768) {
 
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
-    return new Response('ok', { headers: corsHeaders })
+    return new Response(null, { headers: corsHeaders })
   }
 
   try {
