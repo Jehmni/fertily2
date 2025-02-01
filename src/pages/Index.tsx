@@ -3,9 +3,12 @@ import { Button } from "@/components/ui/button";
 import { supabase } from "@/lib/supabase";
 import { useToast } from "@/components/ui/use-toast";
 import { Stethoscope } from "lucide-react";
+import { ProfileSection } from "@/components/ProfileSection";
+import { useState } from "react";
 
 const Index = () => {
   const { toast } = useToast();
+  const [showProfile, setShowProfile] = useState(false);
 
   const handleLogout = async () => {
     try {
@@ -23,7 +26,13 @@ const Index = () => {
   return (
     <div className="min-h-screen bg-gradient-to-b from-secondary to-white p-4">
       <div className="max-w-4xl mx-auto">
-        <div className="flex justify-end mb-4">
+        <div className="flex justify-between items-center mb-4">
+          <Button 
+            variant="outline" 
+            onClick={() => setShowProfile(!showProfile)}
+          >
+            {showProfile ? "Back to Chat" : "View Profile"}
+          </Button>
           <Button variant="outline" onClick={handleLogout}>
             Sign Out
           </Button>
@@ -42,7 +51,11 @@ const Index = () => {
             Get personalized insights and support on your fertility journey
           </p>
         </div>
-        <ChatWindow />
+        {showProfile ? (
+          <ProfileSection />
+        ) : (
+          <ChatWindow />
+        )}
       </div>
     </div>
   );

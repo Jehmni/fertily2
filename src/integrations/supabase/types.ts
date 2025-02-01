@@ -9,6 +9,36 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      appointments: {
+        Row: {
+          appointment_date: string
+          created_at: string
+          description: string | null
+          id: string
+          reminder_sent: boolean | null
+          title: string
+          user_id: string
+        }
+        Insert: {
+          appointment_date: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          reminder_sent?: boolean | null
+          title: string
+          user_id: string
+        }
+        Update: {
+          appointment_date?: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          reminder_sent?: boolean | null
+          title?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       chat_history: {
         Row: {
           created_at: string
@@ -33,29 +63,98 @@ export type Database = {
         }
         Relationships: []
       }
+      cycle_tracking: {
+        Row: {
+          created_at: string
+          cycle_end_date: string | null
+          cycle_start_date: string
+          id: string
+          notes: string | null
+          symptoms: string[] | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          cycle_end_date?: string | null
+          cycle_start_date: string
+          id?: string
+          notes?: string | null
+          symptoms?: string[] | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          cycle_end_date?: string | null
+          cycle_start_date?: string
+          id?: string
+          notes?: string | null
+          symptoms?: string[] | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      educational_resources: {
+        Row: {
+          category: string
+          content: string
+          created_at: string
+          id: string
+          title: string
+        }
+        Insert: {
+          category: string
+          content: string
+          created_at?: string
+          id?: string
+          title: string
+        }
+        Update: {
+          category?: string
+          content?: string
+          created_at?: string
+          id?: string
+          title?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           created_at: string
+          cycle_length: number | null
           date_of_birth: string | null
+          fertility_goals: string | null
           first_name: string | null
           id: string
           last_name: string | null
+          last_period_date: string | null
+          medical_conditions: string[] | null
+          medications: string[] | null
           updated_at: string
         }
         Insert: {
           created_at?: string
+          cycle_length?: number | null
           date_of_birth?: string | null
+          fertility_goals?: string | null
           first_name?: string | null
           id: string
           last_name?: string | null
+          last_period_date?: string | null
+          medical_conditions?: string[] | null
+          medications?: string[] | null
           updated_at?: string
         }
         Update: {
           created_at?: string
+          cycle_length?: number | null
           date_of_birth?: string | null
+          fertility_goals?: string | null
           first_name?: string | null
           id?: string
           last_name?: string | null
+          last_period_date?: string | null
+          medical_conditions?: string[] | null
+          medications?: string[] | null
           updated_at?: string
         }
         Relationships: []
