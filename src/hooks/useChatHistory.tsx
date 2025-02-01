@@ -17,12 +17,14 @@ export const useChatHistory = () => {
   } = useQuery({
     queryKey: ['chatHistory'],
     queryFn: ChatService.loadChatHistory,
-    onError: (error: Error) => {
-      toast({
-        title: "Error",
-        description: "Failed to load chat history",
-        variant: "destructive",
-      });
+    meta: {
+      onError: () => {
+        toast({
+          title: "Error",
+          description: "Failed to load chat history",
+          variant: "destructive",
+        });
+      },
     },
   });
 
@@ -39,7 +41,7 @@ export const useChatHistory = () => {
         { text: response, isBot: true },
       ]);
     },
-    onError: (error: Error) => {
+    onError: () => {
       toast({
         title: "Error",
         description: "Failed to send message",
