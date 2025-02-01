@@ -1,0 +1,7 @@
+project_id = "fgbhxuvdobmkqojfmboa"
+
+[voice-to-text]
+verify_jwt = true
+
+[text-to-voice]
+verify_jwt = true
