@@ -14,6 +14,7 @@ serve(async (req) => {
 
   try {
     const { message } = await req.json()
+    console.log('Received message:', message)
 
     // Call OpenAI API
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
@@ -31,16 +32,18 @@ serve(async (req) => {
           },
           { role: 'user', content: message }
         ],
-        max_tokens: 500, // Add a reasonable limit to avoid excessive token usage
+        max_tokens: 500,
       }),
     })
 
+    if (!response.ok) {
+      const errorData = await response.json()
+      console.error('OpenAI API error:', errorData)
+      throw new Error(errorData.error?.message || 'Failed to get AI response')
+    }
+
     const data = await response.json()
     console.log('OpenAI response:', data)
-
-    if (!response.ok) {
-      throw new Error(data.error?.message || 'Failed to get AI response')
-    }
 
     const aiResponse = data.choices[0].message.content
 
@@ -51,7 +54,10 @@ serve(async (req) => {
   } catch (error) {
     console.error('Error in chat function:', error)
     return new Response(
-      JSON.stringify({ error: error.message }),
+      JSON.stringify({ 
+        error: error.message,
+        details: 'If this error persists, please contact support.'
+      }),
       { 
         status: 500,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' }
