@@ -193,7 +193,15 @@ export type Database = {
           id?: string
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "user_favorites_educational_resources_fkey"
+            columns: ["content_id"]
+            isOneToOne: false
+            referencedRelation: "educational_resources"
+            referencedColumns: ["id"]
+          },
+        ]
       }
     }
     Views: {

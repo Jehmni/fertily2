@@ -12,12 +12,16 @@ export const UserFavorites = () => {
   const { data: favorites = [], isLoading } = useQuery({
     queryKey: ['user-favorites'],
     queryFn: async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error("User not authenticated");
+
       const { data: favoritesData, error: favoritesError } = await supabase
         .from('user_favorites')
         .select(`
           *,
           educational_resources (*)
-        `);
+        `)
+        .eq('user_id', user.id);
       
       if (favoritesError) throw favoritesError;
       return favoritesData;
