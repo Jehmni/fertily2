@@ -97,22 +97,34 @@ export type Database = {
         Row: {
           category: string
           content: string
+          content_url: string | null
           created_at: string
           id: string
+          resource_type: string | null
+          subcategory: string | null
+          thumbnail_url: string | null
           title: string
         }
         Insert: {
           category: string
           content: string
+          content_url?: string | null
           created_at?: string
           id?: string
+          resource_type?: string | null
+          subcategory?: string | null
+          thumbnail_url?: string | null
           title: string
         }
         Update: {
           category?: string
           content?: string
+          content_url?: string | null
           created_at?: string
           id?: string
+          resource_type?: string | null
+          subcategory?: string | null
+          thumbnail_url?: string | null
           title?: string
         }
         Relationships: []
@@ -156,6 +168,30 @@ export type Database = {
           medical_conditions?: string[] | null
           medications?: string[] | null
           updated_at?: string
+        }
+        Relationships: []
+      }
+      user_favorites: {
+        Row: {
+          content_id: string
+          content_type: string
+          created_at: string
+          id: string
+          user_id: string
+        }
+        Insert: {
+          content_id: string
+          content_type: string
+          created_at?: string
+          id?: string
+          user_id: string
+        }
+        Update: {
+          content_id?: string
+          content_type?: string
+          created_at?: string
+          id?: string
+          user_id?: string
         }
         Relationships: []
       }
