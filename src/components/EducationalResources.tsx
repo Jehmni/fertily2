@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Heart } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useState } from "react";
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 
 export const EducationalResources = () => {
   const { toast } = useToast();
@@ -31,7 +32,6 @@ export const EducationalResources = () => {
         .select('category', { count: 'exact' })
         .order('category');
       if (error) throw error;
-      // Get unique categories
       return Array.from(new Set(data.map(item => item.category)));
     },
   });
@@ -94,38 +94,45 @@ export const EducationalResources = () => {
         ))}
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <Accordion type="single" collapsible className="space-y-4">
         {resources.map((resource) => (
-          <Card key={resource.id} className="p-4">
-            <div className="flex justify-between items-start">
-              <div>
-                <h3 className="text-lg font-semibold">{resource.title}</h3>
-                <p className="text-sm text-gray-500">{resource.category}</p>
-                {resource.subcategory && (
-                  <p className="text-xs text-gray-400">{resource.subcategory}</p>
-                )}
+          <AccordionItem key={resource.id} value={resource.id} className="border rounded-lg bg-card">
+            <AccordionTrigger className="px-4 py-2 hover:no-underline">
+              <div className="flex justify-between items-center w-full pr-4">
+                <div className="text-left">
+                  <h3 className="text-lg font-semibold">{resource.title}</h3>
+                  <p className="text-sm text-gray-500">{resource.category}</p>
+                  {resource.subcategory && (
+                    <p className="text-xs text-gray-400">{resource.subcategory}</p>
+                  )}
+                </div>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleFavorite(resource.id);
+                  }}
+                >
+                  <Heart className="h-4 w-4" />
+                </Button>
               </div>
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={() => handleFavorite(resource.id)}
-              >
-                <Heart className="h-4 w-4" />
-              </Button>
-            </div>
-            <p className="mt-2 text-sm line-clamp-3">{resource.content}</p>
-            {resource.content_url && (
-              <Button
-                variant="link"
-                className="mt-2 p-0"
-                onClick={() => window.open(resource.content_url, '_blank')}
-              >
-                Read more
-              </Button>
-            )}
-          </Card>
+            </AccordionTrigger>
+            <AccordionContent className="px-4 pb-4">
+              <p className="mt-2 text-sm">{resource.content}</p>
+              {resource.content_url && (
+                <Button
+                  variant="link"
+                  className="mt-2 p-0"
+                  onClick={() => window.open(resource.content_url, '_blank')}
+                >
+                  Read more
+                </Button>
+              )}
+            </AccordionContent>
+          </AccordionItem>
         ))}
-      </div>
+      </Accordion>
     </div>
   );
 };
