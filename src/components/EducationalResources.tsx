@@ -38,11 +38,25 @@ export const EducationalResources = () => {
 
   const handleFavorite = async (resourceId: string) => {
     try {
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      if (!user) {
+        toast({
+          title: "Error",
+          description: "You must be logged in to favorite resources",
+          variant: "destructive",
+        });
+        return;
+      }
+
       const { error } = await supabase.from('user_favorites').insert({
+        user_id: user.id,
         content_type: 'educational_resource',
         content_id: resourceId,
       });
+
       if (error) throw error;
+      
       toast({
         title: "Success",
         description: "Added to favorites!",
