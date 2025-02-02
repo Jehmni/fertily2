@@ -28,10 +28,11 @@ export const EducationalResources = () => {
     queryFn: async () => {
       const { data, error } = await supabase
         .from('educational_resources')
-        .select('category')
-        .distinct();
+        .select('category', { count: 'exact' })
+        .order('category');
       if (error) throw error;
-      return data.map(item => item.category);
+      // Get unique categories
+      return Array.from(new Set(data.map(item => item.category)));
     },
   });
 
