@@ -78,10 +78,11 @@ export const EducationalResources = () => {
 
   return (
     <div className="space-y-6 p-4">
-      <div className="flex gap-2 overflow-x-auto pb-4">
+      <div className="flex gap-2 overflow-x-auto pb-4 scrollbar-hide">
         <Button
           variant={selectedCategory === null ? "default" : "outline"}
           onClick={() => setSelectedCategory(null)}
+          className="shrink-0"
         >
           All
         </Button>
@@ -90,6 +91,7 @@ export const EducationalResources = () => {
             key={category}
             variant={selectedCategory === category ? "default" : "outline"}
             onClick={() => setSelectedCategory(category)}
+            className="shrink-0"
           >
             {category}
           </Button>
@@ -101,7 +103,7 @@ export const EducationalResources = () => {
           <AccordionItem 
             key={resource.id} 
             value={resource.id} 
-            className="border rounded-lg bg-card shadow-sm"
+            className="border rounded-lg bg-card shadow-sm overflow-hidden"
           >
             <AccordionTrigger className="px-4 py-2 hover:no-underline">
               <div className="flex justify-between items-center w-full pr-4">
@@ -115,7 +117,7 @@ export const EducationalResources = () => {
                 <Button
                   variant="ghost"
                   size="icon"
-                  className={favorited.has(resource.id) ? "text-primary" : ""}
+                  className={`${favorited.has(resource.id) ? "text-primary" : ""} shrink-0`}
                   onClick={(e) => {
                     e.stopPropagation();
                     handleFavorite(resource.id);
@@ -127,7 +129,7 @@ export const EducationalResources = () => {
             </AccordionTrigger>
             <AccordionContent className="px-4 pb-4">
               <div className="prose prose-sm max-w-none mt-2 space-y-4">
-                <p className="whitespace-pre-wrap">{resource.content}</p>
+                <div className="whitespace-pre-wrap break-words">{resource.content}</div>
                 {resource.content_url && (
                   <Button
                     variant="link"
