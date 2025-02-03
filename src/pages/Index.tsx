@@ -2,17 +2,21 @@ import { ChatWindow } from "@/components/ChatWindow";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/lib/supabase";
 import { useToast } from "@/hooks/use-toast";
-import { Stethoscope, Book, Heart } from "lucide-react";
+import { Stethoscope, Book, Heart, User } from "lucide-react";
 import { ProfileSection } from "@/components/ProfileSection";
 import { useState } from "react";
 import { EducationalResources } from "@/components/EducationalResources";
 import { UserFavorites } from "@/components/UserFavorites";
+import { FertilityCalendar } from "@/components/FertilityCalendar";
+import { FertilityDashboard } from "@/components/FertilityDashboard";
+import { NotificationBell } from "@/components/NotificationBell";
 
 const Index = () => {
   const { toast } = useToast();
   const [showProfile, setShowProfile] = useState(false);
   const [showEducation, setShowEducation] = useState(false);
   const [showFavorites, setShowFavorites] = useState(false);
+  const [showChat, setShowChat] = useState(false);
 
   const handleLogout = async () => {
     try {
@@ -31,12 +35,18 @@ const Index = () => {
     if (showProfile) return <ProfileSection />;
     if (showEducation) return <EducationalResources />;
     if (showFavorites) return <UserFavorites />;
-    return <ChatWindow />;
+    if (showChat) return <ChatWindow />;
+    return (
+      <div className="space-y-6">
+        <FertilityDashboard />
+        <FertilityCalendar />
+      </div>
+    );
   };
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-secondary to-white p-4">
-      <div className="max-w-4xl mx-auto">
+      <div className="max-w-6xl mx-auto">
         <div className="flex justify-between items-center mb-4">
           <div className="flex gap-2">
             <Button 
@@ -45,9 +55,11 @@ const Index = () => {
                 setShowProfile(true);
                 setShowEducation(false);
                 setShowFavorites(false);
+                setShowChat(false);
               }}
               className={showProfile ? "bg-primary/10" : ""}
             >
+              <User className="w-4 h-4 mr-2" />
               Profile
             </Button>
             <Button 
@@ -56,6 +68,7 @@ const Index = () => {
                 setShowProfile(false);
                 setShowEducation(true);
                 setShowFavorites(false);
+                setShowChat(false);
               }}
               className={showEducation ? "bg-primary/10" : ""}
             >
@@ -68,16 +81,32 @@ const Index = () => {
                 setShowProfile(false);
                 setShowEducation(false);
                 setShowFavorites(true);
+                setShowChat(false);
               }}
               className={showFavorites ? "bg-primary/10" : ""}
             >
               <Heart className="w-4 h-4 mr-2" />
               Favorites
             </Button>
+            <Button 
+              variant="outline" 
+              onClick={() => {
+                setShowProfile(false);
+                setShowEducation(false);
+                setShowFavorites(false);
+                setShowChat(true);
+              }}
+              className={showChat ? "bg-primary/10" : ""}
+            >
+              Chat
+            </Button>
           </div>
-          <Button variant="outline" onClick={handleLogout}>
-            Sign Out
-          </Button>
+          <div className="flex items-center gap-2">
+            <NotificationBell />
+            <Button variant="outline" onClick={handleLogout}>
+              Sign Out
+            </Button>
+          </div>
         </div>
         <div className="text-center mb-8 animate-fadeIn">
           <div className="flex items-center justify-center gap-2 mb-2">

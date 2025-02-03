@@ -129,6 +129,60 @@ export type Database = {
         }
         Relationships: []
       }
+      fertility_insights: {
+        Row: {
+          created_at: string
+          id: string
+          insight_data: Json
+          insight_type: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          insight_data: Json
+          insight_type: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          insight_data?: Json
+          insight_type?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      notifications: {
+        Row: {
+          created_at: string
+          id: string
+          message: string
+          read: boolean | null
+          title: string
+          type: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          message: string
+          read?: boolean | null
+          title: string
+          type: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          message?: string
+          read?: boolean | null
+          title?: string
+          type?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           created_at: string
