@@ -10,6 +10,7 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/
 export const EducationalResources = () => {
   const { toast } = useToast();
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
+  const [favorited, setFavorited] = useState<Set<string>>(new Set());
 
   const { data: resources = [], isLoading } = useQuery({
     queryKey: ['educational-resources', selectedCategory],
@@ -18,7 +19,7 @@ export const EducationalResources = () => {
       if (selectedCategory) {
         query = query.eq('category', selectedCategory);
       }
-      const { data, error } = await query;
+      const { data, error } = await query.order('category');
       if (error) throw error;
       return data;
     },
@@ -29,7 +30,7 @@ export const EducationalResources = () => {
     queryFn: async () => {
       const { data, error } = await supabase
         .from('educational_resources')
-        .select('category', { count: 'exact' })
+        .select('category')
         .order('category');
       if (error) throw error;
       return Array.from(new Set(data.map(item => item.category)));
@@ -57,6 +58,7 @@ export const EducationalResources = () => {
 
       if (error) throw error;
       
+      setFavorited(prev => new Set([...prev, resourceId]));
       toast({
         title: "Success",
         description: "Added to favorites!",
@@ -71,11 +73,11 @@ export const EducationalResources = () => {
   };
 
   if (isLoading) {
-    return <div>Loading resources...</div>;
+    return <div className="flex items-center justify-center p-8">Loading resources...</div>;
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 p-4">
       <div className="flex gap-2 overflow-x-auto pb-4">
         <Button
           variant={selectedCategory === null ? "default" : "outline"}
@@ -96,42 +98,54 @@ export const EducationalResources = () => {
 
       <Accordion type="single" collapsible className="space-y-4">
         {resources.map((resource) => (
-          <AccordionItem key={resource.id} value={resource.id} className="border rounded-lg bg-card">
+          <AccordionItem 
+            key={resource.id} 
+            value={resource.id} 
+            className="border rounded-lg bg-card shadow-sm"
+          >
             <AccordionTrigger className="px-4 py-2 hover:no-underline">
               <div className="flex justify-between items-center w-full pr-4">
                 <div className="text-left">
                   <h3 className="text-lg font-semibold">{resource.title}</h3>
-                  <p className="text-sm text-gray-500">{resource.category}</p>
+                  <p className="text-sm text-muted-foreground">{resource.category}</p>
                   {resource.subcategory && (
-                    <p className="text-xs text-gray-400">{resource.subcategory}</p>
+                    <p className="text-xs text-muted-foreground">{resource.subcategory}</p>
                   )}
                 </div>
                 <Button
                   variant="ghost"
                   size="icon"
+                  className={favorited.has(resource.id) ? "text-primary" : ""}
                   onClick={(e) => {
                     e.stopPropagation();
                     handleFavorite(resource.id);
                   }}
                 >
-                  <Heart className="h-4 w-4" />
+                  <Heart className="h-4 w-4" fill={favorited.has(resource.id) ? "currentColor" : "none"} />
                 </Button>
               </div>
             </AccordionTrigger>
             <AccordionContent className="px-4 pb-4">
-              <p className="mt-2 text-sm">{resource.content}</p>
-              {resource.content_url && (
-                <Button
-                  variant="link"
-                  className="mt-2 p-0"
-                  onClick={() => window.open(resource.content_url, '_blank')}
-                >
-                  Read more
-                </Button>
-              )}
+              <div className="prose prose-sm max-w-none mt-2 space-y-4">
+                <p className="whitespace-pre-wrap">{resource.content}</p>
+                {resource.content_url && (
+                  <Button
+                    variant="link"
+                    className="p-0 h-auto font-normal"
+                    onClick={() => window.open(resource.content_url, '_blank')}
+                  >
+                    Read more
+                  </Button>
+                )}
+              </div>
             </AccordionContent>
           </AccordionItem>
         ))}
+        {resources.length === 0 && (
+          <div className="text-center py-8 text-muted-foreground">
+            No resources found for this category.
+          </div>
+        )}
       </Accordion>
     </div>
   );

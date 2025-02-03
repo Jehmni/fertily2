@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -23,6 +23,44 @@ export const ProfileSection = () => {
     fertilityGoals: "",
   });
 
+  useEffect(() => {
+    loadProfile();
+  }, []);
+
+  const loadProfile = async () => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error("No user found");
+
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', user.id)
+        .single();
+
+      if (error) throw error;
+
+      if (data) {
+        setProfile({
+          firstName: data.first_name || "",
+          lastName: data.last_name || "",
+          cycleLength: data.cycle_length?.toString() || "",
+          lastPeriodDate: data.last_period_date ? new Date(data.last_period_date) : undefined,
+          medicalConditions: (data.medical_conditions || []).join(', '),
+          medications: (data.medications || []).join(', '),
+          fertilityGoals: data.fertility_goals || "",
+        });
+      }
+    } catch (error: any) {
+      console.error('Error loading profile:', error);
+      toast({
+        title: "Error",
+        description: "Failed to load profile data",
+        variant: "destructive",
+      });
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
@@ -36,10 +74,10 @@ export const ProfileSection = () => {
         .update({
           first_name: profile.firstName,
           last_name: profile.lastName,
-          cycle_length: parseInt(profile.cycleLength),
+          cycle_length: parseInt(profile.cycleLength) || null,
           last_period_date: profile.lastPeriodDate,
-          medical_conditions: profile.medicalConditions.split(',').map(c => c.trim()),
-          medications: profile.medications.split(',').map(m => m.trim()),
+          medical_conditions: profile.medicalConditions.split(',').map(c => c.trim()).filter(Boolean),
+          medications: profile.medications.split(',').map(m => m.trim()).filter(Boolean),
           fertility_goals: profile.fertilityGoals,
         })
         .eq('id', user.id);
@@ -50,6 +88,9 @@ export const ProfileSection = () => {
         title: "Success",
         description: "Profile updated successfully",
       });
+      
+      // Reload profile to ensure we have the latest data
+      await loadProfile();
     } catch (error: any) {
       toast({
         title: "Error",
@@ -62,7 +103,7 @@ export const ProfileSection = () => {
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4 bg-white p-6 rounded-lg shadow-sm">
+    <form onSubmit={handleSubmit} className="space-y-6 bg-white p-6 rounded-lg shadow-sm">
       <h2 className="text-2xl font-semibold mb-4">Profile Information</h2>
       
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -94,6 +135,8 @@ export const ProfileSection = () => {
             value={profile.cycleLength}
             onChange={(e) => setProfile(p => ({ ...p, cycleLength: e.target.value }))}
             placeholder="28"
+            min="20"
+            max="45"
           />
         </div>
 
@@ -116,7 +159,7 @@ export const ProfileSection = () => {
                 )}
               </Button>
             </PopoverTrigger>
-            <PopoverContent className="w-auto p-0">
+            <PopoverContent className="w-auto p-0" align="start">
               <Calendar
                 mode="single"
                 selected={profile.lastPeriodDate}
