@@ -2,7 +2,7 @@ import { ChatWindow } from "@/components/ChatWindow";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/lib/supabase";
 import { useToast } from "@/hooks/use-toast";
-import { Stethoscope, Book, Heart, User } from "lucide-react";
+import { Stethoscope, Book, Heart, User, Home } from "lucide-react";
 import { ProfileSection } from "@/components/ProfileSection";
 import { useState } from "react";
 import { EducationalResources } from "@/components/EducationalResources";
@@ -31,6 +31,13 @@ const Index = () => {
     }
   };
 
+  const resetView = () => {
+    setShowProfile(false);
+    setShowEducation(false);
+    setShowFavorites(false);
+    setShowChat(false);
+  };
+
   const renderContent = () => {
     if (showProfile) return <ProfileSection />;
     if (showEducation) return <EducationalResources />;
@@ -49,6 +56,14 @@ const Index = () => {
       <div className="max-w-6xl mx-auto">
         <div className="flex justify-between items-center mb-4">
           <div className="flex gap-2">
+            <Button 
+              variant="outline" 
+              onClick={resetView}
+              className={!showProfile && !showEducation && !showFavorites && !showChat ? "bg-primary/10" : ""}
+            >
+              <Home className="w-4 h-4 mr-2" />
+              Home
+            </Button>
             <Button 
               variant="outline" 
               onClick={() => {
