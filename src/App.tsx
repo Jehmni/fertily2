@@ -8,6 +8,7 @@ import { supabase } from "@/lib/supabase";
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import NotFound from "./pages/NotFound";
+import { ResourceDetail } from "@/components/ResourceDetail";
 
 const queryClient = new QueryClient();
 
@@ -60,6 +61,16 @@ const App = () => {
                   <Auth />
                 ) : (
                   <Navigate to="/" replace />
+                )
+              }
+            />
+            <Route
+              path="/resources/:id"
+              element={
+                session ? (
+                  <ResourceDetail />
+                ) : (
+                  <Navigate to="/auth" replace />
                 )
               }
             />
