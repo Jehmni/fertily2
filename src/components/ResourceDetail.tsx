@@ -44,7 +44,7 @@ export const ResourceDetail = () => {
         </Button>
         <Button
           variant="outline"
-          onClick={() => navigate('/resources')}
+          onClick={() => navigate('/')}
           className="flex items-center gap-2"
         >
           <Book className="h-4 w-4" />
