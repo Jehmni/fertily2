@@ -21,6 +21,22 @@ export const FertilityCalendar = () => {
     setFertileWindow({ start: fertileStart, end: fertileEnd });
   };
 
+  const handleLastPeriodDateChange = (newDate: Date | null) => {
+    setLastPeriodDate(newDate);
+    if (newDate) {
+      calculateFertileWindow(newDate, cycleLength);
+    } else {
+      setFertileWindow(null);
+    }
+  };
+
+  const handleCycleLengthChange = (newLength: number) => {
+    setCycleLength(newLength);
+    if (lastPeriodDate) {
+      calculateFertileWindow(lastPeriodDate, newLength);
+    }
+  };
+
   const handleCalculate = async () => {
     if (!lastPeriodDate) {
       toast({
@@ -72,8 +88,8 @@ export const FertilityCalendar = () => {
         <FertilityForm
           cycleLength={cycleLength}
           lastPeriodDate={lastPeriodDate}
-          onCycleLengthChange={setCycleLength}
-          onLastPeriodDateChange={setLastPeriodDate}
+          onCycleLengthChange={handleCycleLengthChange}
+          onLastPeriodDateChange={handleLastPeriodDateChange}
           onCalculate={handleCalculate}
           isLoading={loading}
         />
