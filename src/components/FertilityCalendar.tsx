@@ -15,6 +15,10 @@ export const FertilityCalendar = () => {
   const [loading, setLoading] = useState(false);
 
   const calculateFertileWindow = (startDate: Date, length: number) => {
+    if (!startDate || length < 21 || length > 35) {
+      setFertileWindow(null);
+      return;
+    }
     const ovulationDay = addDays(startDate, length - 14);
     const fertileStart = subDays(ovulationDay, 5);
     const fertileEnd = ovulationDay;
@@ -31,6 +35,14 @@ export const FertilityCalendar = () => {
   };
 
   const handleCycleLengthChange = (newLength: number) => {
+    if (newLength < 21 || newLength > 35) {
+      toast({
+        title: "Invalid Cycle Length",
+        description: "Cycle length must be between 21 and 35 days",
+        variant: "destructive",
+      });
+      return;
+    }
     setCycleLength(newLength);
     if (lastPeriodDate) {
       calculateFertileWindow(lastPeriodDate, newLength);
@@ -42,6 +54,15 @@ export const FertilityCalendar = () => {
       toast({
         title: "Error",
         description: "Please enter your last period date",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (cycleLength < 21 || cycleLength > 35) {
+      toast({
+        title: "Error",
+        description: "Cycle length must be between 21 and 35 days",
         variant: "destructive",
       });
       return;
@@ -66,7 +87,7 @@ export const FertilityCalendar = () => {
 
       toast({
         title: "Success",
-        description: "Fertility window calculated successfully",
+        description: "Fertility window calculated and saved successfully",
       });
     } catch (error: any) {
       toast({
@@ -74,6 +95,7 @@ export const FertilityCalendar = () => {
         description: "Failed to save cycle data",
         variant: "destructive",
       });
+      console.error('Error saving cycle data:', error);
     } finally {
       setLoading(false);
     }

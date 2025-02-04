@@ -30,13 +30,16 @@ export const FertilityCalendarDisplay = ({
 
   const modifiersStyles = {
     fertile: {
-      backgroundColor: 'rgba(139, 92, 246, 0.3)', // Using Vivid Purple with transparency
+      backgroundColor: 'rgba(124, 58, 237, 0.4)', // More visible purple
       borderRadius: '100%',
-      color: '#4C1D95', // Darker purple for text contrast
+      color: '#4C1D95', // Dark purple for text
+      fontWeight: 'bold',
     },
     periodStart: {
-      backgroundColor: 'rgba(255, 0, 0, 0.2)',
+      backgroundColor: 'rgba(239, 68, 68, 0.4)', // More visible red
       borderRadius: '100%',
+      color: '#991B1B', // Dark red for text
+      fontWeight: 'bold',
     },
   };
 
@@ -53,20 +56,23 @@ export const FertilityCalendarDisplay = ({
 
       <div className="flex gap-4 text-sm justify-center">
         <div className="flex items-center gap-2">
-          <div className="w-3 h-3 rounded-full bg-red-200"></div>
+          <div className="w-3 h-3 rounded-full bg-red-400"></div>
           <span>Period Start</span>
         </div>
         <div className="flex items-center gap-2">
-          <div className="w-3 h-3 rounded-full bg-purple-400"></div>
+          <div className="w-3 h-3 rounded-full bg-violet-500"></div>
           <span>Fertile Window</span>
         </div>
       </div>
 
       {fertileWindow && (
-        <div className="text-sm text-center p-4 bg-purple-50 rounded-lg border border-purple-200">
-          <p className="font-semibold text-purple-800">Your Fertile Window</p>
-          <p className="text-purple-600">
-            {format(fertileWindow.start, 'PPP')} to {format(fertileWindow.end, 'PPP')}
+        <div className="text-sm text-center p-4 bg-violet-50 rounded-lg border border-violet-200 animate-fadeIn">
+          <p className="font-semibold text-violet-900 mb-1">Your Fertile Window</p>
+          <p className="text-violet-700">
+            {format(fertileWindow.start, 'MMMM d')} to {format(fertileWindow.end, 'MMMM d, yyyy')}
+          </p>
+          <p className="text-violet-600 text-xs mt-2">
+            These are your most fertile days. Consider tracking additional symptoms during this time.
           </p>
         </div>
       )}
