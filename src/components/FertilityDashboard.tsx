@@ -23,10 +23,6 @@ export const FertilityDashboard = () => {
     lastPeriod: null,
   });
 
-  useEffect(() => {
-    loadInsights();
-  }, []);
-
   const loadInsights = async () => {
     try {
       const { data: { user } } = await supabase.auth.getUser();
@@ -43,7 +39,7 @@ export const FertilityDashboard = () => {
       if (profileData?.last_period_date && profileData?.cycle_length) {
         const lastPeriod = new Date(profileData.last_period_date);
         const nextPeriod = addDays(lastPeriod, profileData.cycle_length);
-        const ovulationDay = addDays(lastPeriod, Math.floor(profileData.cycle_length / 2) - 14);
+        const ovulationDay = addDays(lastPeriod, profileData.cycle_length - 14);
         const fertileStart = addDays(ovulationDay, -5);
         const fertileEnd = ovulationDay;
 
@@ -56,18 +52,16 @@ export const FertilityDashboard = () => {
           cycleLength: profileData.cycle_length,
           lastPeriod: format(lastPeriod, 'PPP'),
         });
-
-        // Create notification for upcoming fertile window
-        if (fertileStart > new Date()) {
-          await supabase.from('notifications').insert({
-            user_id: user.id,
-            title: 'Upcoming Fertile Window',
-            message: `Your fertile window starts on ${format(fertileStart, 'PPP')}`,
-            type: 'fertility_window',
-          });
-        }
+      } else {
+        setInsights({
+          nextPeriod: null,
+          fertileWindow: null,
+          cycleLength: null,
+          lastPeriod: null,
+        });
       }
     } catch (error: any) {
+      console.error('Error loading insights:', error);
       toast({
         title: "Error",
         description: "Failed to load insights",
@@ -75,6 +69,31 @@ export const FertilityDashboard = () => {
       });
     }
   };
+
+  // Load insights on mount and set up real-time subscription
+  useEffect(() => {
+    loadInsights();
+
+    // Subscribe to changes in the profiles table
+    const channel = supabase
+      .channel('profile-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'profiles',
+        },
+        () => {
+          loadInsights();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, []);
 
   return (
     <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">

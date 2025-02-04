@@ -25,16 +25,32 @@ export const FertilityCalendar = () => {
     setFertileWindow({ start: fertileStart, end: fertileEnd });
   };
 
-  const handleLastPeriodDateChange = (newDate: Date | null) => {
+  const handleLastPeriodDateChange = async (newDate: Date | null) => {
     setLastPeriodDate(newDate);
     if (newDate) {
       calculateFertileWindow(newDate, cycleLength);
+      // Save to database immediately when date changes
+      try {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) throw new Error("No user found");
+
+        const { error: updateError } = await supabase
+          .from('profiles')
+          .update({
+            last_period_date: newDate.toISOString().split('T')[0],
+          })
+          .eq('id', user.id);
+
+        if (updateError) throw updateError;
+      } catch (error) {
+        console.error('Error saving last period date:', error);
+      }
     } else {
       setFertileWindow(null);
     }
   };
 
-  const handleCycleLengthChange = (newLength: number) => {
+  const handleCycleLengthChange = async (newLength: number) => {
     if (newLength < 21 || newLength > 35) {
       toast({
         title: "Invalid Cycle Length",
@@ -44,8 +60,26 @@ export const FertilityCalendar = () => {
       return;
     }
     setCycleLength(newLength);
-    if (lastPeriodDate) {
-      calculateFertileWindow(lastPeriodDate, newLength);
+    
+    // Save to database immediately when cycle length changes
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error("No user found");
+
+      const { error: updateError } = await supabase
+        .from('profiles')
+        .update({
+          cycle_length: newLength,
+        })
+        .eq('id', user.id);
+
+      if (updateError) throw updateError;
+
+      if (lastPeriodDate) {
+        calculateFertileWindow(lastPeriodDate, newLength);
+      }
+    } catch (error) {
+      console.error('Error saving cycle length:', error);
     }
   };
 
