@@ -20,8 +20,17 @@ export const ChatInput = ({ onSend, disabled }: ChatInputProps) => {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (message.trim()) {
-      onSend(message);
-      setMessage("");
+      try {
+        onSend(message);
+        setMessage("");
+      } catch (error) {
+        console.error('Error sending message:', error);
+        toast({
+          title: "Error",
+          description: "Failed to send message. Please try again.",
+          variant: "destructive",
+        });
+      }
     }
   };
 
@@ -93,7 +102,7 @@ export const ChatInput = ({ onSend, disabled }: ChatInputProps) => {
           <Mic className="h-4 w-4" />
         )}
       </Button>
-      <Button type="submit" size="icon" disabled={disabled}>
+      <Button type="submit" size="icon" disabled={disabled || !message.trim()}>
         <Send className="h-4 w-4" />
       </Button>
     </form>

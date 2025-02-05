@@ -18,10 +18,11 @@ export const useChatHistory = () => {
     queryKey: ['chatHistory'],
     queryFn: ChatService.loadChatHistory,
     meta: {
-      onError: () => {
+      onError: (error: Error) => {
+        console.error('Failed to load chat history:', error);
         toast({
           title: "Error",
-          description: "Failed to load chat history",
+          description: "Failed to load chat history. Please try refreshing the page.",
           variant: "destructive",
         });
       },
@@ -30,9 +31,14 @@ export const useChatHistory = () => {
 
   const { mutate: sendMessage, isPending: isSending } = useMutation({
     mutationFn: async (message: string) => {
-      const response = await ChatService.sendMessage(message);
-      await ChatService.saveChatMessage(message, response);
-      return { message, response };
+      try {
+        const response = await ChatService.sendMessage(message);
+        await ChatService.saveChatMessage(message, response);
+        return { message, response };
+      } catch (error) {
+        console.error('Message handling error:', error);
+        throw error;
+      }
     },
     onSuccess: ({ message, response }) => {
       queryClient.setQueryData(['chatHistory'], (old: ChatMessage[] = []) => [
@@ -41,19 +47,13 @@ export const useChatHistory = () => {
         { text: response, isBot: true },
       ]);
     },
-    onError: () => {
+    onError: (error: Error) => {
+      console.error('Failed to send message:', error);
       toast({
         title: "Error",
-        description: "Failed to send message",
+        description: "Failed to send message. Please try again.",
         variant: "destructive",
       });
-      queryClient.setQueryData(['chatHistory'], (old: ChatMessage[] = []) => [
-        ...old,
-        { 
-          text: "I apologize, but I encountered an error processing your message. Please try again.",
-          isBot: true 
-        },
-      ]);
     },
   });
 
