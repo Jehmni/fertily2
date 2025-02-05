@@ -1,8 +1,8 @@
 import { useEffect, useState } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { format, addDays } from "date-fns";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/lib/supabase";
-import { format, addDays } from "date-fns";
+import { FertilityInsightCard } from "./fertility/FertilityInsightCard";
 
 interface InsightData {
   nextPeriod: string | null;
@@ -52,13 +52,6 @@ export const FertilityDashboard = () => {
           cycleLength: profileData.cycle_length,
           lastPeriod: format(lastPeriod, 'PPP'),
         });
-      } else {
-        setInsights({
-          nextPeriod: null,
-          fertileWindow: null,
-          cycleLength: null,
-          lastPeriod: null,
-        });
       }
     } catch (error: any) {
       console.error('Error loading insights:', error);
@@ -73,7 +66,6 @@ export const FertilityDashboard = () => {
   useEffect(() => {
     loadInsights();
 
-    // Subscribe to changes in the profiles table
     const channel = supabase
       .channel('profile-changes')
       .on(
@@ -96,47 +88,26 @@ export const FertilityDashboard = () => {
 
   return (
     <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-      <Card>
-        <CardHeader>
-          <CardTitle>Next Period</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <p className="text-2xl font-semibold">{insights.nextPeriod || 'Not available'}</p>
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardHeader>
-          <CardTitle>Fertile Window</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <p className="text-sm">
-            {insights.fertileWindow
-              ? `${insights.fertileWindow.start} - ${insights.fertileWindow.end}`
-              : 'Not available'}
-          </p>
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardHeader>
-          <CardTitle>Cycle Length</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <p className="text-2xl font-semibold">
-            {insights.cycleLength ? `${insights.cycleLength} days` : 'Not set'}
-          </p>
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardHeader>
-          <CardTitle>Last Period</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <p className="text-2xl font-semibold">{insights.lastPeriod || 'Not recorded'}</p>
-        </CardContent>
-      </Card>
+      <FertilityInsightCard 
+        title="Next Period" 
+        content={insights.nextPeriod || 'Not available'} 
+      />
+      <FertilityInsightCard 
+        title="Fertile Window" 
+        content={
+          insights.fertileWindow
+            ? `${insights.fertileWindow.start} - ${insights.fertileWindow.end}`
+            : 'Not available'
+        } 
+      />
+      <FertilityInsightCard 
+        title="Cycle Length" 
+        content={insights.cycleLength ? `${insights.cycleLength} days` : 'Not set'} 
+      />
+      <FertilityInsightCard 
+        title="Last Period" 
+        content={insights.lastPeriod || 'Not recorded'} 
+      />
     </div>
   );
 };

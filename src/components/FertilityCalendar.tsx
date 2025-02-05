@@ -1,10 +1,12 @@
 import { useState } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/lib/supabase";
-import { addDays, subDays } from "date-fns";
 import { FertilityForm } from "./fertility/FertilityForm";
 import { FertilityCalendarDisplay } from "./fertility/FertilityCalendarDisplay";
+import { FertilityHeader } from "./fertility/FertilityHeader";
+import { useFormHandlers } from "./fertility/FertilityFormHandlers";
+import { calculateFertileWindow } from "@/utils/fertilityCalculations";
 
 export const FertilityCalendar = () => {
   const { toast } = useToast();
@@ -13,82 +15,21 @@ export const FertilityCalendar = () => {
   const [lastPeriodDate, setLastPeriodDate] = useState<Date | null>(null);
   const [fertileWindow, setFertileWindow] = useState<{ start: Date; end: Date } | null>(null);
   const [loading, setLoading] = useState(false);
+  const { handleLastPeriodDateChange, handleCycleLengthChange } = useFormHandlers();
 
-  const calculateFertileWindow = (startDate: Date, length: number) => {
-    if (!startDate || length < 21 || length > 35) {
-      setFertileWindow(null);
-      return;
-    }
-    const ovulationDay = addDays(startDate, length - 14);
-    const fertileStart = subDays(ovulationDay, 5);
-    const fertileEnd = ovulationDay;
-    setFertileWindow({ start: fertileStart, end: fertileEnd });
+  const calculateWindow = (startDate: Date, length: number) => {
+    const window = calculateFertileWindow(startDate, length);
+    setFertileWindow(window);
   };
 
-  const handleLastPeriodDateChange = async (newDate: Date | null) => {
+  const handleLastPeriodDateChangeLocal = async (newDate: Date | null) => {
     setLastPeriodDate(newDate);
-    if (newDate) {
-      calculateFertileWindow(newDate, cycleLength);
-      try {
-        const { data: { user } } = await supabase.auth.getUser();
-        if (!user) throw new Error("No user found");
-
-        const { error: updateError } = await supabase
-          .from('profiles')
-          .update({
-            last_period_date: newDate.toISOString().split('T')[0],
-          })
-          .eq('id', user.id);
-
-        if (updateError) throw updateError;
-      } catch (error) {
-        console.error('Error saving last period date:', error);
-        toast({
-          title: "Error",
-          description: "Failed to save last period date",
-          variant: "destructive",
-        });
-      }
-    } else {
-      setFertileWindow(null);
-    }
+    await handleLastPeriodDateChange(newDate, calculateWindow, cycleLength);
   };
 
-  const handleCycleLengthChange = async (newLength: number) => {
-    if (newLength < 21 || newLength > 35) {
-      toast({
-        title: "Invalid Cycle Length",
-        description: "Cycle length must be between 21 and 35 days",
-        variant: "destructive",
-      });
-      return;
-    }
+  const handleCycleLengthChangeLocal = async (newLength: number) => {
     setCycleLength(newLength);
-    
-    try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error("No user found");
-
-      const { error: updateError } = await supabase
-        .from('profiles')
-        .update({
-          cycle_length: newLength,
-        })
-        .eq('id', user.id);
-
-      if (updateError) throw updateError;
-
-      if (lastPeriodDate) {
-        calculateFertileWindow(lastPeriodDate, newLength);
-      }
-    } catch (error) {
-      console.error('Error saving cycle length:', error);
-      toast({
-        title: "Error",
-        description: "Failed to save cycle length",
-        variant: "destructive",
-      });
-    }
+    await handleCycleLengthChange(newLength, lastPeriodDate, calculateWindow);
   };
 
   const handleCalculate = async () => {
@@ -125,7 +66,7 @@ export const FertilityCalendar = () => {
 
       if (updateError) throw updateError;
 
-      calculateFertileWindow(lastPeriodDate, cycleLength);
+      calculateWindow(lastPeriodDate, cycleLength);
 
       toast({
         title: "Success",
@@ -145,15 +86,13 @@ export const FertilityCalendar = () => {
 
   return (
     <Card>
-      <CardHeader>
-        <CardTitle>Fertility Calendar</CardTitle>
-      </CardHeader>
+      <FertilityHeader />
       <CardContent className="space-y-6">
         <FertilityForm
           cycleLength={cycleLength}
           lastPeriodDate={lastPeriodDate}
-          onCycleLengthChange={handleCycleLengthChange}
-          onLastPeriodDateChange={handleLastPeriodDateChange}
+          onCycleLengthChange={handleCycleLengthChangeLocal}
+          onLastPeriodDateChange={handleLastPeriodDateChangeLocal}
           onCalculate={handleCalculate}
           isLoading={loading}
         />
