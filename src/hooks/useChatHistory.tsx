@@ -32,6 +32,12 @@ export const useChatHistory = () => {
   const { mutate: sendMessage, isPending: isSending } = useMutation({
     mutationFn: async (message: string) => {
       try {
+        // Immediately update UI with user message
+        queryClient.setQueryData(['chatHistory'], (old: ChatMessage[] = []) => [
+          ...old,
+          { text: message, isBot: false },
+        ]);
+
         const response = await ChatService.sendMessage(message);
         await ChatService.saveChatMessage(message, response);
         return { message, response };
@@ -41,11 +47,17 @@ export const useChatHistory = () => {
       }
     },
     onSuccess: ({ message, response }) => {
-      queryClient.setQueryData(['chatHistory'], (old: ChatMessage[] = []) => [
-        ...old,
-        { text: message, isBot: false },
-        { text: response, isBot: true },
-      ]);
+      queryClient.setQueryData(['chatHistory'], (old: ChatMessage[] = []) => {
+        // Filter out any temporary messages
+        const filteredMessages = old.filter(msg => 
+          !(msg.text === message && !msg.isBot)
+        );
+        return [
+          ...filteredMessages,
+          { text: message, isBot: false },
+          { text: response, isBot: true },
+        ];
+      });
     },
     onError: (error: Error) => {
       console.error('Failed to send message:', error);
@@ -53,6 +65,10 @@ export const useChatHistory = () => {
         title: "Error",
         description: "Failed to send message. Please try again.",
         variant: "destructive",
+      });
+      // Remove the temporary message on error
+      queryClient.setQueryData(['chatHistory'], (old: ChatMessage[] = []) => {
+        return old.filter(msg => msg.isBot);
       });
     },
   });
