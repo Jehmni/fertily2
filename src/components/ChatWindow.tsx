@@ -16,7 +16,7 @@ export const ChatWindow = () => {
 
   return (
     <Card className="w-full max-w-2xl mx-auto h-[600px] flex flex-col">
-      <ChatHistory messages={messages} />
+      <ChatHistory messages={messages} isLoading={isSending} />
       <div className="p-4 border-t">
         <ChatInput onSend={sendMessage} disabled={isSending} />
       </div>
