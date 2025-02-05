@@ -29,7 +29,6 @@ export const FertilityCalendar = () => {
     setLastPeriodDate(newDate);
     if (newDate) {
       calculateFertileWindow(newDate, cycleLength);
-      // Save to database immediately when date changes
       try {
         const { data: { user } } = await supabase.auth.getUser();
         if (!user) throw new Error("No user found");
@@ -44,6 +43,11 @@ export const FertilityCalendar = () => {
         if (updateError) throw updateError;
       } catch (error) {
         console.error('Error saving last period date:', error);
+        toast({
+          title: "Error",
+          description: "Failed to save last period date",
+          variant: "destructive",
+        });
       }
     } else {
       setFertileWindow(null);
@@ -61,7 +65,6 @@ export const FertilityCalendar = () => {
     }
     setCycleLength(newLength);
     
-    // Save to database immediately when cycle length changes
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error("No user found");
@@ -80,6 +83,11 @@ export const FertilityCalendar = () => {
       }
     } catch (error) {
       console.error('Error saving cycle length:', error);
+      toast({
+        title: "Error",
+        description: "Failed to save cycle length",
+        variant: "destructive",
+      });
     }
   };
 

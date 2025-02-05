@@ -70,7 +70,6 @@ export const FertilityDashboard = () => {
     }
   };
 
-  // Load insights on mount and set up real-time subscription
   useEffect(() => {
     loadInsights();
 
