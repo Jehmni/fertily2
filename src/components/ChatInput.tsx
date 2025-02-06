@@ -50,6 +50,11 @@ export const ChatInput = ({ onSend, disabled }: ChatInputProps) => {
         try {
           const text = await VoiceService.speechToText(audioBlob);
           setMessage(text);
+          // Auto-send the transcribed message
+          if (text.trim()) {
+            onSend(text);
+            setMessage("");
+          }
           stream.getTracks().forEach(track => track.stop());
         } catch (error) {
           console.error('Speech to text error:', error);

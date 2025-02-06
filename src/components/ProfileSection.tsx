@@ -9,10 +9,13 @@ import { Calendar as CalendarIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/components/ui/use-toast";
 import { supabase } from "@/lib/supabase";
+import { useNavigate } from "react-router-dom";
 
 export const ProfileSection = () => {
   const { toast } = useToast();
+  const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
+  const [isUpdate, setIsUpdate] = useState(false);
   const [profile, setProfile] = useState({
     firstName: "",
     lastName: "",
@@ -50,6 +53,7 @@ export const ProfileSection = () => {
           medications: (data.medications || []).join(', '),
           fertilityGoals: data.fertility_goals || "",
         });
+        setIsUpdate(true);
       }
     } catch (error: any) {
       console.error('Error loading profile:', error);
@@ -89,8 +93,7 @@ export const ProfileSection = () => {
         description: "Profile updated successfully",
       });
       
-      // Reload profile to ensure we have the latest data
-      await loadProfile();
+      navigate('/');
     } catch (error: any) {
       toast({
         title: "Error",
@@ -202,7 +205,7 @@ export const ProfileSection = () => {
       </div>
 
       <Button type="submit" className="w-full" disabled={loading}>
-        {loading ? "Saving..." : "Save Profile"}
+        {loading ? "Saving..." : (isUpdate ? "Update Profile" : "Save Profile")}
       </Button>
     </form>
   );

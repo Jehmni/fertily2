@@ -4,6 +4,7 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Trash2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { Link } from "react-router-dom";
 
 export const UserFavorites = () => {
   const { toast } = useToast();
@@ -63,10 +64,15 @@ export const UserFavorites = () => {
         {favorites.map((favorite) => (
           <Card key={favorite.id} className="p-4">
             <div className="flex justify-between items-start">
-              <div>
-                <h3 className="text-lg font-semibold">
-                  {favorite.educational_resources?.title}
-                </h3>
+              <div className="flex-1">
+                <Link 
+                  to={`/resources/${favorite.educational_resources?.id}`}
+                  className="hover:text-primary transition-colors"
+                >
+                  <h3 className="text-lg font-semibold">
+                    {favorite.educational_resources?.title}
+                  </h3>
+                </Link>
                 <p className="text-sm text-gray-500">
                   {favorite.educational_resources?.category}
                 </p>
