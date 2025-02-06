@@ -67,15 +67,18 @@ export const UserFavorites = () => {
               <div className="flex-1">
                 <Link 
                   to={`/resources/${favorite.educational_resources?.id}`}
-                  className="hover:text-primary transition-colors"
+                  className="block hover:text-primary transition-colors"
                 >
                   <h3 className="text-lg font-semibold">
                     {favorite.educational_resources?.title}
                   </h3>
+                  <p className="text-sm text-gray-500">
+                    {favorite.educational_resources?.category}
+                  </p>
+                  <p className="mt-2 text-sm line-clamp-3">
+                    {favorite.educational_resources?.content}
+                  </p>
                 </Link>
-                <p className="text-sm text-gray-500">
-                  {favorite.educational_resources?.category}
-                </p>
               </div>
               <Button
                 variant="ghost"
@@ -85,9 +88,6 @@ export const UserFavorites = () => {
                 <Trash2 className="h-4 w-4" />
               </Button>
             </div>
-            <p className="mt-2 text-sm line-clamp-3">
-              {favorite.educational_resources?.content}
-            </p>
           </Card>
         ))}
         {favorites.length === 0 && (
