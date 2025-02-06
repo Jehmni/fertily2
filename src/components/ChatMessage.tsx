@@ -21,7 +21,8 @@ export const ChatMessage = ({ message, isBot }: ChatMessageProps) => {
       const audio = new Audio(`data:audio/mp3;base64,${base64Audio}`);
       
       audio.onended = () => setIsPlaying(false);
-      audio.onerror = () => {
+      audio.onerror = (e) => {
+        console.error('Audio playback error:', e);
         setIsPlaying(false);
         toast({
           title: "Error",
@@ -30,7 +31,17 @@ export const ChatMessage = ({ message, isBot }: ChatMessageProps) => {
         });
       };
       
-      await audio.play();
+      try {
+        await audio.play();
+      } catch (error) {
+        console.error('Audio play error:', error);
+        setIsPlaying(false);
+        toast({
+          title: "Error",
+          description: "Failed to play audio. Please try again.",
+          variant: "destructive",
+        });
+      }
     } catch (error) {
       console.error('Text to speech error:', error);
       setIsPlaying(false);

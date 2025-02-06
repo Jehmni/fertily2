@@ -1,6 +1,6 @@
 import "https://deno.land/x/xhr@0.1.0/mod.ts"
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
-import { supabase } from '../_shared/supabase-client.ts'
+import { calculateFertileWindow } from '../_shared/fertility.ts'
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -25,15 +25,24 @@ serve(async (req) => {
 
     if (profileError) throw profileError
 
-    // Create system message with user context
+    // Calculate next fertile window if profile data exists
+    let fertileWindow = null
+    if (profile.last_period_date && profile.cycle_length) {
+      const lastPeriodDate = new Date(profile.last_period_date)
+      fertileWindow = calculateFertileWindow(lastPeriodDate, profile.cycle_length)
+    }
+
+    // Create system message with user context and fertile window
     const systemMessage = `You are a knowledgeable fertility assistant. Use the following user information to provide personalized responses:
-    - Cycle Length: ${profile.cycle_length || 'Not provided'}
+    - Cycle Length: ${profile.cycle_length || 'Not provided'} days
     - Last Period Date: ${profile.last_period_date || 'Not provided'}
     - Medical Conditions: ${profile.medical_conditions?.join(', ') || 'None reported'}
     - Medications: ${profile.medications?.join(', ') || 'None reported'}
     - Fertility Goals: ${profile.fertility_goals || 'Not specified'}
+    ${fertileWindow ? `
+    - Next Fertile Window: ${fertileWindow.start.toLocaleDateString()} to ${fertileWindow.end.toLocaleDateString()}` : ''}
     
-    Provide accurate, empathetic, and helpful responses based on this information.`
+    When asked about fertile windows or ovulation, use the calculated dates above. Always provide accurate, empathetic, and helpful responses based on this information.`
 
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
