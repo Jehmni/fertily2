@@ -1,3 +1,4 @@
+
 import { supabase } from "@/lib/supabase";
 
 export interface ChatMessage {
@@ -7,6 +8,11 @@ export interface ChatMessage {
 
 export const ChatService = {
   async loadChatHistory(): Promise<ChatMessage[]> {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) {
+      throw new Error('No active session');
+    }
+
     const { data, error } = await supabase
       .from('chat_history')
       .select('*')
@@ -25,8 +31,16 @@ export const ChatService = {
 
   async sendMessage(message: string): Promise<string> {
     try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        throw new Error('No active session');
+      }
+
       const { data, error } = await supabase.functions.invoke('chat', {
-        body: { message }
+        body: { message },
+        headers: {
+          Authorization: `Bearer ${session.access_token}`
+        }
       });
 
       if (error) throw error;
@@ -40,12 +54,17 @@ export const ChatService = {
   },
 
   async saveChatMessage(message: string, response: string): Promise<void> {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) {
+      throw new Error('No active session');
+    }
+
     const { error } = await supabase
       .from('chat_history')
       .insert([{ 
         message, 
         response,
-        user_id: (await supabase.auth.getUser()).data.user?.id
+        user_id: session.user.id
       }]);
 
     if (error) {
