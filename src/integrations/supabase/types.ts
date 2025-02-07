@@ -153,6 +153,110 @@ export type Database = {
         }
         Relationships: []
       }
+      ivf_medical_data: {
+        Row: {
+          age: number
+          alcohol_consumption: string | null
+          amh_level: number | null
+          antral_follicle_count: number | null
+          bmi: number | null
+          created_at: string
+          embryo_quality: string | null
+          estradiol_level: number | null
+          fsh_level: number | null
+          id: string
+          lh_level: number | null
+          medical_history: Json | null
+          previous_ivf_cycles: number | null
+          previous_ivf_outcomes: Json | null
+          smoking_status: boolean | null
+          sperm_quality: Json | null
+          updated_at: string
+          user_id: string
+          uterine_conditions: string[] | null
+        }
+        Insert: {
+          age: number
+          alcohol_consumption?: string | null
+          amh_level?: number | null
+          antral_follicle_count?: number | null
+          bmi?: number | null
+          created_at?: string
+          embryo_quality?: string | null
+          estradiol_level?: number | null
+          fsh_level?: number | null
+          id?: string
+          lh_level?: number | null
+          medical_history?: Json | null
+          previous_ivf_cycles?: number | null
+          previous_ivf_outcomes?: Json | null
+          smoking_status?: boolean | null
+          sperm_quality?: Json | null
+          updated_at?: string
+          user_id: string
+          uterine_conditions?: string[] | null
+        }
+        Update: {
+          age?: number
+          alcohol_consumption?: string | null
+          amh_level?: number | null
+          antral_follicle_count?: number | null
+          bmi?: number | null
+          created_at?: string
+          embryo_quality?: string | null
+          estradiol_level?: number | null
+          fsh_level?: number | null
+          id?: string
+          lh_level?: number | null
+          medical_history?: Json | null
+          previous_ivf_cycles?: number | null
+          previous_ivf_outcomes?: Json | null
+          smoking_status?: boolean | null
+          sperm_quality?: Json | null
+          updated_at?: string
+          user_id?: string
+          uterine_conditions?: string[] | null
+        }
+        Relationships: []
+      }
+      ivf_predictions: {
+        Row: {
+          created_at: string
+          id: string
+          key_factors: Json | null
+          medical_data_id: string
+          recommendations: string[] | null
+          success_probability: number | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          key_factors?: Json | null
+          medical_data_id: string
+          recommendations?: string[] | null
+          success_probability?: number | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          key_factors?: Json | null
+          medical_data_id?: string
+          recommendations?: string[] | null
+          success_probability?: number | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ivf_predictions_medical_data_id_fkey"
+            columns: ["medical_data_id"]
+            isOneToOne: false
+            referencedRelation: "ivf_medical_data"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       notifications: {
         Row: {
           created_at: string
