@@ -38,7 +38,7 @@ export const CommunityService = {
       .from('community_posts')
       .select(`
         *,
-        profile:profiles(first_name, last_name),
+        profile:profiles!community_posts_user_id_fkey(first_name, last_name),
         reactions_count:post_reactions(count),
         comments_count:post_comments(count)
       `)
@@ -69,7 +69,7 @@ export const CommunityService = {
       .from('post_comments')
       .select(`
         *,
-        profile:profiles(first_name, last_name)
+        profile:profiles!post_comments_user_id_fkey(first_name, last_name)
       `)
       .eq('post_id', postId)
       .order('created_at', { ascending: true });
