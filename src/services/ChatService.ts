@@ -15,7 +15,7 @@ export const ChatService = {
 
     const { data, error } = await supabase
       .from('chat_history')
-      .select('*')
+      .select('message, response, is_bot')
       .eq('user_id', session.user.id)
       .order('created_at', { ascending: true });
 
@@ -25,7 +25,7 @@ export const ChatService = {
     }
 
     return data.map(msg => ({
-      text: msg.message || msg.response,
+      text: msg.is_bot ? (msg.response || '') : (msg.message || ''),
       isBot: msg.is_bot
     }));
   },
