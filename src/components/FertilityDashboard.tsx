@@ -1,8 +1,12 @@
+
 import { useEffect, useState } from "react";
 import { format, addDays } from "date-fns";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/lib/supabase";
 import { FertilityInsightCard } from "./fertility/FertilityInsightCard";
+import { IVFPredictionDashboard } from "./ivf/IVFPredictionDashboard";
+import { Button } from "./ui/button";
+import { Activity } from "lucide-react";
 
 interface InsightData {
   nextPeriod: string | null;
@@ -16,6 +20,7 @@ interface InsightData {
 
 export const FertilityDashboard = () => {
   const { toast } = useToast();
+  const [showIVF, setShowIVF] = useState(false);
   const [insights, setInsights] = useState<InsightData>({
     nextPeriod: null,
     fertileWindow: null,
@@ -86,28 +91,52 @@ export const FertilityDashboard = () => {
     };
   }, []);
 
+  if (showIVF) {
+    return (
+      <div className="space-y-4">
+        <Button 
+          variant="outline" 
+          onClick={() => setShowIVF(false)}
+          className="mb-4"
+        >
+          ← Back to Fertility Dashboard
+        </Button>
+        <IVFPredictionDashboard />
+      </div>
+    );
+  }
+
   return (
-    <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-      <FertilityInsightCard 
-        title="Next Period" 
-        content={insights.nextPeriod || 'Not available'} 
-      />
-      <FertilityInsightCard 
-        title="Fertile Window" 
-        content={
-          insights.fertileWindow
-            ? `${insights.fertileWindow.start} - ${insights.fertileWindow.end}`
-            : 'Not available'
-        } 
-      />
-      <FertilityInsightCard 
-        title="Cycle Length" 
-        content={insights.cycleLength ? `${insights.cycleLength} days` : 'Not set'} 
-      />
-      <FertilityInsightCard 
-        title="Last Period" 
-        content={insights.lastPeriod || 'Not recorded'} 
-      />
+    <div className="space-y-6">
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+        <FertilityInsightCard 
+          title="Next Period" 
+          content={insights.nextPeriod || 'Not available'} 
+        />
+        <FertilityInsightCard 
+          title="Fertile Window" 
+          content={
+            insights.fertileWindow
+              ? `${insights.fertileWindow.start} - ${insights.fertileWindow.end}`
+              : 'Not available'
+          } 
+        />
+        <FertilityInsightCard 
+          title="Cycle Length" 
+          content={insights.cycleLength ? `${insights.cycleLength} days` : 'Not set'} 
+        />
+        <FertilityInsightCard 
+          title="Last Period" 
+          content={insights.lastPeriod || 'Not recorded'} 
+        />
+      </div>
+      <Button 
+        onClick={() => setShowIVF(true)}
+        className="w-full"
+      >
+        <Activity className="w-4 h-4 mr-2" />
+        IVF Success Prediction
+      </Button>
     </div>
   );
 };
