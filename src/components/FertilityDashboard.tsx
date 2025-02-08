@@ -6,7 +6,8 @@ import { supabase } from "@/lib/supabase";
 import { FertilityInsightCard } from "./fertility/FertilityInsightCard";
 import { IVFPredictionDashboard } from "./ivf/IVFPredictionDashboard";
 import { Button } from "./ui/button";
-import { Activity } from "lucide-react";
+import { Calendar, Heart, Droplet, Activity } from "lucide-react";
+import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
 
 interface InsightData {
   nextPeriod: string | null;
@@ -112,6 +113,7 @@ export const FertilityDashboard = () => {
         <FertilityInsightCard 
           title="Next Period" 
           content={insights.nextPeriod || 'Not available'} 
+          icon={Calendar}
         />
         <FertilityInsightCard 
           title="Fertile Window" 
@@ -120,23 +122,38 @@ export const FertilityDashboard = () => {
               ? `${insights.fertileWindow.start} - ${insights.fertileWindow.end}`
               : 'Not available'
           } 
+          icon={Heart}
         />
         <FertilityInsightCard 
           title="Cycle Length" 
           content={insights.cycleLength ? `${insights.cycleLength} days` : 'Not set'} 
+          icon={Droplet}
         />
         <FertilityInsightCard 
           title="Last Period" 
           content={insights.lastPeriod || 'Not recorded'} 
+          icon={Calendar}
         />
       </div>
-      <Button 
-        onClick={() => setShowIVF(true)}
-        className="w-full"
-      >
-        <Activity className="w-4 h-4 mr-2" />
-        IVF Success Prediction
-      </Button>
+
+      <Card className="bg-accent hover:shadow-md transition-all duration-200">
+        <CardHeader className="flex flex-row items-center gap-2">
+          <Activity className="w-5 h-5 text-primary" />
+          <CardTitle className="text-lg">IVF Success Prediction</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <p className="mb-4 text-muted-foreground">
+            Discover your personalized IVF success rates based on your unique profile and medical history.
+          </p>
+          <Button 
+            onClick={() => setShowIVF(true)}
+            className="w-full"
+          >
+            <Activity className="w-4 h-4 mr-2" />
+            Explore IVF Prediction
+          </Button>
+        </CardContent>
+      </Card>
     </div>
   );
 };

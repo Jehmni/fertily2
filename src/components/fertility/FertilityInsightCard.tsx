@@ -17,12 +17,12 @@ export const FertilityInsightCard = ({
 }: FertilityInsightCardProps) => {
   return (
     <Card className={`transition-all duration-200 hover:shadow-md ${className}`}>
-      <CardHeader className="flex flex-row items-center gap-2">
-        {Icon && <Icon className="w-5 h-5 text-primary" />}
-        <CardTitle className="text-lg">{title}</CardTitle>
+      <CardHeader className="flex flex-row items-center gap-2 p-4">
+        {Icon && <Icon className="w-4 h-4 text-primary" />}
+        <CardTitle className="text-sm font-medium">{title}</CardTitle>
       </CardHeader>
-      <CardContent>
-        <p className="text-2xl font-semibold text-primary">{content}</p>
+      <CardContent className="p-4 pt-0">
+        <p className="text-lg font-semibold text-primary">{content}</p>
       </CardContent>
     </Card>
   );
