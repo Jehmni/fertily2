@@ -16,6 +16,7 @@ export const ChatService = {
     const { data, error } = await supabase
       .from('chat_history')
       .select('*')
+      .eq('user_id', session.user.id)
       .order('created_at', { ascending: true });
 
     if (error) {
@@ -25,7 +26,7 @@ export const ChatService = {
 
     return data.map(msg => ({
       text: msg.message || msg.response,
-      isBot: !!msg.response,
+      isBot: msg.is_bot
     }));
   },
 
@@ -59,17 +60,32 @@ export const ChatService = {
       throw new Error('No active session');
     }
 
-    const { error } = await supabase
+    // First, save the user's message
+    const { error: userMessageError } = await supabase
       .from('chat_history')
       .insert([{ 
-        message, 
-        response,
-        user_id: session.user.id
+        message,
+        user_id: session.user.id,
+        is_bot: false
       }]);
 
-    if (error) {
-      console.error('Error saving chat message:', error);
-      throw error;
+    if (userMessageError) {
+      console.error('Error saving user message:', userMessageError);
+      throw userMessageError;
+    }
+
+    // Then, save the AI's response
+    const { error: botResponseError } = await supabase
+      .from('chat_history')
+      .insert([{ 
+        response,
+        user_id: session.user.id,
+        is_bot: true
+      }]);
+
+    if (botResponseError) {
+      console.error('Error saving bot response:', botResponseError);
+      throw botResponseError;
     }
   }
 };
