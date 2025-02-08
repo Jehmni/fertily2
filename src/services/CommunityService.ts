@@ -34,18 +34,22 @@ export interface PostComment {
 
 export const CommunityService = {
   async getPosts() {
-    const { data, error } = await supabase
+    const { data: posts, error } = await supabase
       .from('community_posts')
       .select(`
         *,
-        profile:profiles(first_name, last_name),
+        profiles (first_name, last_name),
         reactions_count:post_reactions(count),
         comments_count:post_comments(count)
       `)
       .order('created_at', { ascending: false });
 
     if (error) throw error;
-    return data;
+    return posts.map(post => ({
+      ...post,
+      profile: post.profiles,
+      profiles: undefined
+    }));
   },
 
   async createPost(title: string, content: string, category: string, anonymous: boolean) {
@@ -57,11 +61,18 @@ export const CommunityService = {
         category,
         anonymous,
       })
-      .select()
+      .select(`
+        *,
+        profiles (first_name, last_name)
+      `)
       .single();
 
     if (error) throw error;
-    return data;
+    return {
+      ...data,
+      profile: data.profiles,
+      profiles: undefined
+    };
   },
 
   async getComments(postId: string) {
@@ -69,13 +80,17 @@ export const CommunityService = {
       .from('post_comments')
       .select(`
         *,
-        profile:profiles(first_name, last_name)
+        profiles (first_name, last_name)
       `)
       .eq('post_id', postId)
       .order('created_at', { ascending: true });
 
     if (error) throw error;
-    return data;
+    return data.map(comment => ({
+      ...comment,
+      profile: comment.profiles,
+      profiles: undefined
+    }));
   },
 
   async addComment(postId: string, content: string, anonymous: boolean) {
@@ -86,11 +101,18 @@ export const CommunityService = {
         content,
         anonymous,
       })
-      .select()
+      .select(`
+        *,
+        profiles (first_name, last_name)
+      `)
       .single();
 
     if (error) throw error;
-    return data;
+    return {
+      ...data,
+      profile: data.profiles,
+      profiles: undefined
+    };
   },
 
   async toggleReaction(postId: string, reactionType: string) {
