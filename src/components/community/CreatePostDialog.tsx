@@ -67,6 +67,8 @@ export const CreatePostDialog = () => {
               <option value="seeking-support">Seeking Support</option>
               <option value="success-story">Success Story</option>
               <option value="ivf-journey">IVF Journey</option>
+              <option value="motivation">Motivation & Encouragement</option>
+              <option value="general">General Discussion</option>
             </select>
           </div>
           <div>
