@@ -2,7 +2,7 @@ import { ChatWindow } from "@/components/ChatWindow";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/lib/supabase";
 import { useToast } from "@/hooks/use-toast";
-import { Stethoscope, Book, Heart, User, Home } from "lucide-react";
+import { Stethoscope, Book, Heart, User, Home, Users } from "lucide-react";
 import { ProfileSection } from "@/components/ProfileSection";
 import { useState } from "react";
 import { EducationalResources } from "@/components/EducationalResources";
@@ -17,6 +17,7 @@ const Index = () => {
   const [showEducation, setShowEducation] = useState(false);
   const [showFavorites, setShowFavorites] = useState(false);
   const [showChat, setShowChat] = useState(false);
+  const [showCommunity, setShowCommunity] = useState(false);
 
   const handleLogout = async () => {
     try {
@@ -36,6 +37,7 @@ const Index = () => {
     setShowEducation(false);
     setShowFavorites(false);
     setShowChat(false);
+    setShowCommunity(false);
   };
 
   const renderContent = () => {
@@ -43,6 +45,7 @@ const Index = () => {
     if (showEducation) return <EducationalResources />;
     if (showFavorites) return <UserFavorites />;
     if (showChat) return <ChatWindow />;
+    if (showCommunity) return <Community />;
     return (
       <div className="space-y-6">
         <FertilityDashboard />
@@ -59,7 +62,7 @@ const Index = () => {
             <Button 
               variant="outline" 
               onClick={resetView}
-              className={!showProfile && !showEducation && !showFavorites && !showChat ? "bg-primary/10" : ""}
+              className={!showProfile && !showEducation && !showFavorites && !showChat && !showCommunity ? "bg-primary/10" : ""}
             >
               <Home className="w-4 h-4 mr-2" />
               Home
@@ -71,6 +74,7 @@ const Index = () => {
                 setShowEducation(false);
                 setShowFavorites(false);
                 setShowChat(false);
+                setShowCommunity(false);
               }}
               className={showProfile ? "bg-primary/10" : ""}
             >
@@ -84,6 +88,7 @@ const Index = () => {
                 setShowEducation(true);
                 setShowFavorites(false);
                 setShowChat(false);
+                setShowCommunity(false);
               }}
               className={showEducation ? "bg-primary/10" : ""}
             >
@@ -97,6 +102,7 @@ const Index = () => {
                 setShowEducation(false);
                 setShowFavorites(true);
                 setShowChat(false);
+                setShowCommunity(false);
               }}
               className={showFavorites ? "bg-primary/10" : ""}
             >
@@ -110,10 +116,25 @@ const Index = () => {
                 setShowEducation(false);
                 setShowFavorites(false);
                 setShowChat(true);
+                setShowCommunity(false);
               }}
               className={showChat ? "bg-primary/10" : ""}
             >
               Chat
+            </Button>
+            <Button 
+              variant="outline" 
+              onClick={() => {
+                setShowProfile(false);
+                setShowEducation(false);
+                setShowFavorites(false);
+                setShowChat(false);
+                setShowCommunity(true);
+              }}
+              className={showCommunity ? "bg-primary/10" : ""}
+            >
+              <Users className="w-4 h-4 mr-2" />
+              Community
             </Button>
           </div>
           <div className="flex items-center gap-2">
