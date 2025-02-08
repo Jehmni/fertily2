@@ -11,6 +11,7 @@ export interface CommunityPost {
   content: string;
   category: string;
   anonymous: boolean;
+  anonymous_alias?: string;
   created_at: string;
   updated_at: string;
   profile?: Profile;
@@ -25,6 +26,7 @@ export interface PostComment {
   user_id: string;
   content: string;
   anonymous: boolean;
+  anonymous_alias?: string;
   created_at: string;
   profile?: Profile;
 }

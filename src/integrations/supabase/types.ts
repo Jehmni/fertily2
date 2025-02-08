@@ -107,6 +107,7 @@ export type Database = {
       community_posts: {
         Row: {
           anonymous: boolean | null
+          anonymous_alias: string | null
           category: string
           content: string
           created_at: string
@@ -117,6 +118,7 @@ export type Database = {
         }
         Insert: {
           anonymous?: boolean | null
+          anonymous_alias?: string | null
           category: string
           content: string
           created_at?: string
@@ -127,6 +129,7 @@ export type Database = {
         }
         Update: {
           anonymous?: boolean | null
+          anonymous_alias?: string | null
           category?: string
           content?: string
           created_at?: string
@@ -372,6 +375,7 @@ export type Database = {
       post_comments: {
         Row: {
           anonymous: boolean | null
+          anonymous_alias: string | null
           content: string
           created_at: string
           id: string
@@ -380,6 +384,7 @@ export type Database = {
         }
         Insert: {
           anonymous?: boolean | null
+          anonymous_alias?: string | null
           content: string
           created_at?: string
           id?: string
@@ -388,6 +393,7 @@ export type Database = {
         }
         Update: {
           anonymous?: boolean | null
+          anonymous_alias?: string | null
           content?: string
           created_at?: string
           id?: string
@@ -529,7 +535,12 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      generate_anonymous_alias: {
+        Args: {
+          user_id: string
+        }
+        Returns: string
+      }
     }
     Enums: {
       [_ in never]: never

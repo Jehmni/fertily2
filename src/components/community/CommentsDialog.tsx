@@ -9,6 +9,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { CommunityService } from "@/services/CommunityService";
 import type { CommunityPost, PostComment } from "@/types/community";
+import { useAuth } from "@/hooks/useAuth";
 
 interface CommentsDialogProps {
   post: CommunityPost | null;
@@ -18,6 +19,7 @@ interface CommentsDialogProps {
 export const CommentsDialog = ({ post, onOpenChange }: CommentsDialogProps) => {
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const { user } = useAuth();
   const [newComment, setNewComment] = useState({ content: "", anonymous: false });
 
   const { data: comments = [], isLoading: isLoadingComments } = useQuery({
@@ -36,6 +38,16 @@ export const CommentsDialog = ({ post, onOpenChange }: CommentsDialogProps) => {
     },
   });
 
+  const getCommentDisplayName = (comment: PostComment) => {
+    const isOwnComment = user?.id === comment.user_id;
+    if (comment.anonymous) {
+      return isOwnComment 
+        ? `${comment.anonymous_alias} (You)` 
+        : comment.anonymous_alias;
+    }
+    return `${comment.profile?.first_name} ${comment.profile?.last_name}`;
+  };
+
   return (
     <Dialog open={!!post} onOpenChange={onOpenChange}>
       <DialogContent>
@@ -50,7 +62,7 @@ export const CommentsDialog = ({ post, onOpenChange }: CommentsDialogProps) => {
               comments.map((comment: PostComment) => (
                 <div key={comment.id} className="p-3 bg-muted rounded">
                   <p className="text-sm font-medium">
-                    {comment.anonymous ? "Anonymous" : `${comment.profile?.first_name} ${comment.profile?.last_name}`}
+                    {getCommentDisplayName(comment)}
                   </p>
                   <p>{comment.content}</p>
                 </div>

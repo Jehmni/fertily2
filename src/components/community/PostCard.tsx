@@ -6,6 +6,7 @@ import { Card, CardHeader, CardTitle, CardContent, CardFooter } from "@/componen
 import type { CommunityPost } from "@/types/community";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { CommunityService } from "@/services/CommunityService";
+import { useAuth } from "@/hooks/useAuth";
 
 interface PostCardProps {
   post: CommunityPost;
@@ -14,6 +15,7 @@ interface PostCardProps {
 
 export const PostCard = ({ post, onCommentClick }: PostCardProps) => {
   const queryClient = useQueryClient();
+  const { user } = useAuth();
 
   const toggleReactionMutation = useMutation({
     mutationFn: ({ postId, reactionType }: { postId: string; reactionType: string }) =>
@@ -23,6 +25,13 @@ export const PostCard = ({ post, onCommentClick }: PostCardProps) => {
     },
   });
 
+  const displayName = post.anonymous 
+    ? post.anonymous_alias 
+    : `${post.profile?.first_name} ${post.profile?.last_name}`;
+
+  const isOwnPost = user?.id === post.user_id;
+  const postLabel = isOwnPost && post.anonymous ? `${post.anonymous_alias} (You)` : displayName;
+
   return (
     <Card>
       <CardHeader>
@@ -30,8 +39,7 @@ export const PostCard = ({ post, onCommentClick }: PostCardProps) => {
           <div>
             <CardTitle>{post.title}</CardTitle>
             <p className="text-sm text-muted-foreground">
-              Posted by {post.anonymous ? "Anonymous" : `${post.profile?.first_name} ${post.profile?.last_name}`} • 
-              {format(new Date(post.created_at), "MMM d, yyyy")}
+              Posted by {postLabel} • {format(new Date(post.created_at), "MMM d, yyyy")}
             </p>
           </div>
           <span className="px-2 py-1 bg-primary/10 rounded text-sm">
