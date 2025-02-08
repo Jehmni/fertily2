@@ -1,7 +1,8 @@
 
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { CommunityService, CommunityPost, PostComment } from "@/services/CommunityService";
+import { CommunityService } from "@/services/CommunityService";
+import type { CommunityPost, PostComment } from "@/types/community";
 import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardTitle, CardContent, CardFooter } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
