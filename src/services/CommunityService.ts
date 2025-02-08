@@ -1,39 +1,21 @@
 
 import { supabase } from "@/lib/supabase";
+import type { CommunityPost, PostComment, PostReaction } from "@/types/community";
 
-export interface CommunityPost {
-  id: string;
-  user_id: string;
-  title: string;
-  content: string;
-  category: string;
-  anonymous: boolean;
-  created_at: string;
-  updated_at: string;
-  profile?: {
-    first_name: string;
-    last_name: string;
-  };
-  reactions_count?: number;
-  comments_count?: number;
-  user_reaction?: string;
-}
+const transformPostData = (post: any): CommunityPost => ({
+  ...post,
+  profile: post.profiles,
+  profiles: undefined
+});
 
-export interface PostComment {
-  id: string;
-  post_id: string;
-  user_id: string;
-  content: string;
-  anonymous: boolean;
-  created_at: string;
-  profile?: {
-    first_name: string;
-    last_name: string;
-  };
-}
+const transformCommentData = (comment: any): PostComment => ({
+  ...comment,
+  profile: comment.profiles,
+  profiles: undefined
+});
 
 export const CommunityService = {
-  async getPosts() {
+  async getPosts(): Promise<CommunityPost[]> {
     const { data: posts, error } = await supabase
       .from('community_posts')
       .select(`
@@ -45,14 +27,15 @@ export const CommunityService = {
       .order('created_at', { ascending: false });
 
     if (error) throw error;
-    return posts.map(post => ({
-      ...post,
-      profile: post.profiles,
-      profiles: undefined
-    }));
+    return posts.map(transformPostData);
   },
 
-  async createPost(title: string, content: string, category: string, anonymous: boolean) {
+  async createPost(
+    title: string,
+    content: string,
+    category: string,
+    anonymous: boolean
+  ): Promise<CommunityPost> {
     const { data, error } = await supabase
       .from('community_posts')
       .insert({
@@ -68,14 +51,10 @@ export const CommunityService = {
       .single();
 
     if (error) throw error;
-    return {
-      ...data,
-      profile: data.profiles,
-      profiles: undefined
-    };
+    return transformPostData(data);
   },
 
-  async getComments(postId: string) {
+  async getComments(postId: string): Promise<PostComment[]> {
     const { data, error } = await supabase
       .from('post_comments')
       .select(`
@@ -86,14 +65,14 @@ export const CommunityService = {
       .order('created_at', { ascending: true });
 
     if (error) throw error;
-    return data.map(comment => ({
-      ...comment,
-      profile: comment.profiles,
-      profiles: undefined
-    }));
+    return data.map(transformCommentData);
   },
 
-  async addComment(postId: string, content: string, anonymous: boolean) {
+  async addComment(
+    postId: string,
+    content: string,
+    anonymous: boolean
+  ): Promise<PostComment> {
     const { data, error } = await supabase
       .from('post_comments')
       .insert({
@@ -108,14 +87,13 @@ export const CommunityService = {
       .single();
 
     if (error) throw error;
-    return {
-      ...data,
-      profile: data.profiles,
-      profiles: undefined
-    };
+    return transformCommentData(data);
   },
 
-  async toggleReaction(postId: string, reactionType: string) {
+  async toggleReaction(
+    postId: string,
+    reactionType: string
+  ): Promise<PostReaction | null> {
     const { data: existingReaction } = await supabase
       .from('post_reactions')
       .select()
