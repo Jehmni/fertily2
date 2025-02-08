@@ -1,7 +1,7 @@
 
 import { Card } from "@/components/ui/card";
 import { IVFPrediction } from "@/services/IVFPredictionService";
-import { ChartLineUp, CheckCircle, Info } from "lucide-react";
+import { ChartLine, CheckCircle, Info } from "lucide-react";
 
 interface IVFPredictionResultsProps {
   prediction: IVFPrediction;
@@ -11,7 +11,7 @@ export const IVFPredictionResults = ({ prediction }: IVFPredictionResultsProps) 
   return (
     <div className="space-y-6">
       <h2 className="text-2xl font-semibold flex items-center gap-2">
-        <ChartLineUp className="w-6 h-6" />
+        <ChartLine className="w-6 h-6" />
         IVF Success Prediction
       </h2>
 
