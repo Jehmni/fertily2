@@ -1,7 +1,7 @@
 
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { CommunityService, CommunityPost } from "@/services/CommunityService";
+import { CommunityService, CommunityPost, PostComment } from "@/services/CommunityService";
 import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardTitle, CardContent, CardFooter } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
@@ -9,7 +9,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
-import { Heart, MessageCircle, Users } from "lucide-react";
+import { Heart, MessageCircle } from "lucide-react";
 import { format } from "date-fns";
 import { useToast } from "@/hooks/use-toast";
 
@@ -23,6 +23,12 @@ export const Community = () => {
   const { data: posts, isLoading } = useQuery({
     queryKey: ["community-posts"],
     queryFn: CommunityService.getPosts,
+  });
+
+  const { data: comments = [], isLoading: isLoadingComments } = useQuery({
+    queryKey: ["post-comments", selectedPost?.id],
+    queryFn: () => selectedPost ? CommunityService.getComments(selectedPost.id) : Promise.resolve([]),
+    enabled: !!selectedPost,
   });
 
   const createPostMutation = useMutation({
@@ -47,7 +53,7 @@ export const Community = () => {
     mutationFn: ({ postId, content, anonymous }: { postId: string; content: string; anonymous: boolean }) =>
       CommunityService.addComment(postId, content, anonymous),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["community-posts"] });
+      queryClient.invalidateQueries({ queryKey: ["post-comments", selectedPost?.id] });
       setNewComment({ content: "", anonymous: false });
       toast({ title: "Success", description: "Your comment has been added" });
     },
@@ -168,14 +174,18 @@ export const Community = () => {
           </DialogHeader>
           <div className="space-y-4">
             <div className="space-y-4">
-              {selectedPost?.comments?.map((comment) => (
-                <div key={comment.id} className="p-3 bg-muted rounded">
-                  <p className="text-sm font-medium">
-                    {comment.anonymous ? "Anonymous" : `${comment.profile?.first_name} ${comment.profile?.last_name}`}
-                  </p>
-                  <p>{comment.content}</p>
-                </div>
-              ))}
+              {isLoadingComments ? (
+                <div>Loading comments...</div>
+              ) : (
+                comments.map((comment: PostComment) => (
+                  <div key={comment.id} className="p-3 bg-muted rounded">
+                    <p className="text-sm font-medium">
+                      {comment.anonymous ? "Anonymous" : `${comment.profile?.first_name} ${comment.profile?.last_name}`}
+                    </p>
+                    <p>{comment.content}</p>
+                  </div>
+                ))
+              )}
             </div>
             <div className="space-y-2">
               <Textarea

@@ -10,6 +10,7 @@ import { UserFavorites } from "@/components/UserFavorites";
 import { FertilityCalendar } from "@/components/FertilityCalendar";
 import { FertilityDashboard } from "@/components/FertilityDashboard";
 import { NotificationBell } from "@/components/NotificationBell";
+import { Community } from "@/components/Community";
 
 const Index = () => {
   const { toast } = useToast();
