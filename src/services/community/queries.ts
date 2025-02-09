@@ -13,20 +13,25 @@ export const postQueries = {
       `)
       .order('created_at', { ascending: false }),
 
-  createPost: (title: string, content: string, category: string, anonymous: boolean) =>
-    supabase
+  createPost: async (title: string, content: string, category: string, anonymous: boolean) => {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) throw new Error('No active session');
+    
+    return supabase
       .from('community_posts')
       .insert({
         title,
         content,
         category,
         anonymous,
+        user_id: session.user.id  // Add the user_id from the session
       })
       .select(`
         *,
         profiles (first_name, last_name)
       `)
-      .single(),
+      .single();
+  },
 
   getComments: (postId: string) =>
     supabase
@@ -38,25 +43,34 @@ export const postQueries = {
       .eq('post_id', postId)
       .order('created_at', { ascending: true }),
 
-  addComment: (postId: string, content: string, anonymous: boolean) =>
-    supabase
+  addComment: async (postId: string, content: string, anonymous: boolean) => {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) throw new Error('No active session');
+
+    return supabase
       .from('post_comments')
       .insert({
         post_id: postId,
         content,
         anonymous,
+        user_id: session.user.id  // Add the user_id from the session
       })
       .select(`
         *,
         profiles (first_name, last_name)
       `)
-      .single(),
+      .single();
+  },
 
   toggleReaction: async (postId: string, reactionType: string) => {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) throw new Error('No active session');
+
     const { data: existingReaction } = await supabase
       .from('post_reactions')
       .select()
       .eq('post_id', postId)
+      .eq('user_id', session.user.id)  // Check for the current user's reaction
       .eq('reaction_type', reactionType)
       .single();
 
@@ -64,13 +78,15 @@ export const postQueries = {
       return supabase
         .from('post_reactions')
         .delete()
-        .eq('id', existingReaction.id);
+        .eq('id', existingReaction.id)
+        .eq('user_id', session.user.id);  // Ensure user can only delete their own reaction
     } else {
       return supabase
         .from('post_reactions')
         .insert({
           post_id: postId,
           reaction_type: reactionType,
+          user_id: session.user.id  // Add the user_id from the session
         })
         .select()
         .single();

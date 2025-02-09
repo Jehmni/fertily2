@@ -28,6 +28,7 @@ export const CreatePostDialog = () => {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [newPost, setNewPost] = useState<NewPost>(initialPostState);
+  const [isOpen, setIsOpen] = useState(false);
 
   const createPostMutation = useMutation({
     mutationFn: (post: NewPost) => 
@@ -36,11 +37,31 @@ export const CreatePostDialog = () => {
       queryClient.invalidateQueries({ queryKey: ["community-posts"] });
       toast({ title: "Success", description: "Your post has been shared with the community" });
       setNewPost(initialPostState);
+      setIsOpen(false);
+    },
+    onError: (error: Error) => {
+      toast({ 
+        title: "Error", 
+        description: error.message || "Failed to create post. Please try again.", 
+        variant: "destructive" 
+      });
     },
   });
 
+  const handleSubmit = () => {
+    if (!newPost.title || !newPost.content) {
+      toast({
+        title: "Error",
+        description: "Please fill in all required fields",
+        variant: "destructive"
+      });
+      return;
+    }
+    createPostMutation.mutate(newPost);
+  };
+
   return (
-    <Dialog>
+    <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogTrigger asChild>
         <Button>Share Your Story</Button>
       </DialogTrigger>
@@ -88,10 +109,10 @@ export const CreatePostDialog = () => {
             <Label>Post Anonymously</Label>
           </div>
           <Button
-            onClick={() => createPostMutation.mutate(newPost)}
-            disabled={!newPost.title || !newPost.content}
+            onClick={handleSubmit}
+            disabled={!newPost.title || !newPost.content || createPostMutation.isPending}
           >
-            Share
+            {createPostMutation.isPending ? "Sharing..." : "Share"}
           </Button>
         </div>
       </DialogContent>
