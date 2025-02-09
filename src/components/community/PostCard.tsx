@@ -58,7 +58,7 @@ export const PostCard = ({ post, onCommentClick }: PostCardProps) => {
             onClick={() => toggleReactionMutation.mutate({ postId: post.id, reactionType: "heart" })}
           >
             <Heart className={`h-4 w-4 mr-1 ${post.user_reaction === "heart" ? "fill-current text-red-500" : ""}`} />
-            {post.reactions_count || 0}
+            {post.reactions_count?.[0]?.count || 0}
           </Button>
           <Button
             variant="ghost"
@@ -66,10 +66,11 @@ export const PostCard = ({ post, onCommentClick }: PostCardProps) => {
             onClick={() => onCommentClick(post)}
           >
             <MessageCircle className="h-4 w-4 mr-1" />
-            {post.comments_count || 0}
+            {post.comments_count?.[0]?.count || 0}
           </Button>
         </div>
       </CardFooter>
     </Card>
   );
 };
+
