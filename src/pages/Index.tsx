@@ -107,6 +107,7 @@ const Index = () => {
       active: showFavorites,
     },
     {
+      icon: <Stethoscope className="w-4 h-4 mr-2" />,
       label: "Chat",
       action: () => {
         setShowProfile(false);
@@ -136,7 +137,7 @@ const Index = () => {
   return (
     <div className="min-h-screen bg-gradient-to-b from-secondary to-white p-4">
       <div className="max-w-6xl mx-auto">
-        <div className="flex justify-between items-center mb-4">
+        <div className="flex justify-between items-center mb-4 relative">
           {isMobile ? (
             <>
               <Button
@@ -151,15 +152,19 @@ const Index = () => {
                 )}
               </Button>
               {isMenuOpen && (
-                <div className="fixed inset-0 z-40 bg-background/80 backdrop-blur-sm">
-                  <div className="fixed inset-y-0 left-0 w-3/4 bg-white p-6 shadow-lg z-50">
+                <div className="fixed inset-0 z-40">
+                  <div 
+                    className="fixed inset-0 bg-background/80 backdrop-blur-sm"
+                    onClick={() => setIsMenuOpen(false)}
+                  />
+                  <div className="fixed inset-y-0 left-0 w-3/4 bg-white p-6 shadow-lg z-50 overflow-y-auto">
                     <div className="flex flex-col space-y-2">
                       {navigationItems.map((item, index) => (
                         <Button
                           key={index}
-                          variant="outline"
+                          variant={item.active ? "default" : "ghost"}
                           onClick={item.action}
-                          className={`justify-start ${item.active ? "bg-primary/10" : ""}`}
+                          className="justify-start w-full"
                         >
                           {item.icon}
                           {item.label}
@@ -175,9 +180,8 @@ const Index = () => {
               {navigationItems.map((item, index) => (
                 <Button
                   key={index}
-                  variant="outline"
+                  variant={item.active ? "default" : "ghost"}
                   onClick={item.action}
-                  className={item.active ? "bg-primary/10" : ""}
                 >
                   {item.icon}
                   {item.label}
