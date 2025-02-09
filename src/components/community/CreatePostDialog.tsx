@@ -9,6 +9,11 @@ import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { CommunityService } from "@/services/CommunityService";
+import type { PostCategory } from "@/types/community";
+
+interface CreatePostDialogProps {
+  categories: PostCategory[];
+}
 
 type NewPost = {
   title: string;
@@ -24,7 +29,7 @@ const initialPostState: NewPost = {
   anonymous: false,
 };
 
-export const CreatePostDialog = () => {
+export const CreatePostDialog = ({ categories }: CreatePostDialogProps) => {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [newPost, setNewPost] = useState<NewPost>(initialPostState);
@@ -85,11 +90,11 @@ export const CreatePostDialog = () => {
               value={newPost.category}
               onChange={(e) => setNewPost(prev => ({ ...prev, category: e.target.value }))}
             >
-              <option value="seeking-support">Seeking Support</option>
-              <option value="success-story">Success Story</option>
-              <option value="ivf-journey">IVF Journey</option>
-              <option value="motivation">Motivation & Encouragement</option>
-              <option value="general">General Discussion</option>
+              {categories.map((category) => (
+                <option key={category.id} value={category.name}>
+                  {category.name}
+                </option>
+              ))}
             </select>
           </div>
           <div>
