@@ -24,7 +24,7 @@ export const postQueries = {
         content,
         category,
         anonymous,
-        user_id: session.user.id  // Add the user_id from the session
+        user_id: session.user.id
       })
       .select(`
         *,
@@ -53,7 +53,7 @@ export const postQueries = {
         post_id: postId,
         content,
         anonymous,
-        user_id: session.user.id  // Add the user_id from the session
+        user_id: session.user.id
       })
       .select(`
         *,
@@ -70,23 +70,23 @@ export const postQueries = {
       .from('post_reactions')
       .select()
       .eq('post_id', postId)
-      .eq('user_id', session.user.id)  // Check for the current user's reaction
+      .eq('user_id', session.user.id)
       .eq('reaction_type', reactionType)
-      .single();
+      .maybeSingle();  // Changed from .single() to .maybeSingle()
 
     if (existingReaction) {
       return supabase
         .from('post_reactions')
         .delete()
         .eq('id', existingReaction.id)
-        .eq('user_id', session.user.id);  // Ensure user can only delete their own reaction
+        .eq('user_id', session.user.id);
     } else {
       return supabase
         .from('post_reactions')
         .insert({
           post_id: postId,
           reaction_type: reactionType,
-          user_id: session.user.id  // Add the user_id from the session
+          user_id: session.user.id
         })
         .select()
         .single();
