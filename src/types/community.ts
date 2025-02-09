@@ -15,9 +15,10 @@ export interface CommunityPost {
   created_at: string;
   updated_at: string;
   profile?: Profile;
-  reactions_count?: number;
-  comments_count?: number;
+  reactions_count?: { count: number }[];
+  comments_count?: { count: number }[];
   user_reaction?: string;
+  is_bookmarked?: boolean;
 }
 
 export interface PostComment {
@@ -36,5 +37,20 @@ export interface PostReaction {
   post_id: string;
   user_id: string;
   reaction_type: string;
+  created_at: string;
+}
+
+export interface PostCategory {
+  id: string;
+  name: string;
+  description: string;
+  icon: string;
+  created_at: string;
+}
+
+export interface PostBookmark {
+  id: string;
+  user_id: string;
+  post_id: string;
   created_at: string;
 }

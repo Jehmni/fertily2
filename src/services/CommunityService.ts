@@ -1,13 +1,19 @@
 
 import { postQueries } from "./community/queries";
 import { transformPostData, transformCommentData } from "./community/transformers";
-import type { CommunityPost, PostComment, PostReaction } from "@/types/community";
+import type { CommunityPost, PostComment, PostReaction, PostCategory, PostBookmark } from "@/types/community";
 
 export const CommunityService = {
-  async getPosts(): Promise<CommunityPost[]> {
-    const { data: posts, error } = await postQueries.getPosts();
+  async getPosts(filters?: { category?: string; query?: string }): Promise<CommunityPost[]> {
+    const { data: posts, error } = await postQueries.getPosts(filters);
     if (error) throw error;
     return posts.map(transformPostData);
+  },
+
+  async getCategories(): Promise<PostCategory[]> {
+    const { data, error } = await postQueries.getCategories();
+    if (error) throw error;
+    return data;
   },
 
   async createPost(
@@ -42,6 +48,18 @@ export const CommunityService = {
     reactionType: string
   ): Promise<PostReaction | null> {
     const { data, error } = await postQueries.toggleReaction(postId, reactionType);
+    if (error) throw error;
+    return data;
+  },
+
+  async toggleBookmark(postId: string): Promise<PostBookmark | null> {
+    const { data, error } = await postQueries.toggleBookmark(postId);
+    if (error) throw error;
+    return data;
+  },
+
+  async getUserBookmarks(): Promise<{ post_id: string }[]> {
+    const { data, error } = await postQueries.getUserBookmarks();
     if (error) throw error;
     return data;
   }

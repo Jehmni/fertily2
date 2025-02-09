@@ -2,8 +2,8 @@
 import { supabase } from "@/lib/supabase";
 
 export const postQueries = {
-  getPosts: () => 
-    supabase
+  getPosts: (filters?: { category?: string; query?: string }) => {
+    let query = supabase
       .from('community_posts')
       .select(`
         *,
@@ -11,7 +11,24 @@ export const postQueries = {
         reactions_count:post_reactions(count),
         comments_count:post_comments(count)
       `)
-      .order('created_at', { ascending: false }),
+      .order('created_at', { ascending: false });
+
+    if (filters?.category) {
+      query = query.eq('category', filters.category);
+    }
+
+    if (filters?.query) {
+      query = query.or(`title.ilike.%${filters.query}%,content.ilike.%${filters.query}%`);
+    }
+
+    return query;
+  },
+
+  getCategories: () =>
+    supabase
+      .from('post_categories')
+      .select('*')
+      .order('name', { ascending: true }),
 
   createPost: async (title: string, content: string, category: string, anonymous: boolean) => {
     const { data: { session } } = await supabase.auth.getSession();
@@ -72,7 +89,7 @@ export const postQueries = {
       .eq('post_id', postId)
       .eq('user_id', session.user.id)
       .eq('reaction_type', reactionType)
-      .maybeSingle();  // Changed from .single() to .maybeSingle()
+      .maybeSingle();
 
     if (existingReaction) {
       return supabase
@@ -92,5 +109,43 @@ export const postQueries = {
         .single();
     }
   },
-};
 
+  toggleBookmark: async (postId: string) => {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) throw new Error('No active session');
+
+    const { data: existingBookmark } = await supabase
+      .from('post_bookmarks')
+      .select()
+      .eq('post_id', postId)
+      .eq('user_id', session.user.id)
+      .maybeSingle();
+
+    if (existingBookmark) {
+      return supabase
+        .from('post_bookmarks')
+        .delete()
+        .eq('id', existingBookmark.id)
+        .eq('user_id', session.user.id);
+    } else {
+      return supabase
+        .from('post_bookmarks')
+        .insert({
+          post_id: postId,
+          user_id: session.user.id
+        })
+        .select()
+        .single();
+    }
+  },
+
+  getUserBookmarks: async () => {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) throw new Error('No active session');
+
+    return supabase
+      .from('post_bookmarks')
+      .select('post_id')
+      .eq('user_id', session.user.id);
+  }
+};

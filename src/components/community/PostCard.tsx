@@ -1,6 +1,6 @@
 
 import { format } from "date-fns";
-import { Heart, MessageCircle } from "lucide-react";
+import { Heart, MessageCircle, Bookmark } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardTitle, CardContent, CardFooter } from "@/components/ui/card";
 import type { CommunityPost } from "@/types/community";
@@ -11,9 +11,11 @@ import { useAuth } from "@/hooks/useAuth";
 interface PostCardProps {
   post: CommunityPost;
   onCommentClick: (post: CommunityPost) => void;
+  bookmarked: boolean;
+  onBookmarkToggle: () => Promise<void>;
 }
 
-export const PostCard = ({ post, onCommentClick }: PostCardProps) => {
+export const PostCard = ({ post, onCommentClick, bookmarked, onBookmarkToggle }: PostCardProps) => {
   const queryClient = useQueryClient();
   const { user } = useAuth();
 
@@ -22,6 +24,13 @@ export const PostCard = ({ post, onCommentClick }: PostCardProps) => {
       CommunityService.toggleReaction(postId, reactionType),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["community-posts"] });
+    },
+  });
+
+  const toggleBookmarkMutation = useMutation({
+    mutationFn: onBookmarkToggle,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["user-bookmarks"] });
     },
   });
 
@@ -69,8 +78,14 @@ export const PostCard = ({ post, onCommentClick }: PostCardProps) => {
             {post.comments_count?.[0]?.count || 0}
           </Button>
         </div>
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={() => toggleBookmarkMutation.mutate()}
+        >
+          <Bookmark className={`h-4 w-4 ${bookmarked ? "fill-current" : ""}`} />
+        </Button>
       </CardFooter>
     </Card>
   );
 };
-
