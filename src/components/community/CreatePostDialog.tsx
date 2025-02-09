@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
@@ -7,9 +7,10 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { CommunityService } from "@/services/CommunityService";
 import type { PostCategory } from "@/types/community";
+import { useAuth } from "@/hooks/useAuth";
 
 interface CreatePostDialogProps {
   categories: PostCategory[];
@@ -31,15 +32,69 @@ const initialPostState: NewPost = {
 
 export const CreatePostDialog = ({ categories }: CreatePostDialogProps) => {
   const { toast } = useToast();
+  const { user } = useAuth();
   const queryClient = useQueryClient();
   const [newPost, setNewPost] = useState<NewPost>(initialPostState);
   const [isOpen, setIsOpen] = useState(false);
+  const [autosaveTimeout, setAutosaveTimeout] = useState<NodeJS.Timeout | null>(null);
+
+  // Query to fetch existing draft
+  const { data: draft } = useQuery({
+    queryKey: ["post-draft"],
+    queryFn: CommunityService.getLatestDraft,
+    enabled: !!user
+  });
+
+  // Load draft if it exists
+  useEffect(() => {
+    if (draft) {
+      setNewPost({
+        title: draft.title || "",
+        content: draft.content || "",
+        category: draft.category || "seeking-support",
+        anonymous: false
+      });
+    }
+  }, [draft]);
+
+  // Autosave mutation
+  const saveDraftMutation = useMutation({
+    mutationFn: (draft: Partial<NewPost>) => 
+      CommunityService.saveDraft(draft.title || "", draft.content || "", draft.category || ""),
+    onError: (error: Error) => {
+      console.error("Failed to save draft:", error);
+    },
+  });
+
+  // Handle auto-saving
+  const handleContentChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    const { name, value } = e.target;
+    setNewPost(prev => ({ ...prev, [name]: value }));
+
+    // Clear existing timeout
+    if (autosaveTimeout) {
+      clearTimeout(autosaveTimeout);
+    }
+
+    // Set new timeout for autosave
+    const timeout = setTimeout(() => {
+      saveDraftMutation.mutate({
+        title: name === 'title' ? value : newPost.title,
+        content: name === 'content' ? value : newPost.content,
+        category: newPost.category
+      });
+    }, 1500); // Autosave after 1.5 seconds of no typing
+
+    setAutosaveTimeout(timeout);
+  };
 
   const createPostMutation = useMutation({
     mutationFn: (post: NewPost) => 
       CommunityService.createPost(post.title, post.content, post.category, post.anonymous),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["community-posts"] });
+      // Clear draft after successful post
+      saveDraftMutation.mutate({ title: "", content: "", category: "" });
       toast({ title: "Success", description: "Your post has been shared with the community" });
       setNewPost(initialPostState);
       setIsOpen(false);
@@ -78,8 +133,9 @@ export const CreatePostDialog = ({ categories }: CreatePostDialogProps) => {
           <div>
             <Label>Title</Label>
             <Input
+              name="title"
               value={newPost.title}
-              onChange={(e) => setNewPost(prev => ({ ...prev, title: e.target.value }))}
+              onChange={handleContentChange}
               placeholder="Give your post a title"
             />
           </div>
@@ -100,8 +156,9 @@ export const CreatePostDialog = ({ categories }: CreatePostDialogProps) => {
           <div>
             <Label>Your Story</Label>
             <Textarea
+              name="content"
               value={newPost.content}
-              onChange={(e) => setNewPost(prev => ({ ...prev, content: e.target.value }))}
+              onChange={handleContentChange}
               placeholder="Share your experience..."
               rows={5}
             />

@@ -62,5 +62,20 @@ export const CommunityService = {
     const { data, error } = await postQueries.getUserBookmarks();
     if (error) throw error;
     return data;
-  }
+  },
+
+  async saveDraft(
+    title: string,
+    content: string,
+    category: string
+  ): Promise<void> {
+    const { error } = await postQueries.saveDraft(title, content, category);
+    if (error) throw error;
+  },
+
+  async getLatestDraft(): Promise<{ title: string | null; content: string | null; category: string | null }> {
+    const { data, error } = await postQueries.getLatestDraft();
+    if (error) throw error;
+    return data?.[0] || { title: null, content: null, category: null };
+  },
 };
