@@ -132,6 +132,9 @@ export const MentionsInput = ({ value, onChange, placeholder }: MentionsInputPro
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
+  // Ensure suggestions is always an array
+  const validSuggestions = Array.isArray(suggestions) ? suggestions : [];
+
   return (
     <div className="relative w-full">
       <Textarea
@@ -149,34 +152,35 @@ export const MentionsInput = ({ value, onChange, placeholder }: MentionsInputPro
         placeholder={placeholder}
         className="min-h-[100px]"
       />
-      <Popover open={mentionState.isOpen && suggestions.length > 0}>
-        <PopoverTrigger className="hidden" />
-        <PopoverContent 
-          className="p-0 w-[200px]" 
-          style={{
-            position: 'fixed',
-            top: `${dropdownPosition.top}px`,
-            left: `${dropdownPosition.left}px`,
-          }}
-        >
-          <Command>
-            <CommandInput placeholder="Search users..." />
-            <CommandEmpty>No users found.</CommandEmpty>
-            <CommandGroup>
-              {(suggestions || []).map((user) => (
-                <CommandItem
-                  key={user.id}
-                  onSelect={() => insertMention(user)}
-                  className="cursor-pointer"
-                >
-                  {user.display_name}
-                </CommandItem>
-              ))}
-            </CommandGroup>
-          </Command>
-        </PopoverContent>
-      </Popover>
+      {mentionState.isOpen && validSuggestions.length > 0 && (
+        <Popover open={true}>
+          <PopoverTrigger className="hidden" />
+          <PopoverContent 
+            className="p-0 w-[200px]" 
+            style={{
+              position: 'fixed',
+              top: `${dropdownPosition.top}px`,
+              left: `${dropdownPosition.left}px`,
+            }}
+          >
+            <Command>
+              <CommandInput placeholder="Search users..." />
+              <CommandEmpty>No users found.</CommandEmpty>
+              <CommandGroup>
+                {validSuggestions.map((user) => (
+                  <CommandItem
+                    key={user.id}
+                    onSelect={() => insertMention(user)}
+                    className="cursor-pointer"
+                  >
+                    {user.display_name}
+                  </CommandItem>
+                ))}
+              </CommandGroup>
+            </Command>
+          </PopoverContent>
+        </Popover>
+      )}
     </div>
   );
 };
-
