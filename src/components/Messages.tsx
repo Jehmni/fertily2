@@ -1,19 +1,20 @@
-
 import { useEffect, useState } from "react";
 import { Card } from "@/components/ui/card";
 import { supabase } from "@/lib/supabase";
 import { useToast } from "@/hooks/use-toast";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Loader2 } from "lucide-react";
+import { ConversationList } from "./messages/ConversationList";
+import { MessageList } from "./messages/MessageList";
+import { MessageInput } from "./messages/MessageInput";
 
-interface Profile {
-  first_name: string;
-  last_name: string;
+export interface Profile {
+  first_name: string | null;
+  last_name: string | null;
   avatar_url: string | null;
   avatar_color: string | null;
 }
 
-interface Message {
+export interface Message {
   id: string;
   content: string;
   created_at: string;
@@ -23,7 +24,7 @@ interface Message {
   recipient: Profile;
 }
 
-interface Conversation {
+export interface Conversation {
   user_id: string;
   first_name: string | null;
   last_name: string | null;
@@ -180,8 +181,7 @@ export const Messages = () => {
     }
   };
 
-  const sendMessage = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleSendMessage = async () => {
     if (!selectedUserId || !newMessage.trim()) return;
 
     try {
@@ -218,94 +218,21 @@ export const Messages = () => {
 
   return (
     <Card className="w-full max-w-4xl mx-auto h-[600px] flex">
-      <div className="w-1/3 border-r overflow-y-auto">
-        {conversations.map((conv) => (
-          <div
-            key={conv.user_id}
-            className={`p-4 cursor-pointer hover:bg-secondary/50 ${
-              selectedUserId === conv.user_id ? "bg-secondary" : ""
-            }`}
-            onClick={() => setSelectedUserId(conv.user_id)}
-          >
-            <div className="flex items-center gap-3">
-              <Avatar className="h-8 w-8" style={{ backgroundColor: conv.avatar_color || '#E2E8F0' }}>
-                <AvatarImage src={conv.avatar_url || undefined} />
-                <AvatarFallback>
-                  {`${conv.first_name?.[0] || ''}${conv.last_name?.[0] || ''}`}
-                </AvatarFallback>
-              </Avatar>
-              <div className="flex-1 min-w-0">
-                <div className="font-medium">
-                  {conv.first_name} {conv.last_name}
-                </div>
-                {conv.last_message && (
-                  <div className="text-sm text-muted-foreground truncate">
-                    {conv.last_message.content}
-                  </div>
-                )}
-              </div>
-            </div>
-          </div>
-        ))}
-      </div>
+      <ConversationList
+        conversations={conversations}
+        selectedUserId={selectedUserId}
+        onSelectConversation={setSelectedUserId}
+      />
 
       <div className="flex-1 flex flex-col">
         {selectedUserId ? (
           <>
-            <div className="flex-1 p-4 overflow-y-auto space-y-4">
-              {messages.map((message) => (
-                <div
-                  key={message.id}
-                  className={`flex items-start gap-3 ${
-                    message.sender_id === selectedUserId ? "justify-start" : "justify-end"
-                  }`}
-                >
-                  {message.sender_id === selectedUserId && (
-                    <Avatar className="h-8 w-8" style={{ backgroundColor: message.sender.avatar_color || '#E2E8F0' }}>
-                      <AvatarImage src={message.sender.avatar_url || undefined} />
-                      <AvatarFallback>
-                        {`${message.sender.first_name?.[0] || ''}${message.sender.last_name?.[0] || ''}`}
-                      </AvatarFallback>
-                    </Avatar>
-                  )}
-                  <div
-                    className={`max-w-[70%] p-3 rounded-lg ${
-                      message.sender_id === selectedUserId
-                        ? "bg-secondary"
-                        : "bg-primary text-primary-foreground"
-                    }`}
-                  >
-                    {message.content}
-                  </div>
-                  {message.sender_id !== selectedUserId && (
-                    <Avatar className="h-8 w-8" style={{ backgroundColor: message.sender.avatar_color || '#E2E8F0' }}>
-                      <AvatarImage src={message.sender.avatar_url || undefined} />
-                      <AvatarFallback>
-                        {`${message.sender.first_name?.[0] || ''}${message.sender.last_name?.[0] || ''}`}
-                      </AvatarFallback>
-                    </Avatar>
-                  )}
-                </div>
-              ))}
-            </div>
-            <form onSubmit={sendMessage} className="p-4 border-t">
-              <div className="flex gap-2">
-                <input
-                  type="text"
-                  value={newMessage}
-                  onChange={(e) => setNewMessage(e.target.value)}
-                  placeholder="Type your message..."
-                  className="flex-1 p-2 border rounded-md"
-                />
-                <button
-                  type="submit"
-                  disabled={!newMessage.trim()}
-                  className="px-4 py-2 bg-primary text-primary-foreground rounded-md disabled:opacity-50"
-                >
-                  Send
-                </button>
-              </div>
-            </form>
+            <MessageList messages={messages} selectedUserId={selectedUserId} />
+            <MessageInput
+              newMessage={newMessage}
+              onMessageChange={setNewMessage}
+              onSendMessage={handleSendMessage}
+            />
           </>
         ) : (
           <div className="flex-1 flex items-center justify-center text-muted-foreground">

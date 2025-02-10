@@ -1,18 +1,16 @@
 
-import { useEffect, useState } from "react";
 import { Bell } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
-  DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
-import { useToast } from "@/hooks/use-toast";
-import { supabase } from "@/lib/supabase";
-import { useNavigate, useLocation } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
+import { NotificationList } from "./notifications/NotificationList";
+import { useNotifications } from "./notifications/useNotifications";
 
-interface Notification {
+export interface Notification {
   id: string;
   title: string;
   message: string;
@@ -24,90 +22,23 @@ interface Notification {
 }
 
 export const NotificationBell = () => {
-  const { toast } = useToast();
   const navigate = useNavigate();
-  const location = useLocation();
-  const [notifications, setNotifications] = useState<Notification[]>([]);
-  const [unreadCount, setUnreadCount] = useState(0);
-
-  useEffect(() => {
-    loadNotifications();
-    subscribeToNotifications();
-  }, []);
-
-  const loadNotifications = async () => {
-    try {
-      const { data, error } = await supabase
-        .from('notifications')
-        .select('*')
-        .order('created_at', { ascending: false })
-        .limit(5);
-
-      if (error) throw error;
-
-      setNotifications(data || []);
-      setUnreadCount(data?.filter(n => !n.read).length || 0);
-    } catch (error: any) {
-      toast({
-        title: "Error",
-        description: "Failed to load notifications",
-        variant: "destructive",
-      });
-    }
-  };
-
-  const subscribeToNotifications = () => {
-    const channel = supabase
-      .channel('public:notifications')
-      .on(
-        'postgres_changes',
-        {
-          event: 'INSERT',
-          schema: 'public',
-          table: 'notifications',
-        },
-        (payload) => {
-          const newNotification = payload.new as Notification;
-          setNotifications(prev => [newNotification, ...prev]);
-          setUnreadCount(prev => prev + 1);
-          
-          if (newNotification.type === 'follow') {
-            toast({
-              title: "New Follower",
-              description: newNotification.message,
-            });
-          } else {
-            toast({
-              title: newNotification.title,
-              description: newNotification.message,
-            });
-          }
-        }
-      )
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  };
+  const { notifications, unreadCount, markAsRead } = useNotifications();
 
   const handleNotificationClick = async (notification: Notification) => {
     try {
-      // Mark as read first
       await markAsRead(notification.id);
 
-      // Navigate based on notification type
       switch (notification.type) {
         case 'follow':
           navigate('/community');
           break;
         case 'message':
           if (notification.sender_id) {
-            // Always navigate to home with messages view
             navigate('/', {
               state: {
                 activeView: 'messages',
-                selectedUserId: notification.sender_id // Changed from userId to selectedUserId
+                selectedUserId: notification.sender_id
               }
             });
           }
@@ -125,33 +56,6 @@ export const NotificationBell = () => {
       }
     } catch (error) {
       console.error('Error handling notification click:', error);
-      toast({
-        title: "Error",
-        description: "Failed to process notification",
-        variant: "destructive",
-      });
-    }
-  };
-
-  const markAsRead = async (id: string) => {
-    try {
-      const { error } = await supabase
-        .from('notifications')
-        .update({ read: true })
-        .eq('id', id);
-
-      if (error) throw error;
-
-      setNotifications(prev =>
-        prev.map(n => (n.id === id ? { ...n, read: true } : n))
-      );
-      setUnreadCount(prev => Math.max(0, prev - 1));
-    } catch (error: any) {
-      toast({
-        title: "Error",
-        description: "Failed to mark notification as read",
-        variant: "destructive",
-      });
     }
   };
 
@@ -168,27 +72,11 @@ export const NotificationBell = () => {
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-80">
-        {notifications.length === 0 ? (
-          <DropdownMenuItem>No notifications</DropdownMenuItem>
-        ) : (
-          notifications.map((notification) => (
-            <DropdownMenuItem
-              key={notification.id}
-              className={`flex flex-col items-start p-4 cursor-pointer ${
-                !notification.read ? 'bg-muted/50' : ''
-              }`}
-              onClick={() => handleNotificationClick(notification)}
-            >
-              <div className="font-semibold">{notification.title}</div>
-              <div className="text-sm text-muted-foreground">{notification.message}</div>
-              <div className="text-xs text-muted-foreground mt-1">
-                {new Date(notification.created_at).toLocaleDateString()}
-              </div>
-            </DropdownMenuItem>
-          ))
-        )}
+        <NotificationList 
+          notifications={notifications}
+          onNotificationClick={handleNotificationClick}
+        />
       </DropdownMenuContent>
     </DropdownMenu>
   );
 };
-
