@@ -50,7 +50,6 @@ export const MentionsInput = ({ value, onChange, placeholder }: MentionsInputPro
     const paddingTop = parseInt(computedStyle.paddingTop);
     const paddingLeft = parseInt(computedStyle.paddingLeft);
 
-    // Create a temporary span to measure text width
     const span = document.createElement('span');
     span.style.font = computedStyle.font;
     span.style.visibility = 'hidden';
@@ -66,29 +65,23 @@ export const MentionsInput = ({ value, onChange, placeholder }: MentionsInputPro
 
     setDropdownPosition({
       top: rect.top + (currentLineNumber * lineHeight) - scrollTop + paddingTop,
-      left: rect.left + Math.min(textWidth, rect.width - 200) + paddingLeft // 200 is approximate dropdown width
+      left: rect.left + Math.min(textWidth, rect.width - 200) + paddingLeft
     });
-  };
-
-  const updateCursorPosition = (element: HTMLTextAreaElement) => {
-    const position = element.selectionStart;
-    setCursorPosition(position);
-    calculateDropdownPosition();
   };
 
   const handleTextareaChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     const newValue = e.target.value;
-    const position = e.target.selectionStart;
-    
-    updateCursorPosition(e.target);
+    const newPosition = e.target.selectionStart;
+    setCursorPosition(newPosition);
 
     // Check if we should open mentions popup
-    const lastAtSymbol = newValue.lastIndexOf('@', position);
+    const lastAtSymbol = newValue.lastIndexOf('@', newPosition);
     if (lastAtSymbol !== -1) {
-      const textAfterAt = newValue.slice(lastAtSymbol + 1, position);
+      const textAfterAt = newValue.slice(lastAtSymbol + 1, newPosition);
       if (!textAfterAt.includes(' ')) {
         setSearchTerm(textAfterAt);
         setOpen(true);
+        calculateDropdownPosition();
         return;
       }
     }
@@ -110,16 +103,16 @@ export const MentionsInput = ({ value, onChange, placeholder }: MentionsInputPro
 
     // Set cursor position after the inserted mention
     const newCursorPosition = lastAtPos + user.display_name.length + 1;
-    setTimeout(() => {
-      if (textareaRef.current) {
-        textareaRef.current.focus();
-        textareaRef.current.setSelectionRange(newCursorPosition, newCursorPosition);
-        updateCursorPosition(textareaRef.current);
-      }
-    }, 0);
+    
+    // Maintain focus and update cursor position
+    if (textareaRef.current) {
+      textareaRef.current.focus();
+      textareaRef.current.setSelectionRange(newCursorPosition, newCursorPosition);
+      setCursorPosition(newCursorPosition);
+    }
   };
 
-  // Handle click outside to close dropdown
+  // Handle click outside
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (textareaRef.current && !textareaRef.current.contains(event.target as Node)) {
@@ -137,7 +130,11 @@ export const MentionsInput = ({ value, onChange, placeholder }: MentionsInputPro
         ref={textareaRef}
         value={value}
         onChange={handleTextareaChange}
-        onSelect={(e) => updateCursorPosition(e.target as HTMLTextAreaElement)}
+        onSelect={(e) => {
+          const target = e.target as HTMLTextAreaElement;
+          setCursorPosition(target.selectionStart);
+          calculateDropdownPosition();
+        }}
         placeholder={placeholder}
         className="min-h-[100px]"
       />
