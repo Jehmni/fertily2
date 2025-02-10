@@ -506,6 +506,7 @@ export type Database = {
       post_reactions: {
         Row: {
           created_at: string
+          emoji_type: string | null
           id: string
           post_id: string
           reaction_type: string
@@ -513,6 +514,7 @@ export type Database = {
         }
         Insert: {
           created_at?: string
+          emoji_type?: string | null
           id?: string
           post_id: string
           reaction_type: string
@@ -520,6 +522,7 @@ export type Database = {
         }
         Update: {
           created_at?: string
+          emoji_type?: string | null
           id?: string
           post_id?: string
           reaction_type?: string
@@ -639,7 +642,22 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      post_reaction_counts: {
+        Row: {
+          count: number | null
+          emoji_type: string | null
+          post_id: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "post_reactions_post_id_fkey"
+            columns: ["post_id"]
+            isOneToOne: false
+            referencedRelation: "community_posts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Functions: {
       generate_anonymous_alias: {

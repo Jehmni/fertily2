@@ -7,7 +7,19 @@ export const CommunityService = {
   async getPosts(filters?: { category?: string; query?: string }): Promise<CommunityPost[]> {
     const { data: posts, error } = await postQueries.getPosts(filters);
     if (error) throw error;
-    return posts.map(transformPostData);
+
+    // Get user reactions for each post
+    const postsWithReactions = await Promise.all(
+      posts.map(async (post) => {
+        const { data: userReactions } = await postQueries.getUserReactions(post.id);
+        return {
+          ...post,
+          user_reactions: userReactions?.map(r => r.emoji_type) || []
+        };
+      })
+    );
+
+    return postsWithReactions.map(transformPostData);
   },
 
   async getCategories(): Promise<PostCategory[]> {
@@ -45,9 +57,9 @@ export const CommunityService = {
 
   async toggleReaction(
     postId: string,
-    reactionType: string
+    emojiType: string
   ): Promise<PostReaction | null> {
-    const { data, error } = await postQueries.toggleReaction(postId, reactionType);
+    const { data, error } = await postQueries.toggleReaction(postId, emojiType);
     if (error) throw error;
     return data;
   },

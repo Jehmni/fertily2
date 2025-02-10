@@ -15,9 +15,9 @@ export interface CommunityPost {
   created_at: string;
   updated_at: string;
   profile?: Profile;
-  reactions_count?: { count: number }[];
+  reactions_count?: { emoji_type: string; count: number }[];
   comments_count?: { count: number }[];
-  user_reaction?: string;
+  user_reactions?: string[];
   is_bookmarked?: boolean;
 }
 
@@ -36,7 +36,7 @@ export interface PostReaction {
   id: string;
   post_id: string;
   user_id: string;
-  reaction_type: string;
+  emoji_type: string;
   created_at: string;
 }
 

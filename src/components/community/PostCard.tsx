@@ -1,12 +1,13 @@
 
 import { format } from "date-fns";
-import { Heart, MessageCircle, Bookmark } from "lucide-react";
+import { Heart, MessageCircle, Bookmark, Celebrate, ThumbsUp, Lightbulb, PartyPopper } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardTitle, CardContent, CardFooter } from "@/components/ui/card";
 import type { CommunityPost } from "@/types/community";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { CommunityService } from "@/services/CommunityService";
 import { useAuth } from "@/hooks/useAuth";
+import { toast } from "@/hooks/use-toast";
 
 interface PostCardProps {
   post: CommunityPost;
@@ -15,15 +16,30 @@ interface PostCardProps {
   onBookmarkToggle: () => Promise<void>;
 }
 
+const emojiIcons = {
+  heart: Heart,
+  celebrate: Celebrate,
+  support: ThumbsUp,
+  insightful: Lightbulb,
+  thanks: PartyPopper,
+};
+
 export const PostCard = ({ post, onCommentClick, bookmarked, onBookmarkToggle }: PostCardProps) => {
   const queryClient = useQueryClient();
   const { user } = useAuth();
 
   const toggleReactionMutation = useMutation({
-    mutationFn: ({ postId, reactionType }: { postId: string; reactionType: string }) =>
-      CommunityService.toggleReaction(postId, reactionType),
+    mutationFn: ({ postId, emojiType }: { postId: string; emojiType: string }) =>
+      CommunityService.toggleReaction(postId, emojiType),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["community-posts"] });
+    },
+    onError: () => {
+      toast({
+        title: "Error",
+        description: "Failed to update reaction",
+        variant: "destructive",
+      });
     },
   });
 
@@ -60,15 +76,24 @@ export const PostCard = ({ post, onCommentClick, bookmarked, onBookmarkToggle }:
         <p className="whitespace-pre-wrap">{post.content}</p>
       </CardContent>
       <CardFooter className="flex justify-between">
-        <div className="flex space-x-4">
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => toggleReactionMutation.mutate({ postId: post.id, reactionType: "heart" })}
-          >
-            <Heart className={`h-4 w-4 mr-1 ${post.user_reaction === "heart" ? "fill-current text-red-500" : ""}`} />
-            {post.reactions_count?.[0]?.count || 0}
-          </Button>
+        <div className="flex space-x-2">
+          {Object.entries(emojiIcons).map(([type, Icon]) => {
+            const reactionCount = post.reactions_count?.find(r => r.emoji_type === type)?.count || 0;
+            const isReacted = post.user_reactions?.includes(type);
+            
+            return (
+              <Button
+                key={type}
+                variant="ghost"
+                size="sm"
+                onClick={() => toggleReactionMutation.mutate({ postId: post.id, emojiType: type })}
+                className={isReacted ? "text-primary" : ""}
+              >
+                <Icon className={`h-4 w-4 mr-1 ${isReacted ? "fill-current" : ""}`} />
+                {reactionCount}
+              </Button>
+            );
+          })}
           <Button
             variant="ghost"
             size="sm"

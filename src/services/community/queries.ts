@@ -8,7 +8,7 @@ export const postQueries = {
       .select(`
         *,
         profiles (first_name, last_name),
-        reactions_count:post_reactions(count),
+        reactions_count:post_reaction_counts(emoji_type, count),
         comments_count:post_comments(count)
       `)
       .order('created_at', { ascending: false });
@@ -79,7 +79,7 @@ export const postQueries = {
       .single();
   },
 
-  toggleReaction: async (postId: string, reactionType: string) => {
+  toggleReaction: async (postId: string, emojiType: string) => {
     const { data: { session } } = await supabase.auth.getSession();
     if (!session) throw new Error('No active session');
 
@@ -88,7 +88,7 @@ export const postQueries = {
       .select()
       .eq('post_id', postId)
       .eq('user_id', session.user.id)
-      .eq('reaction_type', reactionType)
+      .eq('emoji_type', emojiType)
       .maybeSingle();
 
     if (existingReaction) {
@@ -102,12 +102,23 @@ export const postQueries = {
         .from('post_reactions')
         .insert({
           post_id: postId,
-          reaction_type: reactionType,
+          emoji_type: emojiType,
           user_id: session.user.id
         })
         .select()
         .single();
     }
+  },
+
+  getUserReactions: async (postId: string) => {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) return { data: [] };
+
+    return supabase
+      .from('post_reactions')
+      .select('emoji_type')
+      .eq('post_id', postId)
+      .eq('user_id', session.user.id);
   },
 
   toggleBookmark: async (postId: string) => {
