@@ -1,6 +1,6 @@
 
 import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useInfiniteQuery, useQuery } from "@tanstack/react-query";
 import { CommunityService } from "@/services/CommunityService";
 import type { CommunityPost, PostCategory } from "@/types/community";
 import { CreatePostDialog } from "./community/CreatePostDialog";
@@ -10,12 +10,15 @@ import { Input } from "./ui/input";
 import { Search, Bookmark, ArrowUpDown } from "lucide-react";
 import { Button } from "./ui/button";
 import { useToast } from "@/hooks/use-toast";
+import { useIntersectionObserver } from "@/hooks/useIntersectionObserver";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+
+const PAGE_SIZE = 10;
 
 export const Community = () => {
   const [selectedPost, setSelectedPost] = useState<CommunityPost | null>(null);
@@ -30,13 +33,24 @@ export const Community = () => {
     queryFn: CommunityService.getCategories,
   });
 
-  const { data: posts = [], isLoading: isPostsLoading } = useQuery({
+  const {
+    data,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+    isLoading: isPostsLoading,
+  } = useInfiniteQuery({
     queryKey: ["community-posts", selectedCategory, searchQuery, sortBy],
-    queryFn: () => CommunityService.getPosts({ 
-      category: selectedCategory,
-      query: searchQuery,
-      sortBy: sortBy
-    }),
+    queryFn: ({ pageParam = 1 }) =>
+      CommunityService.getPosts({
+        category: selectedCategory,
+        query: searchQuery,
+        sortBy: sortBy,
+        page: pageParam,
+        pageSize: PAGE_SIZE,
+      }),
+    getNextPageParam: (lastPage, allPages) =>
+      lastPage.length === PAGE_SIZE ? allPages.length + 1 : undefined,
   });
 
   const { data: bookmarks = [] } = useQuery({
@@ -44,9 +58,18 @@ export const Community = () => {
     queryFn: CommunityService.getUserBookmarks,
   });
 
+  const loadMoreRef = useIntersectionObserver<HTMLDivElement>({
+    onChange: (isIntersecting) => {
+      if (isIntersecting && hasNextPage && !isFetchingNextPage) {
+        fetchNextPage();
+      }
+    },
+  });
+
+  const allPosts = data?.pages.flat() || [];
   const filteredPosts = showBookmarked
-    ? posts.filter(post => bookmarks.some(b => b.post_id === post.id))
-    : posts;
+    ? allPosts.filter(post => bookmarks.some(b => b.post_id === post.id))
+    : allPosts;
 
   if (isPostsLoading || isCategoriesLoading) {
     return <div>Loading community...</div>;
@@ -136,6 +159,17 @@ export const Community = () => {
             }}
           />
         ))}
+        {!isPostsLoading && hasNextPage && (
+          <div ref={loadMoreRef} className="flex justify-center p-4">
+            {isFetchingNextPage ? (
+              <div>Loading more posts...</div>
+            ) : (
+              <Button variant="ghost" onClick={() => fetchNextPage()}>
+                Load More
+              </Button>
+            )}
+          </div>
+        )}
       </div>
 
       <CommentsDialog 
@@ -145,3 +179,4 @@ export const Community = () => {
     </div>
   );
 };
+

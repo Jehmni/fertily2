@@ -6,7 +6,12 @@ export const postQueries = {
     category?: string; 
     query?: string;
     sortBy?: 'newest' | 'popular';
+    page?: number;
+    pageSize?: number;
   }) => {
+    const from = ((filters?.page || 1) - 1) * (filters?.pageSize || 10);
+    const to = from + (filters?.pageSize || 10) - 1;
+
     let query = supabase
       .from('community_posts')
       .select(`
@@ -14,7 +19,8 @@ export const postQueries = {
         profiles (first_name, last_name),
         reactions_count:post_reaction_counts(emoji_type, count),
         comments_count:post_comments(count)
-      `);
+      `)
+      .range(from, to);
 
     if (filters?.category) {
       query = query.eq('category', filters.category);
@@ -54,3 +60,4 @@ export const postQueries = {
       .single();
   }
 };
+

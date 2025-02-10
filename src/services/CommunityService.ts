@@ -1,3 +1,4 @@
+
 import { 
   postQueries, 
   categoryQueries, 
@@ -15,6 +16,8 @@ export const CommunityService = {
     category?: string; 
     query?: string;
     sortBy?: 'newest' | 'popular';
+    page?: number;
+    pageSize?: number;
   }): Promise<CommunityPost[]> {
     const { data: posts, error } = await postQueries.getPosts(filters);
     if (error) throw error;
@@ -128,3 +131,4 @@ export const CommunityService = {
     };
   }
 };
+
