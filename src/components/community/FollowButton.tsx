@@ -5,6 +5,7 @@ import { UserPlus, UserMinus } from "lucide-react";
 import { CommunityService } from "@/services/CommunityService";
 import { useToast } from "@/hooks/use-toast";
 import { useQueryClient } from "@tanstack/react-query";
+import { supabase } from "@/lib/supabase";
 
 interface FollowButtonProps {
   userId: string;
@@ -28,7 +29,28 @@ export const FollowButton = ({ userId, initialIsFollowing = false }: FollowButto
     };
 
     checkFollowStatus();
-  }, [userId]);
+
+    // Subscribe to real-time follow updates
+    const channel = supabase
+      .channel('follow-updates')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'user_follows'
+        },
+        () => {
+          checkFollowStatus();
+          queryClient.invalidateQueries({ queryKey: ["follower-counts", userId] });
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [userId, queryClient]);
 
   const handleToggleFollow = async () => {
     setIsLoading(true);
@@ -78,3 +100,4 @@ export const FollowButton = ({ userId, initialIsFollowing = false }: FollowButto
     </Button>
   );
 };
+
