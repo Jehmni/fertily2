@@ -113,7 +113,9 @@ export type Database = {
           anonymous_alias: string | null
           category: string
           content: string
+          content_format: string | null
           created_at: string
+          formatted_content: Json | null
           id: string
           title: string
           updated_at: string
@@ -124,7 +126,9 @@ export type Database = {
           anonymous_alias?: string | null
           category: string
           content: string
+          content_format?: string | null
           created_at?: string
+          formatted_content?: Json | null
           id?: string
           title: string
           updated_at?: string
@@ -135,7 +139,9 @@ export type Database = {
           anonymous_alias?: string | null
           category?: string
           content?: string
+          content_format?: string | null
           created_at?: string
+          formatted_content?: Json | null
           id?: string
           title?: string
           updated_at?: string
@@ -477,7 +483,9 @@ export type Database = {
         Row: {
           category: string | null
           content: string | null
+          content_format: string | null
           created_at: string
+          formatted_content: Json | null
           id: string
           title: string | null
           updated_at: string
@@ -486,7 +494,9 @@ export type Database = {
         Insert: {
           category?: string | null
           content?: string | null
+          content_format?: string | null
           created_at?: string
+          formatted_content?: Json | null
           id?: string
           title?: string | null
           updated_at?: string
@@ -495,7 +505,9 @@ export type Database = {
         Update: {
           category?: string | null
           content?: string | null
+          content_format?: string | null
           created_at?: string
+          formatted_content?: Json | null
           id?: string
           title?: string | null
           updated_at?: string
