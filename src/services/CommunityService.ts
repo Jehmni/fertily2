@@ -1,5 +1,12 @@
 
-import { postQueries } from "./community/queries";
+import { 
+  postQueries, 
+  categoryQueries, 
+  commentQueries, 
+  reactionQueries, 
+  bookmarkQueries, 
+  draftQueries 
+} from "./community/queries";
 import { transformPostData, transformCommentData } from "./community/transformers";
 import type { CommunityPost, PostComment, PostReaction, PostCategory, PostBookmark } from "@/types/community";
 
@@ -15,7 +22,7 @@ export const CommunityService = {
     // Get user reactions for each post
     const postsWithReactions = await Promise.all(
       posts.map(async (post) => {
-        const { data: userReactions } = await postQueries.getUserReactions(post.id);
+        const { data: userReactions } = await reactionQueries.getUserReactions(post.id);
         return {
           ...post,
           user_reactions: userReactions?.map(r => r.emoji_type) || []
@@ -27,7 +34,7 @@ export const CommunityService = {
   },
 
   async getCategories(): Promise<PostCategory[]> {
-    const { data, error } = await postQueries.getCategories();
+    const { data, error } = await categoryQueries.getCategories();
     if (error) throw error;
     return data;
   },
@@ -45,7 +52,7 @@ export const CommunityService = {
   },
 
   async getComments(postId: string): Promise<PostComment[]> {
-    const { data, error } = await postQueries.getComments(postId);
+    const { data, error } = await commentQueries.getComments(postId);
     if (error) throw error;
     return data.map(transformCommentData);
   },
@@ -55,7 +62,7 @@ export const CommunityService = {
     content: string,
     anonymous: boolean
   ): Promise<PostComment> {
-    const { data, error } = await postQueries.addComment(postId, content, anonymous);
+    const { data, error } = await commentQueries.addComment(postId, content, anonymous);
     if (error) throw error;
     return transformCommentData(data);
   },
@@ -64,19 +71,19 @@ export const CommunityService = {
     postId: string,
     emojiType: string
   ): Promise<PostReaction | null> {
-    const { data, error } = await postQueries.toggleReaction(postId, emojiType);
+    const { data, error } = await reactionQueries.toggleReaction(postId, emojiType);
     if (error) throw error;
     return data;
   },
 
   async toggleBookmark(postId: string): Promise<PostBookmark | null> {
-    const { data, error } = await postQueries.toggleBookmark(postId);
+    const { data, error } = await bookmarkQueries.toggleBookmark(postId);
     if (error) throw error;
     return data;
   },
 
   async getUserBookmarks(): Promise<{ post_id: string }[]> {
-    const { data, error } = await postQueries.getUserBookmarks();
+    const { data, error } = await bookmarkQueries.getUserBookmarks();
     if (error) throw error;
     return data;
   },
@@ -86,12 +93,12 @@ export const CommunityService = {
     content: string,
     category: string
   ): Promise<void> {
-    const { error } = await postQueries.saveDraft(title, content, category);
+    const { error } = await draftQueries.saveDraft(title, content, category);
     if (error) throw error;
   },
 
   async getLatestDraft(): Promise<{ title: string | null; content: string | null; category: string | null }> {
-    const { data, error } = await postQueries.getLatestDraft();
+    const { data, error } = await draftQueries.getLatestDraft();
     if (error) throw error;
     return data?.[0] || { title: null, content: null, category: null };
   },
