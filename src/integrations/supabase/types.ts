@@ -816,6 +816,13 @@ export type Database = {
       }
     }
     Functions: {
+      are_mutual_followers: {
+        Args: {
+          user1_id: string
+          user2_id: string
+        }
+        Returns: boolean
+      }
       extract_mentions: {
         Args: {
           content: string
