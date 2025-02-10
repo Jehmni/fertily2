@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { PersonalInfoForm } from "./profile/PersonalInfoForm";
 import { CycleInfoForm } from "./profile/CycleInfoForm";
 import { MedicalInfoForm } from "./profile/MedicalInfoForm";
+import { AvatarForm } from "./profile/AvatarForm";
 import { useProfile } from "@/hooks/useProfile";
 
 export const ProfileSection = () => {
@@ -24,6 +25,15 @@ export const ProfileSection = () => {
     <form onSubmit={handleSubmit} className="space-y-6 bg-white p-6 rounded-lg shadow-sm">
       <h2 className="text-2xl font-semibold mb-4">Profile Information</h2>
       
+      <AvatarForm
+        avatarUrl={profile.avatarUrl}
+        avatarColor={profile.avatarColor}
+        firstName={profile.firstName}
+        lastName={profile.lastName}
+        onAvatarUrlChange={(url) => setProfile(p => ({ ...p, avatarUrl: url }))}
+        onAvatarColorChange={(color) => setProfile(p => ({ ...p, avatarColor: color }))}
+      />
+
       <PersonalInfoForm
         firstName={profile.firstName}
         lastName={profile.lastName}

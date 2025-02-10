@@ -13,6 +13,8 @@ export interface Profile {
   medicalConditions: string;
   medications: string;
   fertilityGoals: string;
+  avatarUrl: string | null;
+  avatarColor: string;
 }
 
 export const useProfile = () => {
@@ -29,6 +31,8 @@ export const useProfile = () => {
     medicalConditions: "",
     medications: "",
     fertilityGoals: "",
+    avatarUrl: null,
+    avatarColor: "#E2E8F0",
   });
 
   const loadProfile = async () => {
@@ -54,6 +58,8 @@ export const useProfile = () => {
           medicalConditions: (data.medical_conditions || []).join(', '),
           medications: (data.medications || []).join(', '),
           fertilityGoals: data.fertility_goals || "",
+          avatarUrl: data.avatar_url || null,
+          avatarColor: data.avatar_color || "#E2E8F0",
         });
         setIsUpdate(true);
       }
@@ -86,6 +92,8 @@ export const useProfile = () => {
           medical_conditions: profile.medicalConditions.split(',').map(c => c.trim()).filter(Boolean),
           medications: profile.medications.split(',').map(m => m.trim()).filter(Boolean),
           fertility_goals: profile.fertilityGoals,
+          avatar_url: profile.avatarUrl,
+          avatar_color: profile.avatarColor,
         })
         .eq('id', user.id);
 
