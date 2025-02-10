@@ -34,7 +34,7 @@ export const MentionsInput = ({ value, onChange, placeholder }: MentionsInputPro
     queryKey: ["mention-suggestions", searchTerm],
     queryFn: () => CommunityService.searchUsers(searchTerm),
     enabled: searchTerm.length > 0,
-    initialData: [], // Ensure we always have an array
+    initialData: [],
   });
 
   const calculateDropdownPosition = () => {
@@ -72,10 +72,14 @@ export const MentionsInput = ({ value, onChange, placeholder }: MentionsInputPro
 
   const handleTextareaChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     const newValue = e.target.value;
-    const newPosition = e.target.selectionStart;
+    const newPosition = e.target.selectionStart || 0;
+
+    // Update the value first
+    onChange(newValue);
+    
+    // Then update cursor position and check for mentions
     setCursorPosition(newPosition);
 
-    // Check if we should open mentions popup
     const lastAtSymbol = newValue.lastIndexOf('@', newPosition);
     if (lastAtSymbol !== -1) {
       const textAfterAt = newValue.slice(lastAtSymbol + 1, newPosition);
@@ -88,7 +92,6 @@ export const MentionsInput = ({ value, onChange, placeholder }: MentionsInputPro
     }
 
     setOpen(false);
-    onChange(newValue);
   };
 
   const insertMention = (user: MentionSuggestion) => {
@@ -105,12 +108,14 @@ export const MentionsInput = ({ value, onChange, placeholder }: MentionsInputPro
     // Set cursor position after the inserted mention
     const newCursorPosition = lastAtPos + user.display_name.length + 1;
     
-    // Maintain focus and update cursor position
-    if (textareaRef.current) {
-      textareaRef.current.focus();
-      textareaRef.current.setSelectionRange(newCursorPosition, newCursorPosition);
-      setCursorPosition(newCursorPosition);
-    }
+    // Update cursor position after a brief delay to ensure the textarea has updated
+    requestAnimationFrame(() => {
+      if (textareaRef.current) {
+        textareaRef.current.focus();
+        textareaRef.current.setSelectionRange(newCursorPosition, newCursorPosition);
+        setCursorPosition(newCursorPosition);
+      }
+    });
   };
 
   // Handle click outside
@@ -133,7 +138,7 @@ export const MentionsInput = ({ value, onChange, placeholder }: MentionsInputPro
         onChange={handleTextareaChange}
         onSelect={(e) => {
           const target = e.target as HTMLTextAreaElement;
-          setCursorPosition(target.selectionStart);
+          setCursorPosition(target.selectionStart || 0);
           calculateDropdownPosition();
         }}
         placeholder={placeholder}
