@@ -1,4 +1,3 @@
-
 import { ChatWindow } from "@/components/ChatWindow";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/lib/supabase";
@@ -15,6 +14,7 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import { MobileNav } from "@/components/navigation/MobileNav";
 import { DesktopNav } from "@/components/navigation/DesktopNav";
 import { Header } from "@/components/layout/Header";
+import { Messages } from "@/components/Messages";
 
 const Index = () => {
   const { toast } = useToast();
@@ -50,6 +50,8 @@ const Index = () => {
         return <UserFavorites />;
       case "chat":
         return <ChatWindow />;
+      case "messages":
+        return <Messages />;
       case "community":
         return <Community />;
       default:

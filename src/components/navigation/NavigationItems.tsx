@@ -1,5 +1,5 @@
 
-import { Home, User, Book, Heart, Stethoscope, Users } from "lucide-react";
+import { Home, User, Book, Heart, Stethoscope, Users, MessageSquare } from "lucide-react";
 
 export const navigationItems = [
   {
@@ -26,6 +26,11 @@ export const navigationItems = [
     icon: <Stethoscope className="w-4 h-4 mr-2" />,
     label: "Chat",
     key: "chat"
+  },
+  {
+    icon: <MessageSquare className="w-4 h-4 mr-2" />,
+    label: "Messages",
+    key: "messages"
   },
   {
     icon: <Users className="w-4 h-4 mr-2" />,
