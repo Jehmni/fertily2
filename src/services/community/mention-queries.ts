@@ -25,13 +25,16 @@ export const mentionQueries = {
     postId?: string,
     commentId?: string
   ): Promise<UserMention> => {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) throw new Error('No active session');
+
     const { data, error } = await supabase
       .from('user_mentions')
       .insert({
         mentioned_user_id: mentionedUserId,
         post_id: postId,
         comment_id: commentId,
-        mentioning_user_id: (await supabase.auth.getUser()).data.user?.id,
+        mentioning_user_id: user.id,
       })
       .select()
       .single();
@@ -40,4 +43,3 @@ export const mentionQueries = {
     return data;
   },
 };
-

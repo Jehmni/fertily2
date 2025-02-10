@@ -9,7 +9,7 @@ import {
 } from "./community/queries";
 import { followQueries } from "./community/follow-queries";
 import { transformPostData, transformCommentData } from "./community/transformers";
-import type { CommunityPost, PostComment, PostReaction, PostCategory, PostBookmark, MentionSuggestion } from "@/types/community";
+import type { CommunityPost, PostComment, PostReaction, PostCategory, PostBookmark, MentionSuggestion, UserMention } from "@/types/community";
 
 export const CommunityService = {
   async getPosts(filters?: { 
@@ -132,14 +132,10 @@ export const CommunityService = {
   },
 
   async searchUsers(query: string): Promise<MentionSuggestion[]> {
-    const { data, error } = await mentionQueries.searchUsers(query);
-    if (error) throw error;
-    return data;
+    return mentionQueries.searchUsers(query);
   },
 
-  async createMention(mentionedUserId: string, postId?: string, commentId?: string) {
-    const { data, error } = await mentionQueries.createMention(mentionedUserId, postId, commentId);
-    if (error) throw error;
-    return data;
+  async createMention(mentionedUserId: string, postId?: string, commentId?: string): Promise<UserMention> {
+    return mentionQueries.createMention(mentionedUserId, postId, commentId);
   }
 };
