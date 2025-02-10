@@ -36,9 +36,9 @@ export const SearchBar = ({ value, onChange }: SearchBarProps) => {
   // Set initial value
   useEffect(() => {
     if (inputRef.current) {
-      inputRef.current.value = value;
+      inputRef.current.value = value || '';
     }
-  }, []); // Only run once on mount
+  }, [value]); // Update when value prop changes
 
   return (
     <div className="relative flex-1">
