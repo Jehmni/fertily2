@@ -218,7 +218,6 @@ export const Messages = () => {
 
   return (
     <Card className="w-full max-w-4xl mx-auto h-[600px] flex">
-      {/* Conversations List */}
       <div className="w-1/3 border-r overflow-y-auto">
         {conversations.map((conv) => (
           <div
@@ -229,10 +228,10 @@ export const Messages = () => {
             onClick={() => setSelectedUserId(conv.user_id)}
           >
             <div className="flex items-center gap-3">
-              <Avatar>
+              <Avatar className="h-8 w-8" style={{ backgroundColor: conv.avatar_color || '#E2E8F0' }}>
                 <AvatarImage src={conv.avatar_url || undefined} />
-                <AvatarFallback style={{ backgroundColor: conv.avatar_color || undefined }}>
-                  {conv.first_name?.[0] || ''}{conv.last_name?.[0] || ''}
+                <AvatarFallback>
+                  {`${conv.first_name?.[0] || ''}${conv.last_name?.[0] || ''}`}
                 </AvatarFallback>
               </Avatar>
               <div className="flex-1 min-w-0">
@@ -250,7 +249,6 @@ export const Messages = () => {
         ))}
       </div>
 
-      {/* Messages Area */}
       <div className="flex-1 flex flex-col">
         {selectedUserId ? (
           <>
@@ -258,10 +256,18 @@ export const Messages = () => {
               {messages.map((message) => (
                 <div
                   key={message.id}
-                  className={`flex ${
+                  className={`flex items-start gap-3 ${
                     message.sender_id === selectedUserId ? "justify-start" : "justify-end"
                   }`}
                 >
+                  {message.sender_id === selectedUserId && (
+                    <Avatar className="h-8 w-8" style={{ backgroundColor: message.sender.avatar_color || '#E2E8F0' }}>
+                      <AvatarImage src={message.sender.avatar_url || undefined} />
+                      <AvatarFallback>
+                        {`${message.sender.first_name?.[0] || ''}${message.sender.last_name?.[0] || ''}`}
+                      </AvatarFallback>
+                    </Avatar>
+                  )}
                   <div
                     className={`max-w-[70%] p-3 rounded-lg ${
                       message.sender_id === selectedUserId
@@ -271,6 +277,14 @@ export const Messages = () => {
                   >
                     {message.content}
                   </div>
+                  {message.sender_id !== selectedUserId && (
+                    <Avatar className="h-8 w-8" style={{ backgroundColor: message.sender.avatar_color || '#E2E8F0' }}>
+                      <AvatarImage src={message.sender.avatar_url || undefined} />
+                      <AvatarFallback>
+                        {`${message.sender.first_name?.[0] || ''}${message.sender.last_name?.[0] || ''}`}
+                      </AvatarFallback>
+                    </Avatar>
+                  )}
                 </div>
               ))}
             </div>

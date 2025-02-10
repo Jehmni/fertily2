@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -34,7 +35,6 @@ export const CommentsDialog = ({ post, onOpenChange }: CommentsDialogProps) => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["post-comments", post?.id] });
       setNewComment({ content: "", anonymous: false });
-      onOpenChange(false); // Close dialog after successful comment
       toast({ title: "Success", description: "Your comment has been added" });
     },
   });
@@ -64,11 +64,11 @@ export const CommentsDialog = ({ post, onOpenChange }: CommentsDialogProps) => {
                 <div key={comment.id} className="flex items-start gap-3">
                   <Avatar 
                     className="h-8 w-8" 
-                    style={{ 
-                      backgroundColor: comment.profile?.avatar_color || '#E2E8F0'
-                    }}
+                    style={{ backgroundColor: comment.profile?.avatar_color || '#E2E8F0' }}
                   >
-                    <AvatarImage src={comment.profile?.avatar_url || undefined} />
+                    {!comment.anonymous && (
+                      <AvatarImage src={comment.profile?.avatar_url || undefined} />
+                    )}
                     <AvatarFallback>
                       {comment.anonymous 
                         ? comment.anonymous_alias[0]
