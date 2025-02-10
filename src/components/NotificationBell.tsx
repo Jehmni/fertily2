@@ -10,6 +10,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/lib/supabase";
+import { useNavigate } from "react-router-dom";
 
 interface Notification {
   id: string;
@@ -18,10 +19,13 @@ interface Notification {
   read: boolean;
   created_at: string;
   type: string;
+  sender_id?: string;
+  post_id?: string;
 }
 
 export const NotificationBell = () => {
   const { toast } = useToast();
+  const navigate = useNavigate();
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
 
@@ -87,6 +91,33 @@ export const NotificationBell = () => {
     };
   };
 
+  const handleNotificationClick = async (notification: Notification) => {
+    try {
+      // Mark as read first
+      await markAsRead(notification.id);
+
+      // Navigate based on notification type
+      switch (notification.type) {
+        case 'follow':
+          navigate('/community');
+          break;
+        case 'message':
+          navigate('/', { state: { activeView: 'messages', userId: notification.sender_id } });
+          break;
+        case 'comment':
+        case 'reaction':
+          if (notification.post_id) {
+            navigate('/community', { state: { postId: notification.post_id } });
+          }
+          break;
+        default:
+          navigate('/');
+      }
+    } catch (error) {
+      console.error('Error handling notification click:', error);
+    }
+  };
+
   const markAsRead = async (id: string) => {
     try {
       const { error } = await supabase
@@ -128,10 +159,10 @@ export const NotificationBell = () => {
           notifications.map((notification) => (
             <DropdownMenuItem
               key={notification.id}
-              className={`flex flex-col items-start p-4 ${
+              className={`flex flex-col items-start p-4 cursor-pointer ${
                 !notification.read ? 'bg-muted/50' : ''
               }`}
-              onClick={() => markAsRead(notification.id)}
+              onClick={() => handleNotificationClick(notification)}
             >
               <div className="font-semibold">{notification.title}</div>
               <div className="text-sm text-muted-foreground">{notification.message}</div>
