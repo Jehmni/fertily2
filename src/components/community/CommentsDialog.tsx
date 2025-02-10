@@ -1,16 +1,12 @@
 
 import { useState } from "react";
-import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Label } from "@/components/ui/label";
-import { Switch } from "@/components/ui/switch";
 import { useToast } from "@/hooks/use-toast";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { CommunityService } from "@/services/CommunityService";
-import type { CommunityPost, PostComment } from "@/types/community";
-import { useAuth } from "@/hooks/useAuth";
-import { MentionsInput } from "./MentionsInput";
-import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
+import type { CommunityPost } from "@/types/community";
+import { CommentsList } from "./comments/CommentsList";
+import { CommentForm } from "./comments/CommentForm";
 
 interface CommentsDialogProps {
   post: CommunityPost | null;
@@ -20,7 +16,6 @@ interface CommentsDialogProps {
 export const CommentsDialog = ({ post, onOpenChange }: CommentsDialogProps) => {
   const { toast } = useToast();
   const queryClient = useQueryClient();
-  const { user } = useAuth();
   const [newComment, setNewComment] = useState({ content: "", anonymous: false });
 
   const { data: comments = [], isLoading: isLoadingComments } = useQuery({
@@ -39,14 +34,14 @@ export const CommentsDialog = ({ post, onOpenChange }: CommentsDialogProps) => {
     },
   });
 
-  const getCommentDisplayName = (comment: PostComment) => {
-    const isOwnComment = user?.id === comment.user_id;
-    if (comment.anonymous) {
-      return isOwnComment 
-        ? `${comment.anonymous_alias} (You)` 
-        : comment.anonymous_alias;
+  const handleSubmit = () => {
+    if (post) {
+      addCommentMutation.mutate({
+        postId: post.id,
+        content: newComment.content,
+        anonymous: newComment.anonymous,
+      });
     }
-    return `${comment.profile?.first_name} ${comment.profile?.last_name}`;
   };
 
   return (
@@ -56,67 +51,20 @@ export const CommentsDialog = ({ post, onOpenChange }: CommentsDialogProps) => {
           <DialogTitle>Comments</DialogTitle>
         </DialogHeader>
         <div className="space-y-4">
-          <div className="space-y-4">
-            {isLoadingComments ? (
-              <div>Loading comments...</div>
-            ) : (
-              comments.map((comment: PostComment) => (
-                <div key={comment.id} className="flex items-start gap-3">
-                  <Avatar 
-                    className="h-8 w-8" 
-                    style={{ backgroundColor: comment.profile?.avatar_color || '#E2E8F0' }}
-                  >
-                    {!comment.anonymous && (
-                      <AvatarImage src={comment.profile?.avatar_url || undefined} />
-                    )}
-                    <AvatarFallback>
-                      {comment.anonymous 
-                        ? comment.anonymous_alias[0]
-                        : `${comment.profile?.first_name?.[0] || ''}${comment.profile?.last_name?.[0] || ''}`}
-                    </AvatarFallback>
-                  </Avatar>
-                  <div className="flex-1 p-3 bg-muted rounded">
-                    <p className="text-sm font-medium">
-                      {getCommentDisplayName(comment)}
-                    </p>
-                    <p>{comment.content}</p>
-                  </div>
-                </div>
-              ))
-            )}
-          </div>
-          <div className="space-y-2">
-            <MentionsInput
-              value={newComment.content}
-              onChange={(content) => setNewComment(prev => ({ ...prev, content }))}
-              placeholder="Add a supportive comment... Use @ to mention others"
-            />
-            <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-2">
-                <Switch
-                  checked={newComment.anonymous}
-                  onCheckedChange={(checked) => setNewComment(prev => ({ ...prev, anonymous: checked }))}
-                />
-                <Label>Comment Anonymously</Label>
-              </div>
-              <Button
-                onClick={() => {
-                  if (post) {
-                    addCommentMutation.mutate({
-                      postId: post.id,
-                      content: newComment.content,
-                      anonymous: newComment.anonymous,
-                    });
-                  }
-                }}
-                disabled={!newComment.content}
-              >
-                Add Comment
-              </Button>
-            </div>
-          </div>
+          <CommentsList 
+            comments={comments} 
+            isLoading={isLoadingComments} 
+          />
+          <CommentForm
+            content={newComment.content}
+            anonymous={newComment.anonymous}
+            onContentChange={(content) => setNewComment(prev => ({ ...prev, content }))}
+            onAnonymousChange={(checked) => setNewComment(prev => ({ ...prev, anonymous: checked }))}
+            onSubmit={handleSubmit}
+          />
         </div>
       </DialogContent>
     </Dialog>
   );
 };
+
