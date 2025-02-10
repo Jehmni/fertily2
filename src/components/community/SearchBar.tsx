@@ -1,7 +1,7 @@
 
 import { Search } from "lucide-react";
 import { Input } from "@/components/ui/input";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 
 interface SearchBarProps {
   value: string;
@@ -11,15 +11,22 @@ interface SearchBarProps {
 export const SearchBar = ({ value, onChange }: SearchBarProps) => {
   const [localValue, setLocalValue] = useState(value);
 
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      if (localValue !== value) {
-        onChange(localValue);
-      }
-    }, 300);
-
-    return () => clearTimeout(timer);
+  // Memoize the debounced onChange handler
+  const debouncedOnChange = useCallback(() => {
+    if (localValue !== value) {
+      onChange(localValue);
+    }
   }, [localValue, onChange, value]);
+
+  useEffect(() => {
+    const timer = setTimeout(debouncedOnChange, 300);
+    return () => clearTimeout(timer);
+  }, [debouncedOnChange]);
+
+  // Sync local value when prop value changes
+  useEffect(() => {
+    setLocalValue(value);
+  }, [value]);
 
   return (
     <div className="relative flex-1">
