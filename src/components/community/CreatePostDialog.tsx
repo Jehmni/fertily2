@@ -5,13 +5,13 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
-import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { CommunityService } from "@/services/CommunityService";
 import type { PostCategory } from "@/types/community";
 import { useAuth } from "@/hooks/useAuth";
 import { ImageUpload } from "./ImageUpload";
+import { RichTextEditor } from "./RichTextEditor";
 
 interface CreatePostDialogProps {
   categories: PostCategory[];
@@ -23,6 +23,7 @@ type NewPost = {
   category: string;
   anonymous: boolean;
   image_urls: string[];
+  content_format: 'plain' | 'rich';
 };
 
 const initialPostState: NewPost = {
@@ -31,6 +32,7 @@ const initialPostState: NewPost = {
   category: "seeking-support",
   anonymous: false,
   image_urls: [],
+  content_format: 'rich'
 };
 
 export const CreatePostDialog = ({ categories }: CreatePostDialogProps) => {
@@ -55,6 +57,7 @@ export const CreatePostDialog = ({ categories }: CreatePostDialogProps) => {
         category: draft.category || "seeking-support",
         anonymous: false,
         image_urls: [],
+        content_format: 'rich'
       });
     }
   }, [draft]);
@@ -67,9 +70,9 @@ export const CreatePostDialog = ({ categories }: CreatePostDialogProps) => {
     },
   });
 
-  const handleContentChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    const { name, value } = e.target;
-    setNewPost(prev => ({ ...prev, [name]: value }));
+  const handleTitleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { value } = e.target;
+    setNewPost(prev => ({ ...prev, title: value }));
 
     if (autosaveTimeout) {
       clearTimeout(autosaveTimeout);
@@ -77,8 +80,26 @@ export const CreatePostDialog = ({ categories }: CreatePostDialogProps) => {
 
     const timeout = setTimeout(() => {
       saveDraftMutation.mutate({
-        title: name === 'title' ? value : newPost.title,
-        content: name === 'content' ? value : newPost.content,
+        title: value,
+        content: newPost.content,
+        category: newPost.category
+      });
+    }, 1500);
+
+    setAutosaveTimeout(timeout);
+  };
+
+  const handleContentChange = (content: string) => {
+    setNewPost(prev => ({ ...prev, content }));
+
+    if (autosaveTimeout) {
+      clearTimeout(autosaveTimeout);
+    }
+
+    const timeout = setTimeout(() => {
+      saveDraftMutation.mutate({
+        title: newPost.title,
+        content,
         category: newPost.category
       });
     }, 1500);
@@ -128,7 +149,7 @@ export const CreatePostDialog = ({ categories }: CreatePostDialogProps) => {
       <DialogTrigger asChild>
         <Button>Share Your Story</Button>
       </DialogTrigger>
-      <DialogContent>
+      <DialogContent className="max-w-2xl">
         <DialogHeader>
           <DialogTitle>Share with the Community</DialogTitle>
         </DialogHeader>
@@ -138,7 +159,7 @@ export const CreatePostDialog = ({ categories }: CreatePostDialogProps) => {
             <Input
               name="title"
               value={newPost.title}
-              onChange={handleContentChange}
+              onChange={handleTitleChange}
               placeholder="Give your post a title"
             />
           </div>
@@ -158,12 +179,9 @@ export const CreatePostDialog = ({ categories }: CreatePostDialogProps) => {
           </div>
           <div>
             <Label>Your Story</Label>
-            <Textarea
-              name="content"
-              value={newPost.content}
+            <RichTextEditor
+              content={newPost.content}
               onChange={handleContentChange}
-              placeholder="Share your experience..."
-              rows={5}
             />
           </div>
           <div>
@@ -183,6 +201,7 @@ export const CreatePostDialog = ({ categories }: CreatePostDialogProps) => {
           <Button
             onClick={handleSubmit}
             disabled={!newPost.title || !newPost.content || createPostMutation.isPending}
+            className="w-full"
           >
             {createPostMutation.isPending ? "Sharing..." : "Share"}
           </Button>
