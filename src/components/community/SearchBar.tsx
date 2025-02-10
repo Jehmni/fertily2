@@ -1,7 +1,7 @@
 
 import { Search } from "lucide-react";
 import { Input } from "@/components/ui/input";
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useRef } from "react";
 
 interface SearchBarProps {
   value: string;
@@ -10,18 +10,31 @@ interface SearchBarProps {
 
 export const SearchBar = ({ value, onChange }: SearchBarProps) => {
   const [localValue, setLocalValue] = useState(value);
+  const timerRef = useRef<NodeJS.Timeout>();
 
-  // Memoize the debounced onChange handler
-  const debouncedOnChange = useCallback(() => {
-    if (localValue !== value) {
-      onChange(localValue);
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const newValue = e.target.value;
+    setLocalValue(newValue);
+    
+    // Clear existing timer
+    if (timerRef.current) {
+      clearTimeout(timerRef.current);
     }
-  }, [localValue, onChange, value]);
 
+    // Set new timer
+    timerRef.current = setTimeout(() => {
+      onChange(newValue);
+    }, 300);
+  };
+
+  // Cleanup timer on unmount
   useEffect(() => {
-    const timer = setTimeout(debouncedOnChange, 300);
-    return () => clearTimeout(timer);
-  }, [debouncedOnChange]);
+    return () => {
+      if (timerRef.current) {
+        clearTimeout(timerRef.current);
+      }
+    };
+  }, []);
 
   // Sync local value when prop value changes
   useEffect(() => {
@@ -35,7 +48,7 @@ export const SearchBar = ({ value, onChange }: SearchBarProps) => {
         placeholder="Search posts..."
         className="pl-8"
         value={localValue}
-        onChange={(e) => setLocalValue(e.target.value)}
+        onChange={handleChange}
       />
     </div>
   );
