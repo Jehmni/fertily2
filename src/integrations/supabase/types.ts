@@ -584,6 +584,27 @@ export type Database = {
           },
         ]
       }
+      preset_avatars: {
+        Row: {
+          created_at: string
+          id: string
+          name: string
+          url: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          name: string
+          url: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          name?: string
+          url?: string
+        }
+        Relationships: []
+      }
       private_messages: {
         Row: {
           content: string
