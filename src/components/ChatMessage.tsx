@@ -5,6 +5,9 @@ import { Button } from "@/components/ui/button";
 import { useState } from "react";
 import { VoiceService } from "@/services/VoiceService";
 import { useToast } from "@/components/ui/use-toast";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/lib/supabase";
 
 interface ChatMessageProps {
   message: string;
@@ -14,6 +17,23 @@ interface ChatMessageProps {
 export const ChatMessage = ({ message, isBot }: ChatMessageProps) => {
   const { toast } = useToast();
   const [isPlaying, setIsPlaying] = useState(false);
+
+  const { data: profile } = useQuery({
+    queryKey: ['user-profile'],
+    queryFn: async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return null;
+      
+      const { data } = await supabase
+        .from('profiles')
+        .select('avatar_url, avatar_color, first_name, last_name')
+        .eq('id', user.id)
+        .single();
+      
+      return data;
+    },
+    enabled: !isBot
+  });
 
   const playMessage = async () => {
     try {
@@ -57,10 +77,15 @@ export const ChatMessage = ({ message, isBot }: ChatMessageProps) => {
   return (
     <div
       className={cn(
-        "flex w-full mb-4 animate-fadeIn",
+        "flex w-full mb-4 animate-fadeIn items-start gap-3",
         isBot ? "justify-start" : "justify-end"
       )}
     >
+      {isBot && (
+        <Avatar className="h-8 w-8 bg-primary">
+          <AvatarFallback>AI</AvatarFallback>
+        </Avatar>
+      )}
       <div
         className={cn(
           "max-w-[80%] rounded-lg p-4 flex items-start gap-2",
@@ -82,6 +107,14 @@ export const ChatMessage = ({ message, isBot }: ChatMessageProps) => {
           </Button>
         )}
       </div>
+      {!isBot && profile && (
+        <Avatar className="h-8 w-8" style={{ backgroundColor: profile.avatar_color }}>
+          <AvatarImage src={profile.avatar_url || undefined} />
+          <AvatarFallback>
+            {`${profile.first_name?.[0] || ''}${profile.last_name?.[0] || ''}`}
+          </AvatarFallback>
+        </Avatar>
+      )}
     </div>
   );
 };

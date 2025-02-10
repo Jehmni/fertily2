@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { format } from "date-fns";
 import { Heart, MessageCircle, Bookmark, PartyPopper, ThumbsUp, Lightbulb, Star } from "lucide-react";
@@ -11,6 +10,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { toast } from "@/hooks/use-toast";
 import { RichTextEditor } from "./RichTextEditor";
 import { UserProfile } from "./UserProfile";
+import { Avatar, AvatarImage, AvatarFallback } from "@radix-ui/react-avatar";
 
 interface PostCardProps {
   post: CommunityPost;
@@ -72,20 +72,35 @@ export const PostCard = ({ post, onCommentClick, bookmarked, onBookmarkToggle }:
       <Card>
         <CardHeader>
           <div className="flex justify-between items-start">
-            <div className="space-y-1">
-              <CardTitle>{post.title}</CardTitle>
-              <div className="flex items-center space-x-2">
-                <button 
-                  className={`text-sm ${!post.anonymous ? "text-primary hover:underline cursor-pointer" : "text-muted-foreground cursor-default"}`}
-                  onClick={() => !post.anonymous && setShowProfile(true)}
-                  disabled={post.anonymous}
-                >
-                  Posted by {postLabel}
-                </button>
-                <span className="text-sm text-muted-foreground">•</span>
-                <span className="text-sm text-muted-foreground">
-                  {format(new Date(post.created_at), "MMM d, yyyy")}
-                </span>
+            <div className="flex items-center gap-3">
+              <Avatar 
+                className="h-10 w-10" 
+                style={{ 
+                  backgroundColor: post.profile?.avatar_color || '#E2E8F0'
+                }}
+              >
+                <AvatarImage src={post.profile?.avatar_url || undefined} />
+                <AvatarFallback>
+                  {post.anonymous 
+                    ? post.anonymous_alias[0]
+                    : `${post.profile?.first_name?.[0] || ''}${post.profile?.last_name?.[0] || ''}`}
+                </AvatarFallback>
+              </Avatar>
+              <div className="space-y-1">
+                <CardTitle>{post.title}</CardTitle>
+                <div className="flex items-center space-x-2">
+                  <button 
+                    className={`text-sm ${!post.anonymous ? "text-primary hover:underline cursor-pointer" : "text-muted-foreground cursor-default"}`}
+                    onClick={() => !post.anonymous && setShowProfile(true)}
+                    disabled={post.anonymous}
+                  >
+                    Posted by {postLabel}
+                  </button>
+                  <span className="text-sm text-muted-foreground">•</span>
+                  <span className="text-sm text-muted-foreground">
+                    {format(new Date(post.created_at), "MMM d, yyyy")}
+                  </span>
+                </div>
               </div>
             </div>
             <span className="px-2 py-1 bg-primary/10 rounded text-sm">

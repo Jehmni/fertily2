@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -10,6 +9,7 @@ import { CommunityService } from "@/services/CommunityService";
 import type { CommunityPost, PostComment } from "@/types/community";
 import { useAuth } from "@/hooks/useAuth";
 import { MentionsInput } from "./MentionsInput";
+import { Avatar, AvatarImage, AvatarFallback } from "@radix-ui/react-avatar";
 
 interface CommentsDialogProps {
   post: CommunityPost | null;
@@ -61,11 +61,26 @@ export const CommentsDialog = ({ post, onOpenChange }: CommentsDialogProps) => {
               <div>Loading comments...</div>
             ) : (
               comments.map((comment: PostComment) => (
-                <div key={comment.id} className="p-3 bg-muted rounded">
-                  <p className="text-sm font-medium">
-                    {getCommentDisplayName(comment)}
-                  </p>
-                  <p>{comment.content}</p>
+                <div key={comment.id} className="flex items-start gap-3">
+                  <Avatar 
+                    className="h-8 w-8" 
+                    style={{ 
+                      backgroundColor: comment.profile?.avatar_color || '#E2E8F0'
+                    }}
+                  >
+                    <AvatarImage src={comment.profile?.avatar_url || undefined} />
+                    <AvatarFallback>
+                      {comment.anonymous 
+                        ? comment.anonymous_alias[0]
+                        : `${comment.profile?.first_name?.[0] || ''}${comment.profile?.last_name?.[0] || ''}`}
+                    </AvatarFallback>
+                  </Avatar>
+                  <div className="flex-1 p-3 bg-muted rounded">
+                    <p className="text-sm font-medium">
+                      {getCommentDisplayName(comment)}
+                    </p>
+                    <p>{comment.content}</p>
+                  </div>
                 </div>
               ))
             )}
@@ -105,4 +120,3 @@ export const CommentsDialog = ({ post, onOpenChange }: CommentsDialogProps) => {
     </Dialog>
   );
 };
-
