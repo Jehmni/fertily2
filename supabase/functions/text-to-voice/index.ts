@@ -9,15 +9,16 @@ const corsHeaders = {
 
 function arrayBufferToBase64(buffer: ArrayBuffer): string {
   const bytes = new Uint8Array(buffer);
-  let binary = '';
+  const chunks: string[] = [];
   const chunkSize = 1024;
   
   for (let i = 0; i < bytes.length; i += chunkSize) {
     const chunk = bytes.slice(i, Math.min(i + chunkSize, bytes.length));
-    chunk.forEach((b) => binary += String.fromCharCode(b));
+    const binaryChunk = String.fromCharCode.apply(null, chunk);
+    chunks.push(binaryChunk);
   }
   
-  return btoa(binary);
+  return btoa(chunks.join(''));
 }
 
 serve(async (req) => {
