@@ -2,30 +2,42 @@
 import { supabase } from "@/lib/supabase";
 
 export const followQueries = {
-  followUser: (userId: string) =>
-    supabase
-      .from('user_follows')
-      .insert([{ follower_id: supabase.auth.getUser().then(({ data }) => data.user?.id), following_id: userId }]),
+  async getCurrentUserId() {
+    const { data: { user } } = await supabase.auth.getUser();
+    return user?.id;
+  },
 
-  unfollowUser: (userId: string) =>
-    supabase
+  async followUser(userId: string) {
+    const currentUserId = await this.getCurrentUserId();
+    return supabase
+      .from('user_follows')
+      .insert([{ follower_id: currentUserId, following_id: userId }]);
+  },
+
+  async unfollowUser(userId: string) {
+    const currentUserId = await this.getCurrentUserId();
+    return supabase
       .from('user_follows')
       .delete()
       .eq('following_id', userId)
-      .eq('follower_id', supabase.auth.getUser().then(({ data }) => data.user?.id)),
+      .eq('follower_id', currentUserId);
+  },
 
-  getFollowingStatus: (userId: string) =>
-    supabase
+  async getFollowingStatus(userId: string) {
+    const currentUserId = await this.getCurrentUserId();
+    return supabase
       .from('user_follows')
       .select('id')
       .eq('following_id', userId)
-      .eq('follower_id', supabase.auth.getUser().then(({ data }) => data.user?.id))
-      .single(),
+      .eq('follower_id', currentUserId)
+      .maybeSingle();
+  },
 
-  getFollowerCount: (userId: string) =>
-    supabase
+  async getFollowerCount(userId: string) {
+    return supabase
       .from('user_follower_counts')
       .select('follower_count, following_count')
       .eq('user_id', userId)
-      .single()
+      .single();
+  }
 };
