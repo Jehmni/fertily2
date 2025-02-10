@@ -7,15 +7,22 @@ import { CreatePostDialog } from "./community/CreatePostDialog";
 import { PostCard } from "./community/PostCard";
 import { CommentsDialog } from "./community/CommentsDialog";
 import { Input } from "./ui/input";
-import { Search, Bookmark } from "lucide-react";
+import { Search, Bookmark, ArrowUpDown } from "lucide-react";
 import { Button } from "./ui/button";
 import { useToast } from "@/hooks/use-toast";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 export const Community = () => {
   const [selectedPost, setSelectedPost] = useState<CommunityPost | null>(null);
   const [selectedCategory, setSelectedCategory] = useState<string>("");
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [showBookmarked, setShowBookmarked] = useState(false);
+  const [sortBy, setSortBy] = useState<'newest' | 'popular'>('newest');
   const { toast } = useToast();
 
   const { data: categories = [], isLoading: isCategoriesLoading } = useQuery({
@@ -24,10 +31,11 @@ export const Community = () => {
   });
 
   const { data: posts = [], isLoading: isPostsLoading } = useQuery({
-    queryKey: ["community-posts", selectedCategory, searchQuery],
+    queryKey: ["community-posts", selectedCategory, searchQuery, sortBy],
     queryFn: () => CommunityService.getPosts({ 
       category: selectedCategory,
-      query: searchQuery
+      query: searchQuery,
+      sortBy: sortBy
     }),
   });
 
@@ -63,13 +71,31 @@ export const Community = () => {
             />
           </div>
         </div>
-        <Button
-          variant={showBookmarked ? "default" : "outline"}
-          onClick={() => setShowBookmarked(!showBookmarked)}
-        >
-          <Bookmark className="h-4 w-4 mr-2" />
-          Bookmarked
-        </Button>
+        <div className="flex space-x-2">
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline">
+                <ArrowUpDown className="h-4 w-4 mr-2" />
+                {sortBy === 'newest' ? 'Newest' : 'Most Popular'}
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent>
+              <DropdownMenuItem onClick={() => setSortBy('newest')}>
+                Newest
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => setSortBy('popular')}>
+                Most Popular
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+          <Button
+            variant={showBookmarked ? "default" : "outline"}
+            onClick={() => setShowBookmarked(!showBookmarked)}
+          >
+            <Bookmark className="h-4 w-4 mr-2" />
+            Bookmarked
+          </Button>
+        </div>
       </div>
 
       <div className="flex flex-wrap gap-2">

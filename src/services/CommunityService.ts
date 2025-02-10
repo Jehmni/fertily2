@@ -4,7 +4,11 @@ import { transformPostData, transformCommentData } from "./community/transformer
 import type { CommunityPost, PostComment, PostReaction, PostCategory, PostBookmark } from "@/types/community";
 
 export const CommunityService = {
-  async getPosts(filters?: { category?: string; query?: string }): Promise<CommunityPost[]> {
+  async getPosts(filters?: { 
+    category?: string; 
+    query?: string;
+    sortBy?: 'newest' | 'popular';
+  }): Promise<CommunityPost[]> {
     const { data: posts, error } = await postQueries.getPosts(filters);
     if (error) throw error;
 

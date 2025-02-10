@@ -2,7 +2,11 @@
 import { supabase } from "@/lib/supabase";
 
 export const postQueries = {
-  getPosts: (filters?: { category?: string; query?: string }) => {
+  getPosts: (filters?: { 
+    category?: string; 
+    query?: string;
+    sortBy?: 'newest' | 'popular';
+  }) => {
     let query = supabase
       .from('community_posts')
       .select(`
@@ -10,8 +14,7 @@ export const postQueries = {
         profiles (first_name, last_name),
         reactions_count:post_reaction_counts(emoji_type, count),
         comments_count:post_comments(count)
-      `)
-      .order('created_at', { ascending: false });
+      `);
 
     if (filters?.category) {
       query = query.eq('category', filters.category);
@@ -19,6 +22,15 @@ export const postQueries = {
 
     if (filters?.query) {
       query = query.or(`title.ilike.%${filters.query}%,content.ilike.%${filters.query}%`);
+    }
+
+    // Add sorting logic
+    if (filters?.sortBy === 'popular') {
+      // Order by total reactions count
+      query = query.order('reactions_count', { foreignTable: 'post_reaction_counts', ascending: false });
+    } else {
+      // Default to newest
+      query = query.order('created_at', { ascending: false });
     }
 
     return query;
