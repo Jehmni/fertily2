@@ -32,7 +32,7 @@ export const MentionsInput = ({ value, onChange, placeholder }: MentionsInputPro
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const [dropdownPosition, setDropdownPosition] = useState({ top: 0, left: 0 });
 
-  const { data: suggestions } = useQuery({
+  const { data: suggestions = [] } = useQuery({
     queryKey: ["mention-suggestions", mentionState.searchTerm],
     queryFn: () => CommunityService.searchUsers(mentionState.searchTerm),
     enabled: mentionState.searchTerm.length > 0,
@@ -103,17 +103,22 @@ export const MentionsInput = ({ value, onChange, placeholder }: MentionsInputPro
 
     const lastAtPos = value.lastIndexOf('@', mentionState.cursorPosition);
     const newValue = `${value.slice(0, lastAtPos)}@${user.display_name}${value.slice(mentionState.cursorPosition)}`;
-    const newCursorPosition = lastAtPos + user.display_name.length + 1;
     
     onChange(newValue);
     setMentionState({
       isOpen: false,
       searchTerm: "",
-      cursorPosition: newCursorPosition
+      cursorPosition: lastAtPos + user.display_name.length + 1
     });
 
-    textareaRef.current.focus();
-    textareaRef.current.setSelectionRange(newCursorPosition, newCursorPosition);
+    // Set cursor position after state update
+    requestAnimationFrame(() => {
+      if (textareaRef.current) {
+        const newPosition = lastAtPos + user.display_name.length + 1;
+        textareaRef.current.focus();
+        textareaRef.current.setSelectionRange(newPosition, newPosition);
+      }
+    });
   };
 
   useEffect(() => {
@@ -144,7 +149,7 @@ export const MentionsInput = ({ value, onChange, placeholder }: MentionsInputPro
         placeholder={placeholder}
         className="min-h-[100px]"
       />
-      <Popover open={mentionState.isOpen}>
+      <Popover open={mentionState.isOpen && suggestions.length > 0}>
         <PopoverTrigger className="hidden" />
         <PopoverContent 
           className="p-0 w-[200px]" 
@@ -158,7 +163,7 @@ export const MentionsInput = ({ value, onChange, placeholder }: MentionsInputPro
             <CommandInput placeholder="Search users..." />
             <CommandEmpty>No users found.</CommandEmpty>
             <CommandGroup>
-              {suggestions?.map((user) => (
+              {(suggestions || []).map((user) => (
                 <CommandItem
                   key={user.id}
                   onSelect={() => insertMention(user)}
@@ -174,3 +179,4 @@ export const MentionsInput = ({ value, onChange, placeholder }: MentionsInputPro
     </div>
   );
 };
+
