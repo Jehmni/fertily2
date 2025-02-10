@@ -2,6 +2,8 @@
 export interface Profile {
   first_name: string;
   last_name: string;
+  avatar_url?: string | null;
+  avatar_color?: string | null;
 }
 
 export interface CommunityPost {
