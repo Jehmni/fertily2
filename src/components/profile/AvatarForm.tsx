@@ -55,6 +55,11 @@ export const AvatarForm = ({
     fetchPresetAvatars();
   }, []);
 
+  const handleAvatarChange = (url: string) => {
+    onAvatarUrlChange(url);
+    setIsOpen(false); // Close the collapsible when an avatar is selected
+  };
+
   return (
     <div className="space-y-4">
       <Collapsible open={isOpen} onOpenChange={setIsOpen}>
@@ -77,7 +82,7 @@ export const AvatarForm = ({
         <CollapsibleContent className="mt-4">
           <RadioGroup
             value={avatarUrl || ''}
-            onValueChange={onAvatarUrlChange}
+            onValueChange={handleAvatarChange}
             className="grid grid-cols-3 sm:grid-cols-4 gap-4"
           >
             {presetAvatars.map((avatar) => (
