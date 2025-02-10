@@ -81,10 +81,10 @@ export const AvatarForm = ({
           <RadioGroup
             value={avatarUrl || ''}
             onValueChange={onAvatarUrlChange}
-            className="grid grid-cols-2 sm:grid-cols-4 gap-4"
+            className="grid grid-cols-3 sm:grid-cols-4 gap-4"
           >
             {presetAvatars.map((avatar) => (
-              <div key={avatar.id} className="text-center space-y-2">
+              <div key={avatar.id} className="text-center">
                 <RadioGroupItem
                   value={avatar.url}
                   id={avatar.id}
@@ -95,12 +95,9 @@ export const AvatarForm = ({
                   className="block cursor-pointer rounded-lg p-2 hover:bg-muted peer-checked:ring-2 peer-checked:ring-primary"
                 >
                   <Avatar className="h-16 w-16 mx-auto">
-                    <AvatarImage src={avatar.url} alt={avatar.name} />
-                    <AvatarFallback>{avatar.name[0]}</AvatarFallback>
+                    <AvatarImage src={avatar.url} alt="Avatar option" />
+                    <AvatarFallback>Avatar</AvatarFallback>
                   </Avatar>
-                  <span className="mt-1 block text-xs text-muted-foreground">
-                    {avatar.name}
-                  </span>
                 </label>
               </div>
             ))}
