@@ -1,3 +1,4 @@
+
 import { 
   postQueries, 
   categoryQueries, 
@@ -143,12 +144,27 @@ export const CommunityService = {
   async getUserProfile(userId: string) {
     const { data, error } = await supabase
       .from('profiles')
-      .select('first_name, last_name')
+      .select('first_name, last_name, avatar_url, avatar_color')
       .eq('id', userId)
       .single();
       
     if (error) throw error;
     return data;
+  },
+
+  async updateProfile(updates: {
+    avatar_url?: string;
+    avatar_color?: string;
+  }) {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) throw new Error('No active session');
+
+    const { error } = await supabase
+      .from('profiles')
+      .update(updates)
+      .eq('id', user.id);
+
+    if (error) throw error;
   },
 
   async sendPrivateMessage(recipientId: string, content: string) {

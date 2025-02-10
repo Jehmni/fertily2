@@ -616,6 +616,8 @@ export type Database = {
       }
       profiles: {
         Row: {
+          avatar_color: string | null
+          avatar_url: string | null
           created_at: string
           cycle_length: number | null
           date_of_birth: string | null
@@ -629,6 +631,8 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          avatar_color?: string | null
+          avatar_url?: string | null
           created_at?: string
           cycle_length?: number | null
           date_of_birth?: string | null
@@ -642,6 +646,8 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          avatar_color?: string | null
+          avatar_url?: string | null
           created_at?: string
           cycle_length?: number | null
           date_of_birth?: string | null
