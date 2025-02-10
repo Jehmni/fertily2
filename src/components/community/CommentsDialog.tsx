@@ -34,6 +34,7 @@ export const CommentsDialog = ({ post, onOpenChange }: CommentsDialogProps) => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["post-comments", post?.id] });
       setNewComment({ content: "", anonymous: false });
+      onOpenChange(false); // Close dialog after successful comment
       toast({ title: "Success", description: "Your comment has been added" });
     },
   });
@@ -104,4 +105,3 @@ export const CommentsDialog = ({ post, onOpenChange }: CommentsDialogProps) => {
     </Dialog>
   );
 };
-
