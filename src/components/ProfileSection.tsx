@@ -1,6 +1,7 @@
+
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
-import { useToast } from "@/components/ui/use-toast";
+import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/lib/supabase";
 import { useNavigate } from "react-router-dom";
 import { PersonalInfoForm } from "./profile/PersonalInfoForm";
@@ -15,6 +16,7 @@ export const ProfileSection = () => {
   const [profile, setProfile] = useState({
     firstName: "",
     lastName: "",
+    dateOfBirth: undefined as Date | undefined,
     cycleLength: "",
     lastPeriodDate: undefined as Date | undefined,
     medicalConditions: "",
@@ -43,6 +45,7 @@ export const ProfileSection = () => {
         setProfile({
           firstName: data.first_name || "",
           lastName: data.last_name || "",
+          dateOfBirth: data.date_of_birth ? new Date(data.date_of_birth) : undefined,
           cycleLength: data.cycle_length?.toString() || "",
           lastPeriodDate: data.last_period_date ? new Date(data.last_period_date) : undefined,
           medicalConditions: (data.medical_conditions || []).join(', '),
@@ -74,6 +77,7 @@ export const ProfileSection = () => {
         .update({
           first_name: profile.firstName,
           last_name: profile.lastName,
+          date_of_birth: profile.dateOfBirth,
           cycle_length: parseInt(profile.cycleLength) || null,
           last_period_date: profile.lastPeriodDate,
           medical_conditions: profile.medicalConditions.split(',').map(c => c.trim()).filter(Boolean),
@@ -108,8 +112,10 @@ export const ProfileSection = () => {
       <PersonalInfoForm
         firstName={profile.firstName}
         lastName={profile.lastName}
+        dateOfBirth={profile.dateOfBirth}
         onFirstNameChange={(value) => setProfile(p => ({ ...p, firstName: value }))}
         onLastNameChange={(value) => setProfile(p => ({ ...p, lastName: value }))}
+        onDateOfBirthChange={(date) => setProfile(p => ({ ...p, dateOfBirth: date }))}
       />
 
       <CycleInfoForm
