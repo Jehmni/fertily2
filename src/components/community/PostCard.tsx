@@ -74,16 +74,19 @@ export const PostCard = ({ post, onCommentClick, bookmarked, onBookmarkToggle }:
         <CardHeader>
           <div className="flex justify-between items-start">
             <div className="flex items-center gap-3">
-              <Avatar 
-                className="h-10 w-10" 
-                style={{ 
-                  backgroundColor: post.profile?.avatar_color || '#E2E8F0'
-                }}
-              >
-                {!post.anonymous && (
-                  <AvatarImage src={post.profile?.avatar_url || undefined} />
+              <Avatar className="h-10 w-10">
+                {!post.anonymous && post.profile?.avatar_url && (
+                  <AvatarImage 
+                    src={post.profile.avatar_url} 
+                    alt={displayName}
+                    className="object-cover"
+                  />
                 )}
-                <AvatarFallback>
+                <AvatarFallback 
+                  style={{ 
+                    backgroundColor: post.profile?.avatar_color || '#E2E8F0'
+                  }}
+                >
                   {post.anonymous 
                     ? post.anonymous_alias[0]
                     : `${post.profile?.first_name?.[0] || ''}${post.profile?.last_name?.[0] || ''}`}

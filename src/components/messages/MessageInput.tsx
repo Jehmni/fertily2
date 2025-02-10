@@ -14,13 +14,17 @@ export const MessageInput = ({
 }: MessageInputProps) => {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    onSendMessage();
+    if (newMessage.trim()) {
+      onSendMessage();
+    }
   };
 
   const handleKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter') {
       e.preventDefault();
-      onSendMessage();
+      if (newMessage.trim()) {
+        onSendMessage();
+      }
     }
   };
 
