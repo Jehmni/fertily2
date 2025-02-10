@@ -9,7 +9,7 @@ import { CommunityService } from "@/services/CommunityService";
 import type { CommunityPost, PostComment } from "@/types/community";
 import { useAuth } from "@/hooks/useAuth";
 import { MentionsInput } from "./MentionsInput";
-import { Avatar, AvatarImage, AvatarFallback } from "@radix-ui/react-avatar";
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 
 interface CommentsDialogProps {
   post: CommunityPost | null;

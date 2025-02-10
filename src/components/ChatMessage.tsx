@@ -108,7 +108,7 @@ export const ChatMessage = ({ message, isBot }: ChatMessageProps) => {
         )}
       </div>
       {!isBot && profile && (
-        <Avatar className="h-8 w-8" style={{ backgroundColor: profile.avatar_color }}>
+        <Avatar className="h-8 w-8" style={{ backgroundColor: profile.avatar_color || '#E2E8F0' }}>
           <AvatarImage src={profile.avatar_url || undefined} />
           <AvatarFallback>
             {`${profile.first_name?.[0] || ''}${profile.last_name?.[0] || ''}`}
@@ -118,3 +118,4 @@ export const ChatMessage = ({ message, isBot }: ChatMessageProps) => {
     </div>
   );
 };
+
