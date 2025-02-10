@@ -1,6 +1,5 @@
 
 import { useEffect, useState, useRef } from "react";
-import { Button } from "@/components/ui/button";
 import {
   Command,
   CommandEmpty,
@@ -29,7 +28,7 @@ export const MentionsInput = ({ value, onChange, placeholder }: MentionsInputPro
   const [cursorPosition, setCursorPosition] = useState(0);
   const [searchTerm, setSearchTerm] = useState("");
   const textareaRef = useRef<HTMLTextAreaElement>(null);
-  const [triggerPosition, setTriggerPosition] = useState({ top: 0, left: 0 });
+  const [dropdownPosition, setDropdownPosition] = useState({ top: 0, left: 0 });
 
   const { data: suggestions = [] } = useQuery({
     queryKey: ["mention-suggestions", searchTerm],
@@ -37,47 +36,44 @@ export const MentionsInput = ({ value, onChange, placeholder }: MentionsInputPro
     enabled: searchTerm.length > 0,
   });
 
+  const calculateDropdownPosition = () => {
+    if (!textareaRef.current) return;
+
+    const textarea = textareaRef.current;
+    const textBeforeCursor = value.substring(0, cursorPosition);
+    const lines = textBeforeCursor.split('\n');
+    const currentLineNumber = lines.length;
+    const currentLineText = lines[lines.length - 1];
+
+    const computedStyle = window.getComputedStyle(textarea);
+    const lineHeight = parseInt(computedStyle.lineHeight);
+    const paddingTop = parseInt(computedStyle.paddingTop);
+    const paddingLeft = parseInt(computedStyle.paddingLeft);
+
+    // Create a temporary span to measure text width
+    const span = document.createElement('span');
+    span.style.font = computedStyle.font;
+    span.style.visibility = 'hidden';
+    span.style.whiteSpace = 'pre';
+    span.textContent = currentLineText;
+    document.body.appendChild(span);
+
+    const textWidth = span.offsetWidth;
+    document.body.removeChild(span);
+
+    const rect = textarea.getBoundingClientRect();
+    const scrollTop = textarea.scrollTop;
+
+    setDropdownPosition({
+      top: rect.top + (currentLineNumber * lineHeight) - scrollTop + paddingTop,
+      left: rect.left + Math.min(textWidth, rect.width - 200) + paddingLeft // 200 is approximate dropdown width
+    });
+  };
+
   const updateCursorPosition = (element: HTMLTextAreaElement) => {
     const position = element.selectionStart;
     setCursorPosition(position);
-    
-    // Calculate dropdown position based on cursor
-    const cursorCoords = getCaretCoordinates(element, position);
-    if (cursorCoords) {
-      const rect = element.getBoundingClientRect();
-      setTriggerPosition({
-        top: cursorCoords.top + rect.top,
-        left: cursorCoords.left + rect.left
-      });
-    }
-  };
-
-  const getCaretCoordinates = (element: HTMLTextAreaElement, position: number) => {
-    const { offsetHeight: textHeight } = element;
-    const div = document.createElement('div');
-    const copyStyle = getComputedStyle(element);
-    
-    for (const prop of copyStyle) {
-      div.style[prop as any] = copyStyle.getPropertyValue(prop);
-    }
-    
-    div.style.position = 'absolute';
-    div.style.visibility = 'hidden';
-    div.style.height = 'auto';
-    div.style.width = element.offsetWidth + 'px';
-    
-    const text = value.substring(0, position);
-    div.textContent = text;
-    
-    document.body.appendChild(div);
-    const lineHeight = parseInt(copyStyle.lineHeight);
-    const lines = Math.floor(div.offsetHeight / lineHeight);
-    const top = lines * lineHeight;
-    const left = div.offsetWidth;
-    
-    document.body.removeChild(div);
-    
-    return { top, left };
+    calculateDropdownPosition();
   };
 
   const handleTextareaChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
@@ -102,22 +98,38 @@ export const MentionsInput = ({ value, onChange, placeholder }: MentionsInputPro
   };
 
   const insertMention = (user: MentionSuggestion) => {
-    const lastAtSymbol = value.lastIndexOf('@', cursorPosition);
-    const beforeMention = value.slice(0, lastAtSymbol);
+    if (!textareaRef.current) return;
+
+    const beforeMention = value.slice(0, cursorPosition);
+    const lastAtPos = beforeMention.lastIndexOf('@');
     const afterMention = value.slice(cursorPosition);
-    const newValue = `${beforeMention}@${user.display_name}${afterMention}`;
+    const newValue = `${value.slice(0, lastAtPos)}@${user.display_name}${afterMention}`;
     
     onChange(newValue);
     setOpen(false);
-    
-    // Restore focus and set cursor position after mention
-    if (textareaRef.current) {
-      const newCursorPosition = lastAtSymbol + user.display_name.length + 1;
-      textareaRef.current.focus();
-      textareaRef.current.setSelectionRange(newCursorPosition, newCursorPosition);
-      updateCursorPosition(textareaRef.current);
-    }
+
+    // Set cursor position after the inserted mention
+    const newCursorPosition = lastAtPos + user.display_name.length + 1;
+    setTimeout(() => {
+      if (textareaRef.current) {
+        textareaRef.current.focus();
+        textareaRef.current.setSelectionRange(newCursorPosition, newCursorPosition);
+        updateCursorPosition(textareaRef.current);
+      }
+    }, 0);
   };
+
+  // Handle click outside to close dropdown
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (textareaRef.current && !textareaRef.current.contains(event.target as Node)) {
+        setOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   return (
     <div className="relative w-full">
@@ -132,11 +144,11 @@ export const MentionsInput = ({ value, onChange, placeholder }: MentionsInputPro
       <Popover open={open} onOpenChange={setOpen}>
         <PopoverTrigger className="hidden" />
         <PopoverContent 
-          className="p-0" 
+          className="p-0 w-[200px]" 
           style={{
-            position: 'absolute',
-            top: `${triggerPosition.top}px`,
-            left: `${triggerPosition.left}px`,
+            position: 'fixed',
+            top: `${dropdownPosition.top}px`,
+            left: `${dropdownPosition.left}px`,
           }}
         >
           <Command>
@@ -147,6 +159,7 @@ export const MentionsInput = ({ value, onChange, placeholder }: MentionsInputPro
                 <CommandItem
                   key={user.id}
                   onSelect={() => insertMention(user)}
+                  className="cursor-pointer"
                 >
                   {user.display_name}
                 </CommandItem>
