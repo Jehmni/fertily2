@@ -6,18 +6,21 @@ import { useToast } from "@/hooks/use-toast";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Loader2 } from "lucide-react";
 
+interface Profile {
+  first_name: string;
+  last_name: string;
+  avatar_url: string | null;
+  avatar_color: string | null;
+}
+
 interface Message {
   id: string;
   content: string;
   created_at: string;
   sender_id: string;
   recipient_id: string;
-  sender_profile?: {
-    first_name: string;
-    last_name: string;
-    avatar_url: string | null;
-    avatar_color: string | null;
-  };
+  sender: Profile;
+  recipient: Profile;
 }
 
 interface Conversation {
@@ -122,7 +125,9 @@ export const Messages = () => {
               content: msg.content,
               created_at: msg.created_at,
               sender_id: msg.sender_id,
-              recipient_id: msg.recipient_id
+              recipient_id: msg.recipient_id,
+              sender: msg.sender,
+              recipient: msg.recipient
             }
           });
         }
@@ -150,6 +155,12 @@ export const Messages = () => {
         .select(`
           *,
           sender:profiles!private_messages_sender_id_fkey(
+            first_name,
+            last_name,
+            avatar_url,
+            avatar_color
+          ),
+          recipient:profiles!private_messages_recipient_id_fkey(
             first_name,
             last_name,
             avatar_url,
@@ -293,4 +304,3 @@ export const Messages = () => {
     </Card>
   );
 };
-
