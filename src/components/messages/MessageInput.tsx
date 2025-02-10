@@ -17,6 +17,13 @@ export const MessageInput = ({
     onSendMessage();
   };
 
+  const handleKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      onSendMessage();
+    }
+  };
+
   return (
     <form onSubmit={handleSubmit} className="p-4 border-t">
       <div className="flex gap-2">
@@ -24,6 +31,7 @@ export const MessageInput = ({
           type="text"
           value={newMessage}
           onChange={(e) => onMessageChange(e.target.value)}
+          onKeyDown={handleKeyPress}
           placeholder="Type your message..."
           className="flex-1 p-2 border rounded-md"
         />

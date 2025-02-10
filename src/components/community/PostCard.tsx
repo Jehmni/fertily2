@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { format } from "date-fns";
 import { Heart, MessageCircle, Bookmark, PartyPopper, ThumbsUp, Lightbulb, Star } from "lucide-react";
@@ -79,7 +80,9 @@ export const PostCard = ({ post, onCommentClick, bookmarked, onBookmarkToggle }:
                   backgroundColor: post.profile?.avatar_color || '#E2E8F0'
                 }}
               >
-                <AvatarImage src={post.profile?.avatar_url || undefined} />
+                {!post.anonymous && (
+                  <AvatarImage src={post.profile?.avatar_url || undefined} />
+                )}
                 <AvatarFallback>
                   {post.anonymous 
                     ? post.anonymous_alias[0]
