@@ -24,16 +24,18 @@ interface MentionsInputProps {
 }
 
 export const MentionsInput = ({ value, onChange, placeholder }: MentionsInputProps) => {
-  const [open, setOpen] = useState(false);
-  const [cursorPosition, setCursorPosition] = useState(0);
-  const [searchTerm, setSearchTerm] = useState("");
+  const [mentionState, setMentionState] = useState({
+    isOpen: false,
+    searchTerm: "",
+    cursorPosition: 0
+  });
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const [dropdownPosition, setDropdownPosition] = useState({ top: 0, left: 0 });
 
-  const { data: suggestions, isLoading } = useQuery({
-    queryKey: ["mention-suggestions", searchTerm],
-    queryFn: () => CommunityService.searchUsers(searchTerm),
-    enabled: searchTerm.length > 0,
+  const { data: suggestions } = useQuery({
+    queryKey: ["mention-suggestions", mentionState.searchTerm],
+    queryFn: () => CommunityService.searchUsers(mentionState.searchTerm),
+    enabled: mentionState.searchTerm.length > 0,
     initialData: [],
   });
 
@@ -41,7 +43,7 @@ export const MentionsInput = ({ value, onChange, placeholder }: MentionsInputPro
     if (!textareaRef.current) return;
 
     const textarea = textareaRef.current;
-    const textBeforeCursor = value.substring(0, cursorPosition);
+    const textBeforeCursor = value.substring(0, mentionState.cursorPosition);
     const lines = textBeforeCursor.split('\n');
     const currentLineNumber = lines.length;
     const currentLineText = lines[lines.length - 1];
@@ -57,7 +59,6 @@ export const MentionsInput = ({ value, onChange, placeholder }: MentionsInputPro
     span.style.whiteSpace = 'pre';
     span.textContent = currentLineText;
     document.body.appendChild(span);
-
     const textWidth = span.offsetWidth;
     document.body.removeChild(span);
 
@@ -72,57 +73,53 @@ export const MentionsInput = ({ value, onChange, placeholder }: MentionsInputPro
 
   const handleTextareaChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     const newValue = e.target.value;
-    const newPosition = e.target.selectionStart || 0;
-
-    // Update the value first
-    onChange(newValue);
+    const cursorPosition = e.target.selectionStart ?? 0;
+    const lastAtSymbol = newValue.lastIndexOf('@', cursorPosition);
     
-    // Then update cursor position and check for mentions
-    setCursorPosition(newPosition);
+    onChange(newValue);
 
-    const lastAtSymbol = newValue.lastIndexOf('@', newPosition);
     if (lastAtSymbol !== -1) {
-      const textAfterAt = newValue.slice(lastAtSymbol + 1, newPosition);
+      const textAfterAt = newValue.slice(lastAtSymbol + 1, cursorPosition);
       if (!textAfterAt.includes(' ')) {
-        setSearchTerm(textAfterAt);
-        setOpen(true);
+        setMentionState({
+          isOpen: true,
+          searchTerm: textAfterAt,
+          cursorPosition
+        });
         calculateDropdownPosition();
         return;
       }
     }
 
-    setOpen(false);
+    setMentionState(prev => ({
+      ...prev,
+      isOpen: false,
+      cursorPosition
+    }));
   };
 
   const insertMention = (user: MentionSuggestion) => {
     if (!textareaRef.current) return;
 
-    const beforeMention = value.slice(0, cursorPosition);
-    const lastAtPos = beforeMention.lastIndexOf('@');
-    const afterMention = value.slice(cursorPosition);
-    const newValue = `${value.slice(0, lastAtPos)}@${user.display_name}${afterMention}`;
-    
-    onChange(newValue);
-    setOpen(false);
-
-    // Set cursor position after the inserted mention
+    const lastAtPos = value.lastIndexOf('@', mentionState.cursorPosition);
+    const newValue = `${value.slice(0, lastAtPos)}@${user.display_name}${value.slice(mentionState.cursorPosition)}`;
     const newCursorPosition = lastAtPos + user.display_name.length + 1;
     
-    // Update cursor position after a brief delay to ensure the textarea has updated
-    requestAnimationFrame(() => {
-      if (textareaRef.current) {
-        textareaRef.current.focus();
-        textareaRef.current.setSelectionRange(newCursorPosition, newCursorPosition);
-        setCursorPosition(newCursorPosition);
-      }
+    onChange(newValue);
+    setMentionState({
+      isOpen: false,
+      searchTerm: "",
+      cursorPosition: newCursorPosition
     });
+
+    textareaRef.current.focus();
+    textareaRef.current.setSelectionRange(newCursorPosition, newCursorPosition);
   };
 
-  // Handle click outside
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (textareaRef.current && !textareaRef.current.contains(event.target as Node)) {
-        setOpen(false);
+        setMentionState(prev => ({ ...prev, isOpen: false }));
       }
     };
 
@@ -138,13 +135,16 @@ export const MentionsInput = ({ value, onChange, placeholder }: MentionsInputPro
         onChange={handleTextareaChange}
         onSelect={(e) => {
           const target = e.target as HTMLTextAreaElement;
-          setCursorPosition(target.selectionStart || 0);
+          setMentionState(prev => ({
+            ...prev,
+            cursorPosition: target.selectionStart ?? 0
+          }));
           calculateDropdownPosition();
         }}
         placeholder={placeholder}
         className="min-h-[100px]"
       />
-      <Popover open={open} onOpenChange={setOpen}>
+      <Popover open={mentionState.isOpen}>
         <PopoverTrigger className="hidden" />
         <PopoverContent 
           className="p-0 w-[200px]" 
@@ -158,7 +158,7 @@ export const MentionsInput = ({ value, onChange, placeholder }: MentionsInputPro
             <CommandInput placeholder="Search users..." />
             <CommandEmpty>No users found.</CommandEmpty>
             <CommandGroup>
-              {(suggestions || []).map((user) => (
+              {suggestions?.map((user) => (
                 <CommandItem
                   key={user.id}
                   onSelect={() => insertMention(user)}
