@@ -36,9 +36,10 @@ export const CommunityService = {
     title: string,
     content: string,
     category: string,
-    anonymous: boolean
+    anonymous: boolean,
+    image_urls?: string[]
   ): Promise<CommunityPost> {
-    const { data, error } = await postQueries.createPost(title, content, category, anonymous);
+    const { data, error } = await postQueries.createPost(title, content, category, anonymous, image_urls);
     if (error) throw error;
     return transformPostData(data);
   },
