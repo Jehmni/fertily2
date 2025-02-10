@@ -10,7 +10,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/lib/supabase";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 
 interface Notification {
   id: string;
@@ -26,6 +26,7 @@ interface Notification {
 export const NotificationBell = () => {
   const { toast } = useToast();
   const navigate = useNavigate();
+  const location = useLocation();
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
 
@@ -99,15 +100,47 @@ export const NotificationBell = () => {
       // Navigate based on notification type
       switch (notification.type) {
         case 'follow':
-          navigate('/community');
+          if (location.pathname !== '/community') {
+            navigate('/community');
+          }
           break;
         case 'message':
-          navigate('/', { state: { activeView: 'messages', userId: notification.sender_id } });
+          if (notification.sender_id) {
+            if (location.pathname === '/') {
+              // If already on home, just update state
+              navigate('/', { 
+                state: { 
+                  activeView: 'messages', 
+                  userId: notification.sender_id 
+                },
+                replace: true 
+              });
+            } else {
+              // Navigate to home with messages view
+              navigate('/', { 
+                state: { 
+                  activeView: 'messages', 
+                  userId: notification.sender_id 
+                }
+              });
+            }
+          }
           break;
         case 'comment':
         case 'reaction':
           if (notification.post_id) {
-            navigate('/community', { state: { postId: notification.post_id } });
+            if (location.pathname === '/community') {
+              // If already on community, just update state
+              navigate('/community', { 
+                state: { postId: notification.post_id },
+                replace: true 
+              });
+            } else {
+              // Navigate to community with post ID
+              navigate('/community', { 
+                state: { postId: notification.post_id }
+              });
+            }
           }
           break;
         default:
@@ -115,6 +148,11 @@ export const NotificationBell = () => {
       }
     } catch (error) {
       console.error('Error handling notification click:', error);
+      toast({
+        title: "Error",
+        description: "Failed to process notification",
+        variant: "destructive",
+      });
     }
   };
 
