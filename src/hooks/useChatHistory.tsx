@@ -43,11 +43,20 @@ export const useChatHistory = () => {
 
         const response = await ChatService.sendMessage(message, wasSpoken);
         
-        // If this was a spoken message, convert response to speech
+        // If this was a spoken message, convert response to speech and play it
         if (wasSpoken) {
-          const audioContent = await VoiceService.textToSpeech(response);
-          const audio = new Audio(`data:audio/mp3;base64,${audioContent}`);
-          await audio.play();
+          try {
+            const audioContent = await VoiceService.textToSpeech(response);
+            const audio = new Audio(`data:audio/mp3;base64,${audioContent}`);
+            await audio.play();
+          } catch (error) {
+            console.error('Error playing audio response:', error);
+            toast({
+              title: "Error",
+              description: "Failed to play audio response. Please try again.",
+              variant: "destructive",
+            });
+          }
         }
 
         await ChatService.saveChatMessage(message, response, wasSpoken);
