@@ -1,6 +1,8 @@
+
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { ChatService, type ChatMessage } from "@/services/ChatService";
 import { useToast } from "@/components/ui/use-toast";
+import { VoiceService } from "@/services/VoiceService";
 
 export const useChatHistory = () => {
   const { toast } = useToast();
@@ -11,6 +13,7 @@ export const useChatHistory = () => {
       {
         text: "Hello! I'm your fertility assistant. How can I help you today?",
         isBot: true,
+        wasSpoken: false,
       },
     ],
     isLoading: isLoadingHistory,
@@ -30,23 +33,31 @@ export const useChatHistory = () => {
   });
 
   const { mutate: sendMessage, isPending: isSending } = useMutation({
-    mutationFn: async (message: string) => {
+    mutationFn: async ({ message, wasSpoken }: { message: string; wasSpoken: boolean }) => {
       try {
         // Immediately update UI with user message
         queryClient.setQueryData(['chatHistory'], (old: ChatMessage[] = []) => [
           ...old,
-          { text: message, isBot: false },
+          { text: message, isBot: false, wasSpoken },
         ]);
 
-        const response = await ChatService.sendMessage(message);
-        await ChatService.saveChatMessage(message, response);
-        return { message, response };
+        const response = await ChatService.sendMessage(message, wasSpoken);
+        
+        // If this was a spoken message, convert response to speech
+        if (wasSpoken) {
+          const audioContent = await VoiceService.textToSpeech(response);
+          const audio = new Audio(`data:audio/mp3;base64,${audioContent}`);
+          await audio.play();
+        }
+
+        await ChatService.saveChatMessage(message, response, wasSpoken);
+        return { message, response, wasSpoken };
       } catch (error) {
         console.error('Message handling error:', error);
         throw error;
       }
     },
-    onSuccess: ({ message, response }) => {
+    onSuccess: ({ message, response, wasSpoken }) => {
       queryClient.setQueryData(['chatHistory'], (old: ChatMessage[] = []) => {
         // Filter out any temporary messages
         const filteredMessages = old.filter(msg => 
@@ -54,8 +65,8 @@ export const useChatHistory = () => {
         );
         return [
           ...filteredMessages,
-          { text: message, isBot: false },
-          { text: response, isBot: true },
+          { text: message, isBot: false, wasSpoken },
+          { text: response, isBot: true, wasSpoken },
         ];
       });
     },

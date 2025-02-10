@@ -4,6 +4,7 @@ import { supabase } from "@/lib/supabase";
 export interface ChatMessage {
   text: string;
   isBot: boolean;
+  wasSpoken?: boolean;
 }
 
 export const ChatService = {
@@ -15,7 +16,7 @@ export const ChatService = {
 
     const { data, error } = await supabase
       .from('chat_history')
-      .select('message, response, is_bot')
+      .select('message, response, is_bot, was_spoken')
       .eq('user_id', session.user.id)
       .order('created_at', { ascending: true });
 
@@ -26,11 +27,12 @@ export const ChatService = {
 
     return data.map(msg => ({
       text: msg.is_bot ? (msg.response || '') : (msg.message || ''),
-      isBot: msg.is_bot
+      isBot: msg.is_bot,
+      wasSpoken: msg.was_spoken
     }));
   },
 
-  async sendMessage(message: string): Promise<string> {
+  async sendMessage(message: string, wasSpoken: boolean = false): Promise<string> {
     try {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) {
@@ -38,7 +40,7 @@ export const ChatService = {
       }
 
       const { data, error } = await supabase.functions.invoke('chat', {
-        body: { message },
+        body: { message, wasSpoken },
         headers: {
           Authorization: `Bearer ${session.access_token}`
         }
@@ -54,7 +56,7 @@ export const ChatService = {
     }
   },
 
-  async saveChatMessage(message: string, response: string): Promise<void> {
+  async saveChatMessage(message: string, response: string, wasSpoken: boolean = false): Promise<void> {
     const { data: { session } } = await supabase.auth.getSession();
     if (!session) {
       throw new Error('No active session');
@@ -66,7 +68,8 @@ export const ChatService = {
       .insert([{ 
         message,
         user_id: session.user.id,
-        is_bot: false
+        is_bot: false,
+        was_spoken: wasSpoken
       }]);
 
     if (userMessageError) {
@@ -80,7 +83,8 @@ export const ChatService = {
       .insert([{ 
         response,
         user_id: session.user.id,
-        is_bot: true
+        is_bot: true,
+        was_spoken: wasSpoken
       }]);
 
     if (botResponseError) {

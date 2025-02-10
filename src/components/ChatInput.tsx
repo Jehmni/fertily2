@@ -1,3 +1,4 @@
+
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Mic, Send, Square } from "lucide-react";
@@ -6,7 +7,7 @@ import { VoiceService } from "@/services/VoiceService";
 import { useToast } from "@/components/ui/use-toast";
 
 interface ChatInputProps {
-  onSend: (message: string) => void;
+  onSend: (message: { message: string; wasSpoken: boolean }) => void;
   disabled?: boolean;
 }
 
@@ -21,7 +22,7 @@ export const ChatInput = ({ onSend, disabled }: ChatInputProps) => {
     e.preventDefault();
     if (message.trim()) {
       try {
-        onSend(message);
+        onSend({ message, wasSpoken: false });
         setMessage("");
       } catch (error) {
         console.error('Error sending message:', error);
@@ -49,9 +50,9 @@ export const ChatInput = ({ onSend, disabled }: ChatInputProps) => {
         const audioBlob = new Blob(chunksRef.current, { type: 'audio/webm' });
         try {
           const text = await VoiceService.speechToText(audioBlob);
-          // Auto-send the transcribed message
+          // Auto-send the transcribed message as a spoken message
           if (text.trim()) {
-            onSend(text);
+            onSend({ message: text, wasSpoken: true });
           }
           stream.getTracks().forEach(track => track.stop());
         } catch (error) {
