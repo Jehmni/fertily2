@@ -57,25 +57,22 @@ export const AvatarForm = ({
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center gap-4">
-        <Avatar className="h-16 w-16" style={{ backgroundColor: avatarColor }}>
-          <AvatarImage src={avatarUrl || undefined} />
-          <AvatarFallback>
-            {getInitials(firstName, lastName)}
-          </AvatarFallback>
-        </Avatar>
-        <div className="flex-1">
-          <Label>Choose Avatar</Label>
-          <p className="text-sm text-muted-foreground">Select an avatar to represent you</p>
-        </div>
-      </div>
-
       <Collapsible open={isOpen} onOpenChange={setIsOpen}>
         <CollapsibleTrigger asChild>
-          <Button variant="outline" className="w-full flex justify-between">
-            <span>Browse Avatars</span>
-            {isOpen ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
-          </Button>
+          <div className="flex items-center gap-4 cursor-pointer hover:opacity-90 transition-opacity">
+            <Avatar className="h-20 w-20" style={{ backgroundColor: avatarColor }}>
+              <AvatarImage src={avatarUrl || undefined} />
+              <AvatarFallback>
+                {getInitials(firstName, lastName)}
+              </AvatarFallback>
+            </Avatar>
+            {!avatarUrl && (
+              <div className="flex-1">
+                <Label>Change Avatar</Label>
+                <p className="text-sm text-muted-foreground">Click to choose an avatar</p>
+              </div>
+            )}
+          </div>
         </CollapsibleTrigger>
         <CollapsibleContent className="mt-4">
           <RadioGroup
@@ -102,18 +99,19 @@ export const AvatarForm = ({
               </div>
             ))}
           </RadioGroup>
+
+          <div className="flex items-center gap-2 mt-4 pt-4 border-t">
+            <input
+              type="color"
+              value={avatarColor}
+              onChange={(e) => onAvatarColorChange(e.target.value)}
+              className="w-20 h-8 p-1 rounded cursor-pointer"
+            />
+            <span className="text-sm text-muted-foreground">Default background color</span>
+          </div>
         </CollapsibleContent>
       </Collapsible>
-
-      <div className="flex items-center gap-2">
-        <input
-          type="color"
-          value={avatarColor}
-          onChange={(e) => onAvatarColorChange(e.target.value)}
-          className="w-20 h-8 p-1 rounded cursor-pointer"
-        />
-        <span className="text-sm text-muted-foreground">Avatar Background Color</span>
-      </div>
     </div>
   );
 };
+
