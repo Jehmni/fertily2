@@ -21,6 +21,7 @@ export interface CommunityPost {
   comments_count?: { count: number }[];
   user_reactions?: string[];
   is_bookmarked?: boolean;
+  image_urls?: string[];
 }
 
 export interface PostComment {
@@ -56,3 +57,4 @@ export interface PostBookmark {
   post_id: string;
   created_at: string;
 }
+

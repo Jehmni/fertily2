@@ -11,6 +11,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { CommunityService } from "@/services/CommunityService";
 import type { PostCategory } from "@/types/community";
 import { useAuth } from "@/hooks/useAuth";
+import { ImageUpload } from "./ImageUpload";
 
 interface CreatePostDialogProps {
   categories: PostCategory[];
@@ -21,6 +22,7 @@ type NewPost = {
   content: string;
   category: string;
   anonymous: boolean;
+  image_urls: string[];
 };
 
 const initialPostState: NewPost = {
@@ -28,6 +30,7 @@ const initialPostState: NewPost = {
   content: "",
   category: "seeking-support",
   anonymous: false,
+  image_urls: [],
 };
 
 export const CreatePostDialog = ({ categories }: CreatePostDialogProps) => {
@@ -38,26 +41,24 @@ export const CreatePostDialog = ({ categories }: CreatePostDialogProps) => {
   const [isOpen, setIsOpen] = useState(false);
   const [autosaveTimeout, setAutosaveTimeout] = useState<NodeJS.Timeout | null>(null);
 
-  // Query to fetch existing draft
   const { data: draft } = useQuery({
     queryKey: ["post-draft"],
     queryFn: CommunityService.getLatestDraft,
     enabled: !!user
   });
 
-  // Load draft if it exists
   useEffect(() => {
     if (draft) {
       setNewPost({
         title: draft.title || "",
         content: draft.content || "",
         category: draft.category || "seeking-support",
-        anonymous: false
+        anonymous: false,
+        image_urls: [],
       });
     }
   }, [draft]);
 
-  // Autosave mutation
   const saveDraftMutation = useMutation({
     mutationFn: (draft: Partial<NewPost>) => 
       CommunityService.saveDraft(draft.title || "", draft.content || "", draft.category || ""),
@@ -66,34 +67,36 @@ export const CreatePostDialog = ({ categories }: CreatePostDialogProps) => {
     },
   });
 
-  // Handle auto-saving
   const handleContentChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
     setNewPost(prev => ({ ...prev, [name]: value }));
 
-    // Clear existing timeout
     if (autosaveTimeout) {
       clearTimeout(autosaveTimeout);
     }
 
-    // Set new timeout for autosave
     const timeout = setTimeout(() => {
       saveDraftMutation.mutate({
         title: name === 'title' ? value : newPost.title,
         content: name === 'content' ? value : newPost.content,
         category: newPost.category
       });
-    }, 1500); // Autosave after 1.5 seconds of no typing
+    }, 1500);
 
     setAutosaveTimeout(timeout);
   };
 
   const createPostMutation = useMutation({
     mutationFn: (post: NewPost) => 
-      CommunityService.createPost(post.title, post.content, post.category, post.anonymous),
+      CommunityService.createPost(
+        post.title,
+        post.content,
+        post.category,
+        post.anonymous,
+        post.image_urls
+      ),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["community-posts"] });
-      // Clear draft after successful post
       saveDraftMutation.mutate({ title: "", content: "", category: "" });
       toast({ title: "Success", description: "Your post has been shared with the community" });
       setNewPost(initialPostState);
@@ -161,6 +164,13 @@ export const CreatePostDialog = ({ categories }: CreatePostDialogProps) => {
               onChange={handleContentChange}
               placeholder="Share your experience..."
               rows={5}
+            />
+          </div>
+          <div>
+            <Label>Images</Label>
+            <ImageUpload
+              onImagesUploaded={(urls) => setNewPost(prev => ({ ...prev, image_urls: urls }))}
+              existingImages={newPost.image_urls}
             />
           </div>
           <div className="flex items-center space-x-2">

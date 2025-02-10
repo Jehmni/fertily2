@@ -73,7 +73,7 @@ export const PostCard = ({ post, onCommentClick, bookmarked, onBookmarkToggle }:
           </span>
         </div>
       </CardHeader>
-      <CardContent>
+      <CardContent className="space-y-4">
         {post.content_format === 'rich' ? (
           <RichTextEditor 
             content={post.content} 
@@ -82,6 +82,19 @@ export const PostCard = ({ post, onCommentClick, bookmarked, onBookmarkToggle }:
           />
         ) : (
           <p className="whitespace-pre-wrap">{post.content}</p>
+        )}
+        
+        {post.image_urls && post.image_urls.length > 0 && (
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-2 mt-4">
+            {post.image_urls.map((url, index) => (
+              <img
+                key={url}
+                src={url}
+                alt={`Post image ${index + 1}`}
+                className="rounded-lg w-full h-48 object-cover"
+              />
+            ))}
+          </div>
         )}
       </CardContent>
       <CardFooter className="flex justify-between">

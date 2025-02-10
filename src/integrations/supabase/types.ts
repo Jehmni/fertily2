@@ -117,6 +117,7 @@ export type Database = {
           created_at: string
           formatted_content: Json | null
           id: string
+          image_urls: string[] | null
           title: string
           updated_at: string
           user_id: string
@@ -130,6 +131,7 @@ export type Database = {
           created_at?: string
           formatted_content?: Json | null
           id?: string
+          image_urls?: string[] | null
           title: string
           updated_at?: string
           user_id: string
@@ -143,6 +145,7 @@ export type Database = {
           created_at?: string
           formatted_content?: Json | null
           id?: string
+          image_urls?: string[] | null
           title?: string
           updated_at?: string
           user_id?: string
@@ -487,6 +490,7 @@ export type Database = {
           created_at: string
           formatted_content: Json | null
           id: string
+          image_urls: string[] | null
           title: string | null
           updated_at: string
           user_id: string
@@ -498,6 +502,7 @@ export type Database = {
           created_at?: string
           formatted_content?: Json | null
           id?: string
+          image_urls?: string[] | null
           title?: string | null
           updated_at?: string
           user_id: string
@@ -509,6 +514,7 @@ export type Database = {
           created_at?: string
           formatted_content?: Json | null
           id?: string
+          image_urls?: string[] | null
           title?: string | null
           updated_at?: string
           user_id?: string
