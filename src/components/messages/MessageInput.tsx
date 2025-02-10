@@ -12,8 +12,13 @@ export const MessageInput = ({
   onMessageChange,
   onSendMessage
 }: MessageInputProps) => {
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    onSendMessage();
+  };
+
   return (
-    <form onSubmit={(e) => { e.preventDefault(); onSendMessage(); }} className="p-4 border-t">
+    <form onSubmit={handleSubmit} className="p-4 border-t">
       <div className="flex gap-2">
         <input
           type="text"
@@ -22,13 +27,12 @@ export const MessageInput = ({
           placeholder="Type your message..."
           className="flex-1 p-2 border rounded-md"
         />
-        <button
+        <Button
           type="submit"
           disabled={!newMessage.trim()}
-          className="px-4 py-2 bg-primary text-primary-foreground rounded-md disabled:opacity-50"
         >
           Send
-        </button>
+        </Button>
       </div>
     </form>
   );
