@@ -2,9 +2,10 @@
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Mic, Send, Square } from "lucide-react";
-import { useState, useRef } from "react";
+import { useState, useRef, KeyboardEvent } from "react";
 import { VoiceService } from "@/services/VoiceService";
 import { useToast } from "@/components/ui/use-toast";
+import { Textarea } from "@/components/ui/textarea";
 
 interface ChatInputProps {
   onSend: (message: { message: string; wasSpoken: boolean }) => void;
@@ -35,6 +36,13 @@ export const ChatInput = ({ onSend, disabled }: ChatInputProps) => {
     }
   };
 
+  const handleKeyPress = (e: KeyboardEvent<HTMLTextAreaElement>) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      handleSubmit(e);
+    }
+  };
+
   const startRecording = async () => {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
@@ -50,7 +58,6 @@ export const ChatInput = ({ onSend, disabled }: ChatInputProps) => {
         const audioBlob = new Blob(chunksRef.current, { type: 'audio/webm' });
         try {
           const text = await VoiceService.speechToText(audioBlob);
-          // Auto-send the transcribed message as a spoken message
           if (text.trim()) {
             onSend({ message: text, wasSpoken: true });
           }
@@ -86,29 +93,32 @@ export const ChatInput = ({ onSend, disabled }: ChatInputProps) => {
 
   return (
     <form onSubmit={handleSubmit} className="flex gap-2">
-      <Input
+      <Textarea
         value={message}
         onChange={(e) => setMessage(e.target.value)}
-        placeholder="Type your message..."
-        className="flex-1"
+        onKeyDown={handleKeyPress}
+        placeholder="Type your message... (Press Enter to send, Shift+Enter for new line)"
+        className="flex-1 min-h-[60px] max-h-[120px]"
         disabled={disabled}
       />
-      <Button
-        type="button"
-        size="icon"
-        variant="outline"
-        disabled={disabled}
-        onClick={isRecording ? stopRecording : startRecording}
-      >
-        {isRecording ? (
-          <Square className="h-4 w-4 text-red-500" />
-        ) : (
-          <Mic className="h-4 w-4" />
-        )}
-      </Button>
-      <Button type="submit" size="icon" disabled={disabled || !message.trim()}>
-        <Send className="h-4 w-4" />
-      </Button>
+      <div className="flex flex-col gap-2">
+        <Button
+          type="button"
+          size="icon"
+          variant="outline"
+          disabled={disabled}
+          onClick={isRecording ? stopRecording : startRecording}
+        >
+          {isRecording ? (
+            <Square className="h-4 w-4 text-red-500" />
+          ) : (
+            <Mic className="h-4 w-4" />
+          )}
+        </Button>
+        <Button type="submit" size="icon" disabled={disabled || !message.trim()}>
+          <Send className="h-4 w-4" />
+        </Button>
+      </div>
     </form>
   );
 };

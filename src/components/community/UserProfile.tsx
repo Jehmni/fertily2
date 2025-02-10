@@ -7,13 +7,14 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Send } from "lucide-react";
+import { Send, User } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { CommunityService } from "@/services/CommunityService";
 import { useAuth } from "@/hooks/useAuth";
 import { FollowButton } from "./FollowButton";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 
 interface UserProfileProps {
   userId: string;
@@ -66,6 +67,10 @@ export const UserProfile = ({ userId, isOpen, onOpenChange }: UserProfileProps) 
 
   if (!profile) return null;
 
+  const getInitials = (firstName: string, lastName: string) => {
+    return `${firstName?.charAt(0) || ''}${lastName?.charAt(0) || ''}`.toUpperCase() || 'U';
+  };
+
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[425px]">
@@ -73,15 +78,22 @@ export const UserProfile = ({ userId, isOpen, onOpenChange }: UserProfileProps) 
           <DialogTitle>User Profile</DialogTitle>
         </DialogHeader>
         <div className="space-y-4">
-          <div>
-            <h3 className="text-lg font-semibold">
-              {profile.first_name} {profile.last_name}
-            </h3>
-            {followerCounts && (
-              <p className="text-sm text-muted-foreground">
-                {followerCounts.follower_count} followers · {followerCounts.following_count} following
-              </p>
-            )}
+          <div className="flex items-center gap-4">
+            <Avatar className="h-16 w-16">
+              <AvatarFallback className="bg-primary/10">
+                {getInitials(profile.first_name, profile.last_name)}
+              </AvatarFallback>
+            </Avatar>
+            <div>
+              <h3 className="text-lg font-semibold">
+                {profile.first_name} {profile.last_name}
+              </h3>
+              {followerCounts && (
+                <p className="text-sm text-muted-foreground">
+                  {followerCounts.follower_count} followers · {followerCounts.following_count} following
+                </p>
+              )}
+            </div>
           </div>
 
           {user && userId !== user.id && (
