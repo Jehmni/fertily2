@@ -1,4 +1,3 @@
-
 import { 
   postQueries, 
   categoryQueries, 
@@ -7,6 +6,7 @@ import {
   bookmarkQueries, 
   draftQueries 
 } from "./community/queries";
+import { followQueries } from "./community/follow-queries";
 import { transformPostData, transformCommentData } from "./community/transformers";
 import type { CommunityPost, PostComment, PostReaction, PostCategory, PostBookmark } from "@/types/community";
 
@@ -102,4 +102,29 @@ export const CommunityService = {
     if (error) throw error;
     return data?.[0] || { title: null, content: null, category: null };
   },
+
+  async followUser(userId: string): Promise<void> {
+    const { error } = await followQueries.followUser(userId);
+    if (error) throw error;
+  },
+
+  async unfollowUser(userId: string): Promise<void> {
+    const { error } = await followQueries.unfollowUser(userId);
+    if (error) throw error;
+  },
+
+  async getFollowingStatus(userId: string): Promise<boolean> {
+    const { data, error } = await followQueries.getFollowingStatus(userId);
+    if (error) throw error;
+    return !!data;
+  },
+
+  async getFollowerCounts(userId: string): Promise<{ follower_count: number; following_count: number }> {
+    const { data, error } = await followQueries.getFollowerCount(userId);
+    if (error) throw error;
+    return {
+      follower_count: data?.follower_count || 0,
+      following_count: data?.following_count || 0
+    };
+  }
 };

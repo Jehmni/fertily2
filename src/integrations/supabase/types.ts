@@ -158,6 +158,13 @@ export type Database = {
             referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "community_posts_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "user_follower_counts"
+            referencedColumns: ["user_id"]
+          },
         ]
       }
       cycle_tracking: {
@@ -480,6 +487,13 @@ export type Database = {
             referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "post_comments_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "user_follower_counts"
+            referencedColumns: ["user_id"]
+          },
         ]
       }
       post_drafts: {
@@ -560,6 +574,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "post_reactions_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "user_follower_counts"
+            referencedColumns: ["user_id"]
           },
         ]
       }
@@ -675,6 +696,16 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      user_follower_counts: {
+        Row: {
+          first_name: string | null
+          follower_count: number | null
+          following_count: number | null
+          last_name: string | null
+          user_id: string | null
+        }
+        Relationships: []
       }
     }
     Functions: {

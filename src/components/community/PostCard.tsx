@@ -4,11 +4,12 @@ import { Heart, MessageCircle, Bookmark, PartyPopper, ThumbsUp, Lightbulb, Star 
 import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardTitle, CardContent, CardFooter } from "@/components/ui/card";
 import type { CommunityPost } from "@/types/community";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQueryClient, useQuery } from "@tanstack/react-query";
 import { CommunityService } from "@/services/CommunityService";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "@/hooks/use-toast";
 import { RichTextEditor } from "./RichTextEditor";
+import { FollowButton } from "./FollowButton";
 
 interface PostCardProps {
   post: CommunityPost;
@@ -28,6 +29,12 @@ const emojiIcons = {
 export const PostCard = ({ post, onCommentClick, bookmarked, onBookmarkToggle }: PostCardProps) => {
   const queryClient = useQueryClient();
   const { user } = useAuth();
+
+  const { data: followerCounts } = useQuery({
+    queryKey: ["follower-counts", post.user_id],
+    queryFn: () => CommunityService.getFollowerCounts(post.user_id),
+    enabled: !post.anonymous,
+  });
 
   const toggleReactionMutation = useMutation({
     mutationFn: ({ postId, emojiType }: { postId: string; emojiType: string }) =>
@@ -62,11 +69,24 @@ export const PostCard = ({ post, onCommentClick, bookmarked, onBookmarkToggle }:
     <Card>
       <CardHeader>
         <div className="flex justify-between items-start">
-          <div>
+          <div className="space-y-1">
             <CardTitle>{post.title}</CardTitle>
-            <p className="text-sm text-muted-foreground">
-              Posted by {postLabel} • {format(new Date(post.created_at), "MMM d, yyyy")}
-            </p>
+            <div className="flex items-center space-x-2">
+              <p className="text-sm text-muted-foreground">
+                Posted by {postLabel} • {format(new Date(post.created_at), "MMM d, yyyy")}
+              </p>
+              {!post.anonymous && !isOwnPost && (
+                <>
+                  <span className="text-sm text-muted-foreground">•</span>
+                  <FollowButton userId={post.user_id} />
+                  {followerCounts && (
+                    <span className="text-sm text-muted-foreground">
+                      {followerCounts.follower_count} followers
+                    </span>
+                  )}
+                </>
+              )}
+            </div>
           </div>
           <span className="px-2 py-1 bg-primary/10 rounded text-sm">
             {post.category}
