@@ -47,6 +47,7 @@ export type Database = {
           message: string | null
           response: string | null
           user_id: string
+          was_spoken: boolean | null
         }
         Insert: {
           created_at?: string
@@ -55,6 +56,7 @@ export type Database = {
           message?: string | null
           response?: string | null
           user_id: string
+          was_spoken?: boolean | null
         }
         Update: {
           created_at?: string
@@ -63,6 +65,7 @@ export type Database = {
           message?: string | null
           response?: string | null
           user_id?: string
+          was_spoken?: boolean | null
         }
         Relationships: []
       }
