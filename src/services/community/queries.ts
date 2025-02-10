@@ -1,4 +1,3 @@
-
 import { supabase } from "@/lib/supabase";
 
 export const postQueries = {
@@ -42,7 +41,7 @@ export const postQueries = {
       .select('*')
       .order('name', { ascending: true }),
 
-  createPost: async (title: string, content: string, category: string, anonymous: boolean) => {
+  createPost: async (title: string, content: string, category: string, anonymous: boolean, image_urls?: string[]) => {
     const { data: { session } } = await supabase.auth.getSession();
     if (!session) throw new Error('No active session');
     
@@ -53,6 +52,7 @@ export const postQueries = {
         content,
         category,
         anonymous,
+        image_urls,
         user_id: session.user.id
       })
       .select(`
