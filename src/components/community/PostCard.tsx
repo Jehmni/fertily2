@@ -1,6 +1,6 @@
 
 import { format } from "date-fns";
-import { Heart, MessageCircle, Bookmark, Celebrate, ThumbsUp, Lightbulb, PartyPopper } from "lucide-react";
+import { Heart, MessageCircle, Bookmark, PartyPopper, ThumbsUp, Lightbulb } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardTitle, CardContent, CardFooter } from "@/components/ui/card";
 import type { CommunityPost } from "@/types/community";
@@ -18,7 +18,7 @@ interface PostCardProps {
 
 const emojiIcons = {
   heart: Heart,
-  celebrate: Celebrate,
+  celebrate: PartyPopper,
   support: ThumbsUp,
   insightful: Lightbulb,
   thanks: PartyPopper,
