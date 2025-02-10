@@ -10,7 +10,6 @@ import { CommunityService } from "@/services/CommunityService";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "@/hooks/use-toast";
 import { RichTextEditor } from "./RichTextEditor";
-import { FollowButton } from "./FollowButton";
 import { UserProfile } from "./UserProfile";
 
 interface PostCardProps {
@@ -77,7 +76,7 @@ export const PostCard = ({ post, onCommentClick, bookmarked, onBookmarkToggle }:
               <CardTitle>{post.title}</CardTitle>
               <div className="flex items-center space-x-2">
                 <button 
-                  className="text-sm text-muted-foreground hover:underline"
+                  className={`text-sm ${!post.anonymous ? "text-primary hover:underline cursor-pointer" : "text-muted-foreground cursor-default"}`}
                   onClick={() => !post.anonymous && setShowProfile(true)}
                   disabled={post.anonymous}
                 >
