@@ -10,6 +10,7 @@ import {
 import { followQueries } from "./community/follow-queries";
 import { transformPostData, transformCommentData } from "./community/transformers";
 import type { CommunityPost, PostComment, PostReaction, PostCategory, PostBookmark, MentionSuggestion, UserMention } from "@/types/community";
+import { supabase } from "@/lib/supabase";
 
 export const CommunityService = {
   async getPosts(filters?: { 
@@ -137,5 +138,31 @@ export const CommunityService = {
 
   async createMention(mentionedUserId: string, postId?: string, commentId?: string): Promise<UserMention> {
     return mentionQueries.createMention(mentionedUserId, postId, commentId);
+  },
+
+  async getUserProfile(userId: string) {
+    const { data, error } = await supabase
+      .from('profiles')
+      .select('first_name, last_name')
+      .eq('id', userId)
+      .single();
+      
+    if (error) throw error;
+    return data;
+  },
+
+  async sendPrivateMessage(recipientId: string, content: string) {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) throw new Error('No active session');
+
+    const { error } = await supabase
+      .from('private_messages')
+      .insert({
+        sender_id: session.user.id,
+        recipient_id: recipientId,
+        content
+      });
+
+    if (error) throw error;
   }
 };

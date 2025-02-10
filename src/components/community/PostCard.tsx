@@ -1,4 +1,3 @@
-
 import { format } from "date-fns";
 import { Heart, MessageCircle, Bookmark, PartyPopper, ThumbsUp, Lightbulb, Star } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -10,6 +9,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { toast } from "@/hooks/use-toast";
 import { RichTextEditor } from "./RichTextEditor";
 import { FollowButton } from "./FollowButton";
+import { UserProfile } from "./UserProfile";
 
 interface PostCardProps {
   post: CommunityPost;
@@ -29,6 +29,7 @@ const emojiIcons = {
 export const PostCard = ({ post, onCommentClick, bookmarked, onBookmarkToggle }: PostCardProps) => {
   const queryClient = useQueryClient();
   const { user } = useAuth();
+  const [showProfile, setShowProfile] = useState(false);
 
   const { data: followerCounts } = useQuery({
     queryKey: ["follower-counts", post.user_id],
@@ -66,93 +67,100 @@ export const PostCard = ({ post, onCommentClick, bookmarked, onBookmarkToggle }:
   const postLabel = isOwnPost && post.anonymous ? `${post.anonymous_alias} (You)` : displayName;
 
   return (
-    <Card>
-      <CardHeader>
-        <div className="flex justify-between items-start">
-          <div className="space-y-1">
-            <CardTitle>{post.title}</CardTitle>
-            <div className="flex items-center space-x-2">
-              <p className="text-sm text-muted-foreground">
-                Posted by {postLabel} • {format(new Date(post.created_at), "MMM d, yyyy")}
-              </p>
-              {!post.anonymous && !isOwnPost && (
-                <>
-                  <span className="text-sm text-muted-foreground">•</span>
-                  <FollowButton userId={post.user_id} />
-                  {followerCounts && (
-                    <span className="text-sm text-muted-foreground">
-                      {followerCounts.follower_count} followers
-                    </span>
-                  )}
-                </>
-              )}
+    <>
+      <Card>
+        <CardHeader>
+          <div className="flex justify-between items-start">
+            <div className="space-y-1">
+              <CardTitle>{post.title}</CardTitle>
+              <div className="flex items-center space-x-2">
+                <button 
+                  className="text-sm text-muted-foreground hover:underline"
+                  onClick={() => !post.anonymous && setShowProfile(true)}
+                  disabled={post.anonymous}
+                >
+                  Posted by {postLabel}
+                </button>
+                <span className="text-sm text-muted-foreground">•</span>
+                <span className="text-sm text-muted-foreground">
+                  {format(new Date(post.created_at), "MMM d, yyyy")}
+                </span>
+              </div>
             </div>
+            <span className="px-2 py-1 bg-primary/10 rounded text-sm">
+              {post.category}
+            </span>
           </div>
-          <span className="px-2 py-1 bg-primary/10 rounded text-sm">
-            {post.category}
-          </span>
-        </div>
-      </CardHeader>
-      <CardContent className="space-y-4">
-        {post.content_format === 'rich' ? (
-          <RichTextEditor 
-            content={post.content} 
-            onChange={() => {}} 
-            editable={false} 
-          />
-        ) : (
-          <p className="whitespace-pre-wrap">{post.content}</p>
-        )}
-        
-        {post.image_urls && post.image_urls.length > 0 && (
-          <div className="grid grid-cols-2 md:grid-cols-3 gap-2 mt-4">
-            {post.image_urls.map((url, index) => (
-              <img
-                key={url}
-                src={url}
-                alt={`Post image ${index + 1}`}
-                className="rounded-lg w-full h-48 object-cover"
-              />
-            ))}
+        </CardHeader>
+        <CardContent className="space-y-4">
+          {post.content_format === 'rich' ? (
+            <RichTextEditor 
+              content={post.content} 
+              onChange={() => {}} 
+              editable={false} 
+            />
+          ) : (
+            <p className="whitespace-pre-wrap">{post.content}</p>
+          )}
+          
+          {post.image_urls && post.image_urls.length > 0 && (
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-2 mt-4">
+              {post.image_urls.map((url, index) => (
+                <img
+                  key={url}
+                  src={url}
+                  alt={`Post image ${index + 1}`}
+                  className="rounded-lg w-full h-48 object-cover"
+                />
+              ))}
+            </div>
+          )}
+        </CardContent>
+        <CardFooter className="flex justify-between">
+          <div className="flex space-x-2">
+            {Object.entries(emojiIcons).map(([type, Icon]) => {
+              const reactionCount = post.reactions_count?.find(r => r.emoji_type === type)?.count || 0;
+              const isReacted = post.user_reactions?.includes(type);
+              
+              return (
+                <Button
+                  key={type}
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => toggleReactionMutation.mutate({ postId: post.id, emojiType: type })}
+                  className={isReacted ? "text-primary" : ""}
+                >
+                  <Icon className={`h-4 w-4 mr-1 ${isReacted ? "fill-current" : ""}`} />
+                  {reactionCount}
+                </Button>
+              );
+            })}
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => onCommentClick(post)}
+            >
+              <MessageCircle className="h-4 w-4 mr-1" />
+              {post.comments_count?.[0]?.count || 0}
+            </Button>
           </div>
-        )}
-      </CardContent>
-      <CardFooter className="flex justify-between">
-        <div className="flex space-x-2">
-          {Object.entries(emojiIcons).map(([type, Icon]) => {
-            const reactionCount = post.reactions_count?.find(r => r.emoji_type === type)?.count || 0;
-            const isReacted = post.user_reactions?.includes(type);
-            
-            return (
-              <Button
-                key={type}
-                variant="ghost"
-                size="sm"
-                onClick={() => toggleReactionMutation.mutate({ postId: post.id, emojiType: type })}
-                className={isReacted ? "text-primary" : ""}
-              >
-                <Icon className={`h-4 w-4 mr-1 ${isReacted ? "fill-current" : ""}`} />
-                {reactionCount}
-              </Button>
-            );
-          })}
           <Button
             variant="ghost"
             size="sm"
-            onClick={() => onCommentClick(post)}
+            onClick={() => toggleBookmarkMutation.mutate()}
           >
-            <MessageCircle className="h-4 w-4 mr-1" />
-            {post.comments_count?.[0]?.count || 0}
+            <Bookmark className={`h-4 w-4 ${bookmarked ? "fill-current" : ""}`} />
           </Button>
-        </div>
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={() => toggleBookmarkMutation.mutate()}
-        >
-          <Bookmark className={`h-4 w-4 ${bookmarked ? "fill-current" : ""}`} />
-        </Button>
-      </CardFooter>
-    </Card>
+        </CardFooter>
+      </Card>
+
+      {!post.anonymous && (
+        <UserProfile
+          userId={post.user_id}
+          isOpen={showProfile}
+          onOpenChange={setShowProfile}
+        />
+      )}
+    </>
   );
 };
