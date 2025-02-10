@@ -33,12 +33,12 @@ export const SearchBar = ({ value, onChange }: SearchBarProps) => {
     };
   }, []);
 
-  // Update input value when prop changes
+  // Set initial value
   useEffect(() => {
-    if (inputRef.current && inputRef.current.value !== value) {
+    if (inputRef.current) {
       inputRef.current.value = value;
     }
-  }, [value]);
+  }, []); // Only run once on mount
 
   return (
     <div className="relative flex-1">
@@ -47,7 +47,6 @@ export const SearchBar = ({ value, onChange }: SearchBarProps) => {
         ref={inputRef}
         placeholder="Search posts..."
         className="pl-8"
-        defaultValue={value}
         onChange={handleChange}
       />
     </div>
