@@ -5,7 +5,7 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Button } from "@/components/ui/button";
 import { ImageUpload } from "../ImageUpload";
-import { RichTextEditor } from "../RichTextEditor";
+import { MentionsInput } from "../MentionsInput";
 import type { PostCategory } from "@/types/community";
 
 interface PostDialogFormProps {
@@ -76,9 +76,10 @@ export const PostDialogForm = ({
 
       <div>
         <Label>Your Story</Label>
-        <RichTextEditor
-          content={formData.content}
+        <MentionsInput
+          value={formData.content}
           onChange={(content) => handleChange("content", content)}
+          placeholder="Share your story... Use @ to mention others"
         />
       </div>
 
@@ -108,3 +109,4 @@ export const PostDialogForm = ({
     </div>
   );
 };
+

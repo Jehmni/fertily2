@@ -1,15 +1,15 @@
-
 import { 
   postQueries, 
   categoryQueries, 
   commentQueries, 
   reactionQueries, 
   bookmarkQueries, 
-  draftQueries 
+  draftQueries,
+  mentionQueries
 } from "./community/queries";
 import { followQueries } from "./community/follow-queries";
 import { transformPostData, transformCommentData } from "./community/transformers";
-import type { CommunityPost, PostComment, PostReaction, PostCategory, PostBookmark } from "@/types/community";
+import type { CommunityPost, PostComment, PostReaction, PostCategory, PostBookmark, MentionSuggestion } from "@/types/community";
 
 export const CommunityService = {
   async getPosts(filters?: { 
@@ -129,6 +129,17 @@ export const CommunityService = {
       follower_count: data?.follower_count || 0,
       following_count: data?.following_count || 0
     };
+  },
+
+  async searchUsers(query: string): Promise<MentionSuggestion[]> {
+    const { data, error } = await mentionQueries.searchUsers(query);
+    if (error) throw error;
+    return data;
+  },
+
+  async createMention(mentionedUserId: string, postId?: string, commentId?: string) {
+    const { data, error } = await mentionQueries.createMention(mentionedUserId, postId, commentId);
+    if (error) throw error;
+    return data;
   }
 };
-

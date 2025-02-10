@@ -4,12 +4,12 @@ import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
-import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { CommunityService } from "@/services/CommunityService";
 import type { CommunityPost, PostComment } from "@/types/community";
 import { useAuth } from "@/hooks/useAuth";
+import { MentionsInput } from "./MentionsInput";
 
 interface CommentsDialogProps {
   post: CommunityPost | null;
@@ -70,10 +70,10 @@ export const CommentsDialog = ({ post, onOpenChange }: CommentsDialogProps) => {
             )}
           </div>
           <div className="space-y-2">
-            <Textarea
+            <MentionsInput
               value={newComment.content}
-              onChange={(e) => setNewComment(prev => ({ ...prev, content: e.target.value }))}
-              placeholder="Add a supportive comment..."
+              onChange={(content) => setNewComment(prev => ({ ...prev, content }))}
+              placeholder="Add a supportive comment... Use @ to mention others"
             />
             <div className="flex items-center justify-between">
               <div className="flex items-center space-x-2">
@@ -104,3 +104,4 @@ export const CommentsDialog = ({ post, onOpenChange }: CommentsDialogProps) => {
     </Dialog>
   );
 };
+

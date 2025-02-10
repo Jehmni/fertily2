@@ -58,3 +58,19 @@ export interface PostBookmark {
   created_at: string;
 }
 
+export interface UserMention {
+  id: string;
+  post_id?: string;
+  comment_id?: string;
+  mentioned_user_id: string;
+  mentioning_user_id: string;
+  created_at: string;
+}
+
+export interface MentionSuggestion {
+  id: string;
+  display_name: string;
+  first_name: string;
+  last_name: string;
+}
+
