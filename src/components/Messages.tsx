@@ -81,13 +81,11 @@ export const Messages = () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
 
+      // First get all messages
       const { data, error } = await supabase
         .from('private_messages')
         .select(`
-          sender_id,
-          recipient_id,
-          content,
-          created_at,
+          *,
           sender:profiles!private_messages_sender_id_fkey(
             first_name,
             last_name,
@@ -121,7 +119,7 @@ export const Messages = () => {
             avatar_url: otherUserProfile.avatar_url,
             avatar_color: otherUserProfile.avatar_color,
             last_message: {
-              id: crypto.randomUUID(),
+              id: msg.id,
               content: msg.content,
               created_at: msg.created_at,
               sender_id: msg.sender_id,
