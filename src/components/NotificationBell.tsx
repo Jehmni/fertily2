@@ -71,7 +71,6 @@ export const NotificationBell = () => {
           setNotifications(prev => [newNotification, ...prev]);
           setUnreadCount(prev => prev + 1);
           
-          // Show different toast messages based on notification type
           if (newNotification.type === 'follow') {
             toast({
               title: "New Follower",
@@ -100,47 +99,25 @@ export const NotificationBell = () => {
       // Navigate based on notification type
       switch (notification.type) {
         case 'follow':
-          if (location.pathname !== '/community') {
-            navigate('/community');
-          }
+          navigate('/community');
           break;
         case 'message':
           if (notification.sender_id) {
-            if (location.pathname === '/') {
-              // If already on home, just update state
-              navigate('/', { 
-                state: { 
-                  activeView: 'messages', 
-                  userId: notification.sender_id 
-                },
-                replace: true 
-              });
-            } else {
-              // Navigate to home with messages view
-              navigate('/', { 
-                state: { 
-                  activeView: 'messages', 
-                  userId: notification.sender_id 
-                }
-              });
-            }
+            // Always navigate to home with messages view
+            navigate('/', {
+              state: {
+                activeView: 'messages',
+                selectedUserId: notification.sender_id // Changed from userId to selectedUserId
+              }
+            });
           }
           break;
         case 'comment':
         case 'reaction':
           if (notification.post_id) {
-            if (location.pathname === '/community') {
-              // If already on community, just update state
-              navigate('/community', { 
-                state: { postId: notification.post_id },
-                replace: true 
-              });
-            } else {
-              // Navigate to community with post ID
-              navigate('/community', { 
-                state: { postId: notification.post_id }
-              });
-            }
+            navigate('/community', {
+              state: { postId: notification.post_id }
+            });
           }
           break;
         default:
@@ -214,3 +191,4 @@ export const NotificationBell = () => {
     </DropdownMenu>
   );
 };
+
