@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from "react";
 import { Bell } from "lucide-react";
 import {
@@ -16,6 +17,7 @@ interface Notification {
   message: string;
   read: boolean;
   created_at: string;
+  type: string;
 }
 
 export const NotificationBell = () => {
@@ -60,12 +62,22 @@ export const NotificationBell = () => {
           table: 'notifications',
         },
         (payload) => {
-          setNotifications(prev => [payload.new as Notification, ...prev]);
+          const newNotification = payload.new as Notification;
+          setNotifications(prev => [newNotification, ...prev]);
           setUnreadCount(prev => prev + 1);
-          toast({
-            title: (payload.new as Notification).title,
-            description: (payload.new as Notification).message,
-          });
+          
+          // Show different toast messages based on notification type
+          if (newNotification.type === 'follow') {
+            toast({
+              title: "New Follower",
+              description: newNotification.message,
+            });
+          } else {
+            toast({
+              title: newNotification.title,
+              description: newNotification.message,
+            });
+          }
         }
       )
       .subscribe();
@@ -123,6 +135,9 @@ export const NotificationBell = () => {
             >
               <div className="font-semibold">{notification.title}</div>
               <div className="text-sm text-muted-foreground">{notification.message}</div>
+              <div className="text-xs text-muted-foreground mt-1">
+                {new Date(notification.created_at).toLocaleDateString()}
+              </div>
             </DropdownMenuItem>
           ))
         )}
