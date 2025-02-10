@@ -30,10 +30,11 @@ export const MentionsInput = ({ value, onChange, placeholder }: MentionsInputPro
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const [dropdownPosition, setDropdownPosition] = useState({ top: 0, left: 0 });
 
-  const { data: suggestions = [] } = useQuery({
+  const { data: suggestions, isLoading } = useQuery({
     queryKey: ["mention-suggestions", searchTerm],
     queryFn: () => CommunityService.searchUsers(searchTerm),
     enabled: searchTerm.length > 0,
+    initialData: [], // Ensure we always have an array
   });
 
   const calculateDropdownPosition = () => {
@@ -152,7 +153,7 @@ export const MentionsInput = ({ value, onChange, placeholder }: MentionsInputPro
             <CommandInput placeholder="Search users..." />
             <CommandEmpty>No users found.</CommandEmpty>
             <CommandGroup>
-              {suggestions.map((user) => (
+              {(suggestions || []).map((user) => (
                 <CommandItem
                   key={user.id}
                   onSelect={() => insertMention(user)}
