@@ -110,7 +110,7 @@ export const Messages = () => {
         const otherUserId = msg.sender_id === user.id ? msg.recipient_id : msg.sender_id;
         const otherUserProfile = msg.sender_id === user.id ? msg.recipient : msg.sender;
         
-        if (!conversationsMap.has(otherUserId)) {
+        if (!conversationsMap.has(otherUserId) && otherUserProfile) {
           conversationsMap.set(otherUserId, {
             user_id: otherUserId,
             first_name: otherUserProfile.first_name,
@@ -293,3 +293,4 @@ export const Messages = () => {
     </Card>
   );
 };
+
