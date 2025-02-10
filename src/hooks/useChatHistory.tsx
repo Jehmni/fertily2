@@ -41,16 +41,38 @@ export const useChatHistory = () => {
           { text: message, isBot: false, wasSpoken },
         ]);
 
+        console.log('Sending message:', { message, wasSpoken });
         const response = await ChatService.sendMessage(message, wasSpoken);
+        console.log('Received AI response:', response);
         
         // If this was a spoken message, convert response to speech and play it
         if (wasSpoken) {
+          console.log('Converting response to speech...');
           try {
             const audioContent = await VoiceService.textToSpeech(response);
-            const audio = new Audio(`data:audio/mp3;base64,${audioContent}`);
+            console.log('Received audio content, length:', audioContent?.length);
+            
+            if (!audioContent) {
+              throw new Error('No audio content received');
+            }
+
+            const audio = new Audio();
+            audio.src = `data:audio/mp3;base64,${audioContent}`;
+            
+            // Add event listeners for better error handling
+            audio.onerror = (e) => {
+              console.error('Audio playback error:', e);
+              throw new Error('Failed to play audio');
+            };
+            
+            audio.onloadeddata = () => {
+              console.log('Audio loaded successfully');
+            };
+
             await audio.play();
+            console.log('Audio playback started');
           } catch (error) {
-            console.error('Error playing audio response:', error);
+            console.error('Error with audio response:', error);
             toast({
               title: "Error",
               description: "Failed to play audio response. Please try again.",
