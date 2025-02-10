@@ -9,6 +9,8 @@ export interface CommunityPost {
   user_id: string;
   title: string;
   content: string;
+  content_format?: 'plain' | 'rich';
+  formatted_content?: any;
   category: string;
   anonymous: boolean;
   anonymous_alias?: string;

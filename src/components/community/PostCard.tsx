@@ -1,3 +1,4 @@
+
 import { format } from "date-fns";
 import { Heart, MessageCircle, Bookmark, PartyPopper, ThumbsUp, Lightbulb, Star } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -7,6 +8,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { CommunityService } from "@/services/CommunityService";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "@/hooks/use-toast";
+import { RichTextEditor } from "./RichTextEditor";
 
 interface PostCardProps {
   post: CommunityPost;
@@ -72,7 +74,15 @@ export const PostCard = ({ post, onCommentClick, bookmarked, onBookmarkToggle }:
         </div>
       </CardHeader>
       <CardContent>
-        <p className="whitespace-pre-wrap">{post.content}</p>
+        {post.content_format === 'rich' ? (
+          <RichTextEditor 
+            content={post.content} 
+            onChange={() => {}} 
+            editable={false} 
+          />
+        ) : (
+          <p className="whitespace-pre-wrap">{post.content}</p>
+        )}
       </CardContent>
       <CardFooter className="flex justify-between">
         <div className="flex space-x-2">
