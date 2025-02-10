@@ -44,6 +44,11 @@ export const UserProfile = ({ userId, isOpen, onOpenChange }: UserProfileProps) 
     return `${firstName?.charAt(0) || ''}${lastName?.charAt(0) || ''}`.toUpperCase() || 'U';
   };
 
+  // Create a wrapper function that returns Promise<void>
+  const handleAvatarSuccess = async () => {
+    await refetchProfile();
+  };
+
   if (!profile) return null;
 
   return (
@@ -75,7 +80,7 @@ export const UserProfile = ({ userId, isOpen, onOpenChange }: UserProfileProps) 
           {user && userId === user.id && (
             <div className="space-y-4 border rounded-lg p-4">
               <h4 className="font-medium">Customize Avatar</h4>
-              <AvatarUpload userId={userId} onSuccess={refetchProfile} />
+              <AvatarUpload userId={userId} onSuccess={handleAvatarSuccess} />
             </div>
           )}
 
