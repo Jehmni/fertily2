@@ -121,7 +121,7 @@ const Index = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-accent via-background to-secondary/30">
-      <Dialog open={showOnboarding} onOpenChange={setShowOnboarding}>
+      <Dialog open={showOnboarding} onOpenChange={setShowOnboarding} className="bg-gradient-to-b from-accent via-background to-secondary/30">
         <DialogContent className="sm:max-w-md p-0 overflow-hidden bg-gradient-to-b from-accent via-background to-secondary/30">
           <div className="relative">
             <img 
