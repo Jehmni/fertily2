@@ -21,12 +21,11 @@ export const MessageList = ({ messages, selectedUserId }: MessageListProps) => {
 
   return (
     <div className="flex-1 p-4 overflow-y-auto space-y-4 scrollbar-hide">
-      <div className="flex flex-col-reverse">
-        <div ref={messagesEndRef} />
+      <div className="flex flex-col space-y-4">
         {messages.map((message) => (
           <div
             key={message.id}
-            className={`flex items-start gap-3 mb-4 ${
+            className={`flex items-start gap-3 ${
               message.sender_id === selectedUserId ? "justify-start" : "justify-end"
             }`}
           >
@@ -57,6 +56,7 @@ export const MessageList = ({ messages, selectedUserId }: MessageListProps) => {
             )}
           </div>
         ))}
+        <div ref={messagesEndRef} />
       </div>
     </div>
   );
