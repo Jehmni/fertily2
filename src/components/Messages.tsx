@@ -44,10 +44,16 @@ export const Messages = () => {
   const [sending, setSending] = useState(false);
 
   useEffect(() => {
-    loadConversations();
-    const unsubscribe = subscribeToMessages();
+    const initializeMessages = async () => {
+      await loadConversations();
+      setLoading(false);
+    };
+    
+    initializeMessages();
+    const channel = subscribeToMessages();
+
     return () => {
-      unsubscribe();
+      supabase.removeChannel(channel);
     };
   }, []);
 
@@ -59,7 +65,7 @@ export const Messages = () => {
 
   const subscribeToMessages = () => {
     const channel = supabase
-      .channel('private_messages')
+      .channel('private-messages')
       .on(
         'postgres_changes',
         {
@@ -67,17 +73,47 @@ export const Messages = () => {
           schema: 'public',
           table: 'private_messages'
         },
-        (payload) => {
+        async (payload) => {
           const newMessage = payload.new as Message;
-          setMessages(prev => [...prev, newMessage]);
-          loadConversations();
+          
+          // If the message belongs to the current conversation, add it
+          if (selectedUserId && (newMessage.sender_id === selectedUserId || newMessage.recipient_id === selectedUserId)) {
+            const { data: { user } } = await supabase.auth.getUser();
+            if (!user) return;
+
+            // Fetch full message data with profiles
+            const { data, error } = await supabase
+              .from('private_messages')
+              .select(`
+                *,
+                sender:profiles!private_messages_sender_id_fkey(
+                  first_name,
+                  last_name,
+                  avatar_url,
+                  avatar_color
+                ),
+                recipient:profiles!private_messages_recipient_id_fkey(
+                  first_name,
+                  last_name,
+                  avatar_url,
+                  avatar_color
+                )
+              `)
+              .eq('id', newMessage.id)
+              .single();
+
+            if (!error && data) {
+              setMessages(prev => [...prev, data]);
+            }
+          }
+          
+          // Always refresh conversations to update latest messages
+          await loadConversations();
         }
       )
       .subscribe();
 
-    return () => {
-      supabase.removeChannel(channel);
-    };
+    return channel;
   };
 
   const loadConversations = async () => {
@@ -134,7 +170,6 @@ export const Messages = () => {
       });
 
       setConversations(Array.from(conversationsMap.values()));
-      setLoading(false);
     } catch (error) {
       console.error('Error loading conversations:', error);
       toast({
@@ -190,7 +225,8 @@ export const Messages = () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error('No user logged in');
 
-      const { error } = await supabase
+      // First insert the message
+      const { error: insertError } = await supabase
         .from('private_messages')
         .insert({
           sender_id: user.id,
@@ -198,7 +234,9 @@ export const Messages = () => {
           content: newMessage.trim()
         });
 
-      if (error) throw error;
+      if (insertError) throw insertError;
+      
+      // Clear the input only after successful send
       setNewMessage("");
     } catch (error) {
       console.error('Error sending message:', error);
