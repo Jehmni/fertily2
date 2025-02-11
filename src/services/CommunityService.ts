@@ -1,4 +1,3 @@
-
 import { 
   postQueries, 
   categoryQueries, 
@@ -70,6 +69,11 @@ export const CommunityService = {
     const { data, error } = await commentQueries.addComment(postId, content, anonymous);
     if (error) throw error;
     return transformCommentData(data);
+  },
+
+  async deleteComment(commentId: string): Promise<void> {
+    const { error } = await commentQueries.deleteComment(commentId);
+    if (error) throw error;
   },
 
   async toggleReaction(

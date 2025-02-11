@@ -29,5 +29,12 @@ export const commentQueries = {
         profiles (first_name, last_name)
       `)
       .single();
+  },
+
+  deleteComment: async (commentId: string) => {
+    return supabase
+      .from('post_comments')
+      .delete()
+      .eq('id', commentId);
   }
 };
