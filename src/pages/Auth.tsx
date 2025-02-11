@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/lib/supabase";
 import { Button } from "@/components/ui/button";
@@ -39,7 +39,7 @@ const Auth = () => {
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [isSignUp, setIsSignUp] = useState(false);
-  const [showOnboarding, setShowOnboarding] = useState(true);
+  const [showOnboarding, setShowOnboarding] = useState(false);
   const [currentSlide, setCurrentSlide] = useState(0);
   const [errors, setErrors] = useState({
     email: "",
@@ -47,6 +47,11 @@ const Auth = () => {
   });
   const navigate = useNavigate();
   const { toast } = useToast();
+
+  // Handle onboarding visibility based on sign up state
+  useEffect(() => {
+    setShowOnboarding(isSignUp);
+  }, [isSignUp]);
 
   const validateForm = () => {
     const newErrors = {
@@ -116,11 +121,6 @@ const Auth = () => {
       setShowOnboarding(false);
     }
   };
-
-  // Only show onboarding for sign up, not for sign in
-  if (!isSignUp) {
-    setShowOnboarding(false);
-  }
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-primary/20 to-background flex items-center justify-center p-4">
@@ -263,9 +263,7 @@ const Auth = () => {
               onClick={() => {
                 setIsSignUp(!isSignUp);
                 setErrors({ email: "", password: "" });
-                if (!isSignUp) {
-                  setShowOnboarding(true);
-                }
+                setCurrentSlide(0);
               }}
               className="text-sm text-primary hover:underline transition-all duration-200"
             >
