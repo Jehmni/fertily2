@@ -123,6 +123,16 @@ const Auth = () => {
     }
   };
 
+  const handleToggleAuth = () => {
+    if (!isSignUp) {
+      // If currently on sign in, switching to sign up
+      setShowSplash(true);
+      setCurrentSlide(0);
+    }
+    setIsSignUp(!isSignUp);
+    setErrors({ email: "", password: "" });
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-b from-primary/20 to-background flex items-center justify-center p-4">
       {showSplash && (
@@ -184,7 +194,7 @@ const Auth = () => {
         </Dialog>
       )}
       
-      {(!showSplash || isSignUp) && (
+      {(!showSplash || !isSignUp) && (
         <Card className="w-full max-w-md p-8 space-y-6 shadow-lg animate-fadeIn">
           <h1 className="text-3xl font-bold text-center text-primary">
             {isSignUp ? "Create Account" : "Welcome Back"}
@@ -281,10 +291,7 @@ const Auth = () => {
           <div className="text-center">
             <button
               type="button"
-              onClick={() => {
-                setIsSignUp(!isSignUp);
-                setErrors({ email: "", password: "" });
-              }}
+              onClick={handleToggleAuth}
               className="text-sm text-primary hover:underline transition-all duration-200"
             >
               {isSignUp
