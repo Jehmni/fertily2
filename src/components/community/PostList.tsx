@@ -5,6 +5,8 @@ import type { CommunityPost } from "@/types/community";
 import { useIntersectionObserver } from "@/hooks/useIntersectionObserver";
 import { CommunityService } from "@/services/CommunityService";
 import { useToast } from "@/hooks/use-toast";
+import { EmptyState } from "@/components/ui/empty-state";
+import { FileText } from "lucide-react";
 
 interface PostListProps {
   posts: CommunityPost[];
@@ -32,6 +34,21 @@ export const PostList = ({
       }
     },
   });
+
+  if (posts.length === 0) {
+    return (
+      <EmptyState
+        icon={FileText}
+        title="No posts yet"
+        description="Be the first one to share your story with the community"
+        actionLabel="Share Your Story"
+        onAction={() => {
+          // This will trigger the create post dialog from the parent
+          document.dispatchEvent(new CustomEvent('openCreatePostDialog'));
+        }}
+      />
+    );
+  }
 
   return (
     <div className="grid gap-6">

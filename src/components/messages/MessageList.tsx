@@ -3,6 +3,8 @@ import { useEffect, useRef } from "react";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import type { Message } from "../Messages";
 import { format } from "date-fns";
+import { EmptyState } from "@/components/ui/empty-state";
+import { MessageSquare } from "lucide-react";
 
 interface MessageListProps {
   messages: Message[];
@@ -19,6 +21,26 @@ export const MessageList = ({ messages, selectedUserId }: MessageListProps) => {
   useEffect(() => {
     scrollToBottom();
   }, [messages]);
+
+  if (!selectedUserId) {
+    return (
+      <EmptyState
+        icon={MessageSquare}
+        title="No conversation selected"
+        description="Select a conversation to start messaging"
+      />
+    );
+  }
+
+  if (messages.length === 0) {
+    return (
+      <EmptyState
+        icon={MessageSquare}
+        title="No messages yet"
+        description="Start a conversation by sending a message"
+      />
+    );
+  }
 
   return (
     <div className="flex-1 p-4 overflow-y-auto space-y-4 scrollbar-hide">

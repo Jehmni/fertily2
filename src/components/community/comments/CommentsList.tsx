@@ -1,6 +1,8 @@
 
 import type { PostComment } from "@/types/community";
 import { CommentItem } from "./CommentItem";
+import { EmptyState } from "@/components/ui/empty-state";
+import { MessageSquare } from "lucide-react";
 
 interface CommentsListProps {
   comments: PostComment[];
@@ -12,6 +14,16 @@ export const CommentsList = ({ comments, isLoading }: CommentsListProps) => {
     return <div>Loading comments...</div>;
   }
 
+  if (comments.length === 0) {
+    return (
+      <EmptyState
+        icon={MessageSquare}
+        title="No comments yet"
+        description="Be the first one to share your thoughts"
+      />
+    );
+  }
+
   return (
     <div className="space-y-4">
       {comments.map((comment: PostComment) => (
@@ -20,4 +32,3 @@ export const CommentsList = ({ comments, isLoading }: CommentsListProps) => {
     </div>
   );
 };
-

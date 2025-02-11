@@ -1,6 +1,8 @@
 
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import type { Message, Conversation } from "../Messages";
+import { EmptyState } from "@/components/ui/empty-state";
+import { Users } from "lucide-react";
 
 interface ConversationListProps {
   conversations: Conversation[];
@@ -13,6 +15,18 @@ export const ConversationList = ({
   selectedUserId, 
   onSelectConversation 
 }: ConversationListProps) => {
+  if (conversations.length === 0) {
+    return (
+      <div className="w-1/3 border-r">
+        <EmptyState
+          icon={Users}
+          title="No conversations"
+          description="Start chatting with other members of the community"
+        />
+      </div>
+    );
+  }
+
   return (
     <div className="w-1/3 border-r overflow-y-auto">
       {conversations.map((conv) => (
