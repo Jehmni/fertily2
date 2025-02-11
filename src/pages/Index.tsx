@@ -17,7 +17,25 @@ import { DesktopNav } from "@/components/navigation/DesktopNav";
 import { Header } from "@/components/layout/Header";
 import { Messages } from "@/components/Messages";
 import { LoadingSkeleton } from "@/components/ui/loading-skeleton";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import { Dialog, DialogContent } from "@/components/ui/dialog";
+
+const onboardingSlides = [
+  {
+    title: "Welcome to Your Fertility Journey! 👋",
+    description: "Track your fertility cycle with personalized insights and support.",
+    image: "/photo-1649972904349-6e44c42644a7",
+  },
+  {
+    title: "Personal AI Assistant",
+    description: "Chat with our AI assistant for 24/7 support and guidance.",
+    image: "/photo-1581091226825-a6a2a5aee158",
+  },
+  {
+    title: "Join Our Community",
+    description: "Connect with others and share experiences in a supportive environment.",
+    image: "/photo-1519389950473-47ba0277781c",
+  },
+];
 
 const Index = () => {
   const { toast } = useToast();
@@ -25,6 +43,7 @@ const Index = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [showOnboarding, setShowOnboarding] = useState(false);
+  const [currentSlide, setCurrentSlide] = useState(0);
   const isMobile = useIsMobile();
 
   useEffect(() => {
@@ -42,6 +61,14 @@ const Index = () => {
 
     return () => clearTimeout(timer);
   }, []);
+
+  const handleNextSlide = () => {
+    if (currentSlide < onboardingSlides.length - 1) {
+      setCurrentSlide(prev => prev + 1);
+    } else {
+      setShowOnboarding(false);
+    }
+  };
 
   const handleLogout = async () => {
     try {
@@ -92,27 +119,41 @@ const Index = () => {
   return (
     <div className="min-h-screen bg-gradient-to-b from-secondary to-white">
       <Dialog open={showOnboarding} onOpenChange={setShowOnboarding}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle>Welcome to Your Fertility Journey! 👋</DialogTitle>
-            <DialogDescription className="space-y-4">
-              <p>
-                We're here to support you every step of the way. Here's what you can do:
-              </p>
-              <ul className="list-disc list-inside space-y-2">
-                <li>Track your fertility cycle</li>
-                <li>Chat with our AI assistant</li>
-                <li>Connect with the community</li>
-                <li>Access educational resources</li>
-              </ul>
+        <DialogContent className="sm:max-w-md p-0 overflow-hidden">
+          <div className="relative">
+            <img 
+              src={onboardingSlides[currentSlide].image}
+              alt="Onboarding"
+              className="w-full h-48 object-cover"
+            />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
+          </div>
+          <div className="p-6 space-y-4">
+            <h2 className="text-2xl font-semibold">
+              {onboardingSlides[currentSlide].title}
+            </h2>
+            <p className="text-muted-foreground">
+              {onboardingSlides[currentSlide].description}
+            </p>
+            <div className="flex justify-between items-center pt-4">
+              <div className="flex gap-2">
+                {onboardingSlides.map((_, index) => (
+                  <div
+                    key={index}
+                    className={`h-2 w-2 rounded-full transition-colors ${
+                      index === currentSlide ? 'bg-primary' : 'bg-muted'
+                    }`}
+                  />
+                ))}
+              </div>
               <Button 
-                onClick={() => setShowOnboarding(false)}
-                className="w-full mt-4"
+                onClick={handleNextSlide}
+                className="min-w-[100px]"
               >
-                Get Started
+                {currentSlide === onboardingSlides.length - 1 ? "Get Started" : "Next"}
               </Button>
-            </DialogDescription>
-          </DialogHeader>
+            </div>
+          </div>
         </DialogContent>
       </Dialog>
 
