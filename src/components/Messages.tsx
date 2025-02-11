@@ -41,13 +41,11 @@ export const Messages = () => {
   const [newMessage, setNewMessage] = useState("");
   const [loading, setLoading] = useState(true);
 
-  // Load conversations
   useEffect(() => {
     loadConversations();
     subscribeToMessages();
   }, []);
 
-  // Load messages when a conversation is selected
   useEffect(() => {
     if (selectedUserId) {
       loadMessages(selectedUserId);
@@ -230,7 +228,7 @@ export const Messages = () => {
             <MessageList messages={messages} selectedUserId={selectedUserId} />
             <MessageInput
               newMessage={newMessage}
-              onMessageChange={setNewMessage}
+              onMessageChange={(message: string) => setNewMessage(message)}
               onSendMessage={handleSendMessage}
             />
           </>
