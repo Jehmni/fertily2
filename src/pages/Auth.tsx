@@ -40,6 +40,7 @@ const Auth = () => {
   const [loading, setLoading] = useState(false);
   const [isSignUp, setIsSignUp] = useState(false);
   const [currentSlide, setCurrentSlide] = useState(0);
+  const [showOnboarding, setShowOnboarding] = useState(true);
   const [errors, setErrors] = useState({
     email: "",
     password: "",
@@ -52,12 +53,10 @@ const Auth = () => {
     const showSignup = localStorage.getItem("showSignup");
     if (showSignup === "true") {
       setIsSignUp(true);
-      localStorage.removeItem("showSignup"); // Clean up after reading
+      setShowOnboarding(false); // Hide onboarding immediately
+      localStorage.removeItem("showSignup");
     }
-  }, []); // We only want this to run once on mount
-
-  // Add a console log to help debug
-  console.log('Auth component rendered, isSignUp:', isSignUp, 'showSignup in localStorage:', localStorage.getItem("showSignup"));
+  }, []);
 
   const validateForm = () => {
     const newErrors = {
@@ -124,19 +123,19 @@ const Auth = () => {
     if (currentSlide < onboardingSlides.length - 1) {
       setCurrentSlide(prev => prev + 1);
     } else {
-      setCurrentSlide(0);
-      setShowSignupForm();
+      // When reaching the last slide, hide onboarding and show signup form
+      setShowOnboarding(false);
+      setIsSignUp(true);
     }
-  };
-
-  const setShowSignupForm = () => {
-    setIsSignUp(true);
   };
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-primary/20 to-background flex items-center justify-center p-4">
-      {isSignUp && currentSlide < onboardingSlides.length ? (
-        <Dialog open={true} onOpenChange={() => setShowSignupForm()}>
+      {showOnboarding && (
+        <Dialog open={true} onOpenChange={() => {
+          setShowOnboarding(false);
+          setIsSignUp(true);
+        }}>
           <DialogContent className="sm:max-w-md p-0 overflow-hidden">
             <div className="relative">
               <img 
@@ -174,7 +173,7 @@ const Auth = () => {
             </div>
           </DialogContent>
         </Dialog>
-      ) : null}
+      )}
       
       <Card className="w-full max-w-md p-8 space-y-6 shadow-lg animate-fadeIn">
         <h1 className="text-3xl font-bold text-center text-primary">
@@ -275,7 +274,6 @@ const Auth = () => {
             onClick={() => {
               setIsSignUp(!isSignUp);
               setErrors({ email: "", password: "" });
-              setCurrentSlide(0);
             }}
             className="text-sm text-primary hover:underline transition-all duration-200"
           >
