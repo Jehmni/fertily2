@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from "react";
 import { Card } from "@/components/ui/card";
 import { supabase } from "@/lib/supabase";
@@ -40,10 +41,14 @@ export const Messages = () => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [newMessage, setNewMessage] = useState("");
   const [loading, setLoading] = useState(true);
+  const [sending, setSending] = useState(false);
 
   useEffect(() => {
     loadConversations();
-    subscribeToMessages();
+    const unsubscribe = subscribeToMessages();
+    return () => {
+      unsubscribe();
+    };
   }, []);
 
   useEffect(() => {
@@ -65,7 +70,7 @@ export const Messages = () => {
         (payload) => {
           const newMessage = payload.new as Message;
           setMessages(prev => [...prev, newMessage]);
-          loadConversations(); // Refresh conversation list to update latest message
+          loadConversations();
         }
       )
       .subscribe();
@@ -80,7 +85,6 @@ export const Messages = () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
 
-      // First get all messages
       const { data, error } = await supabase
         .from('private_messages')
         .select(`
@@ -103,7 +107,6 @@ export const Messages = () => {
 
       if (error) throw error;
 
-      // Process conversations
       const conversationsMap = new Map<string, Conversation>();
       
       data?.forEach(msg => {
@@ -180,9 +183,10 @@ export const Messages = () => {
   };
 
   const handleSendMessage = async () => {
-    if (!selectedUserId || !newMessage.trim()) return;
+    if (!selectedUserId || !newMessage.trim() || sending) return;
 
     try {
+      setSending(true);
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error('No user logged in');
 
@@ -203,6 +207,8 @@ export const Messages = () => {
         description: "Failed to send message",
         variant: "destructive"
       });
+    } finally {
+      setSending(false);
     }
   };
 
@@ -228,7 +234,7 @@ export const Messages = () => {
             <MessageList messages={messages} selectedUserId={selectedUserId} />
             <MessageInput
               newMessage={newMessage}
-              onMessageChange={(message: string) => setNewMessage(message)}
+              onMessageChange={setNewMessage}
               onSendMessage={handleSendMessage}
             />
           </>
