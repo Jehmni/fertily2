@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/lib/supabase";
@@ -68,11 +67,25 @@ const Auth = () => {
   const { toast } = useToast();
 
   useEffect(() => {
-    const hasCompletedOnboarding = localStorage.getItem("hasCompletedOnboarding");
-    if (hasCompletedOnboarding === "true") {
-      setShowOnboarding(false);
-    }
-  }, []);
+    const checkSession = async () => {
+      const { data: { session }, error } = await supabase.auth.getSession();
+      if (session) {
+        navigate("/");
+      }
+    };
+    
+    checkSession();
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      if (event === 'SIGNED_IN' && session) {
+        navigate("/");
+      }
+    });
+
+    return () => {
+      subscription.unsubscribe();
+    };
+  }, [navigate]);
 
   const validateForm = () => {
     const newErrors = {
@@ -121,7 +134,7 @@ const Auth = () => {
 
     try {
       if (showSignUpForm) {
-        const { error } = await supabase.auth.signUp({
+        const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
           email,
           password,
           options: {
@@ -131,24 +144,26 @@ const Auth = () => {
             }
           }
         });
-        if (error) throw error;
+        
+        if (signUpError) throw signUpError;
 
-        // Update the profile with additional information
-        const { error: profileError } = await supabase
-          .from('profiles')
-          .update({
-            first_name: firstName,
-            last_name: lastName,
-            date_of_birth: dateOfBirth?.toISOString(),
-            cycle_length: cycleLength ? parseInt(cycleLength) : null,
-            last_period_date: lastPeriodDate?.toISOString(),
-            fertility_goals: fertilityGoals,
-            medical_conditions: medicalConditions.split(',').map(c => c.trim()).filter(Boolean),
-            medications: medications.split(',').map(m => m.trim()).filter(Boolean),
-          })
-          .eq('id', (await supabase.auth.getUser()).data.user?.id);
+        if (signUpData.user) {
+          const { error: profileError } = await supabase
+            .from('profiles')
+            .update({
+              first_name: firstName,
+              last_name: lastName,
+              date_of_birth: dateOfBirth?.toISOString(),
+              cycle_length: cycleLength ? parseInt(cycleLength) : null,
+              last_period_date: lastPeriodDate?.toISOString(),
+              fertility_goals: fertilityGoals,
+              medical_conditions: medicalConditions.split(',').map(c => c.trim()).filter(Boolean),
+              medications: medications.split(',').map(m => m.trim()).filter(Boolean),
+            })
+            .eq('id', signUpData.user.id);
 
-        if (profileError) throw profileError;
+          if (profileError) throw profileError;
+        }
 
         toast({
           title: "✨ Account Created!",
@@ -156,16 +171,17 @@ const Auth = () => {
         });
         localStorage.setItem("hasCompletedOnboarding", "true");
       } else {
-        const { error } = await supabase.auth.signInWithPassword({
+        const { error: signInError } = await supabase.auth.signInWithPassword({
           email,
           password,
         });
-        if (error) throw error;
+        
+        if (signInError) throw signInError;
+
         toast({
           title: "👋 Welcome back!",
           description: "Successfully signed in.",
         });
-        navigate("/");
       }
     } catch (error: any) {
       toast({
