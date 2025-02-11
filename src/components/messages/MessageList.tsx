@@ -1,4 +1,5 @@
 
+import { useEffect, useRef } from "react";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import type { Message } from "../Messages";
 
@@ -8,6 +9,16 @@ interface MessageListProps {
 }
 
 export const MessageList = ({ messages, selectedUserId }: MessageListProps) => {
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  };
+
+  useEffect(() => {
+    scrollToBottom();
+  }, [messages]);
+
   return (
     <div className="flex-1 p-4 overflow-y-auto space-y-4">
       {messages.map((message) => (
@@ -44,6 +55,7 @@ export const MessageList = ({ messages, selectedUserId }: MessageListProps) => {
           )}
         </div>
       ))}
+      <div ref={messagesEndRef} />
     </div>
   );
 };
