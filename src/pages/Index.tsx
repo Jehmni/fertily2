@@ -18,6 +18,7 @@ import { Header } from "@/components/layout/Header";
 import { Messages } from "@/components/Messages";
 import { LoadingSkeleton } from "@/components/ui/loading-skeleton";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
+import { useNavigate } from "react-router-dom";
 
 const onboardingSlides = [
   {
@@ -45,6 +46,7 @@ const Index = () => {
   const [showOnboarding, setShowOnboarding] = useState(false);
   const [currentSlide, setCurrentSlide] = useState(0);
   const isMobile = useIsMobile();
+  const navigate = useNavigate();
 
   useEffect(() => {
     // Check if this is the user's first visit
@@ -67,6 +69,7 @@ const Index = () => {
       setCurrentSlide(prev => prev + 1);
     } else {
       setShowOnboarding(false);
+      navigate("/auth"); // Navigate to auth page when "Get Started" is clicked
     }
   };
 
