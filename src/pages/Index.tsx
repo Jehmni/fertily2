@@ -16,8 +16,8 @@ import { DesktopNav } from "@/components/navigation/DesktopNav";
 import { Header } from "@/components/layout/Header";
 import { Messages } from "@/components/Messages";
 import { LoadingSkeleton } from "@/components/ui/loading-skeleton";
-import { Dialog, DialogContent } from "@/components/ui/dialog";
-import { useNavigate } from "react-router-dom";
+import { Dialog, DialogContent, DialogOverlay, DialogPortal } from "@/components/ui/dialog";
+import { useNavigate, useLocation } from "react-router-dom";
 
 const onboardingSlides = [
   {
@@ -46,30 +46,33 @@ const Index = () => {
   const [currentSlide, setCurrentSlide] = useState(0);
   const isMobile = useIsMobile();
   const navigate = useNavigate();
+  const location = useLocation();
 
   useEffect(() => {
-    // Check if this is the user's first visit
-    const hasSeenOnboarding = localStorage.getItem("hasSeenOnboarding");
-    if (!hasSeenOnboarding) {
-      setShowOnboarding(true);
-      localStorage.setItem("hasSeenOnboarding", "true");
+    // Only show onboarding if we're not already on the auth page
+    if (location.pathname !== '/auth') {
+      const hasSeenOnboarding = localStorage.getItem("hasSeenOnboarding");
+      if (!hasSeenOnboarding) {
+        setShowOnboarding(true);
+        localStorage.setItem("hasSeenOnboarding", "true");
+      }
     }
     
-    // Simulate loading state
     const timer = setTimeout(() => {
       setIsLoading(false);
     }, 1000);
 
     return () => clearTimeout(timer);
-  }, []);
+  }, [location]);
 
   const handleNextSlide = () => {
     if (currentSlide < onboardingSlides.length - 1) {
       setCurrentSlide(prev => prev + 1);
     } else {
       setShowOnboarding(false);
-      // Navigate to auth page when onboarding is complete
-      navigate("/auth");
+      if (location.pathname !== '/auth') {
+        navigate("/auth");
+      }
     }
   };
 
@@ -125,48 +128,50 @@ const Index = () => {
         open={showOnboarding} 
         onOpenChange={(open) => {
           setShowOnboarding(open);
-          if (!open) {
-            // Also navigate to auth when dialog is closed
+          if (!open && location.pathname !== '/auth') {
             navigate("/auth");
           }
         }}
       >
-        <DialogContent className="sm:max-w-md p-0 overflow-hidden bg-gradient-to-b from-accent via-background to-secondary/30">
-          <div className="relative">
-            <img 
-              src={onboardingSlides[currentSlide].image}
-              alt="Onboarding"
-              className="w-full h-48 object-cover"
-            />
-            <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
-          </div>
-          <div className="p-6 space-y-4">
-            <h2 className="text-2xl font-semibold">
-              {onboardingSlides[currentSlide].title}
-            </h2>
-            <p className="text-muted-foreground">
-              {onboardingSlides[currentSlide].description}
-            </p>
-            <div className="flex justify-between items-center pt-4">
-              <div className="flex gap-2">
-                {onboardingSlides.map((_, index) => (
-                  <div
-                    key={index}
-                    className={`h-2 w-2 rounded-full transition-colors ${
-                      index === currentSlide ? 'bg-primary' : 'bg-muted'
-                    }`}
-                  />
-                ))}
-              </div>
-              <Button 
-                onClick={handleNextSlide}
-                className="min-w-[100px]"
-              >
-                {currentSlide === onboardingSlides.length - 1 ? "Get Started" : "Next"}
-              </Button>
+        <DialogPortal>
+          <DialogOverlay className="bg-gradient-to-b from-accent/80 via-background/80 to-secondary/80 backdrop-blur-sm" />
+          <DialogContent className="sm:max-w-md p-0 overflow-hidden bg-gradient-to-b from-accent via-background to-secondary/30">
+            <div className="relative">
+              <img 
+                src={onboardingSlides[currentSlide].image}
+                alt="Onboarding"
+                className="w-full h-48 object-cover"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
             </div>
-          </div>
-        </DialogContent>
+            <div className="p-6 space-y-4">
+              <h2 className="text-2xl font-semibold">
+                {onboardingSlides[currentSlide].title}
+              </h2>
+              <p className="text-muted-foreground">
+                {onboardingSlides[currentSlide].description}
+              </p>
+              <div className="flex justify-between items-center pt-4">
+                <div className="flex gap-2">
+                  {onboardingSlides.map((_, index) => (
+                    <div
+                      key={index}
+                      className={`h-2 w-2 rounded-full transition-colors ${
+                        index === currentSlide ? 'bg-primary' : 'bg-muted'
+                      }`}
+                    />
+                  ))}
+                </div>
+                <Button 
+                  onClick={handleNextSlide}
+                  className="min-w-[100px]"
+                >
+                  {currentSlide === onboardingSlides.length - 1 ? "Get Started" : "Next"}
+                </Button>
+              </div>
+            </div>
+          </DialogContent>
+        </DialogPortal>
       </Dialog>
 
       <div className="max-w-6xl mx-auto px-4 py-4 md:py-6">
