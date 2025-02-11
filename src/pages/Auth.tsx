@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/lib/supabase";
@@ -14,7 +13,7 @@ import {
 } from "@/components/ui/tooltip";
 import { Label } from "@/components/ui/label";
 import { Loader2, Info } from "lucide-react";
-import { Dialog, DialogContent } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 
 const onboardingSlides = [
   {
@@ -40,7 +39,7 @@ const Auth = () => {
   const [loading, setLoading] = useState(false);
   const [isSignUp, setIsSignUp] = useState(false);
   const [currentSlide, setCurrentSlide] = useState(0);
-  const [showOnboarding, setShowOnboarding] = useState(true);
+  const [showSplash, setShowSplash] = useState(true);
   const [errors, setErrors] = useState({
     email: "",
     password: "",
@@ -49,11 +48,10 @@ const Auth = () => {
   const { toast } = useToast();
 
   useEffect(() => {
-    // Check if we should show signup form
     const showSignup = localStorage.getItem("showSignup");
     if (showSignup === "true") {
+      setShowSplash(false);
       setIsSignUp(true);
-      setShowOnboarding(false); // Hide onboarding immediately
       localStorage.removeItem("showSignup");
     }
   }, []);
@@ -122,21 +120,25 @@ const Auth = () => {
   const handleNextSlide = () => {
     if (currentSlide < onboardingSlides.length - 1) {
       setCurrentSlide(prev => prev + 1);
-    } else {
-      // When reaching the last slide, hide onboarding and show signup form
-      setShowOnboarding(false);
-      setIsSignUp(true);
     }
   };
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-primary/20 to-background flex items-center justify-center p-4">
-      {showOnboarding && (
-        <Dialog open={true} onOpenChange={() => {
-          setShowOnboarding(false);
-          setIsSignUp(true);
-        }}>
+      {showSplash && (
+        <Dialog 
+          open={true} 
+          onOpenChange={(open) => {
+            if (!open) {
+              setShowSplash(false);
+              if (currentSlide === onboardingSlides.length - 1) {
+                setIsSignUp(true);
+              }
+            }
+          }}
+        >
           <DialogContent className="sm:max-w-md p-0 overflow-hidden">
+            <DialogTitle className="sr-only">Onboarding</DialogTitle>
             <div className="relative">
               <img 
                 src={onboardingSlides[currentSlide].image}
@@ -164,7 +166,14 @@ const Auth = () => {
                   ))}
                 </div>
                 <Button 
-                  onClick={handleNextSlide}
+                  onClick={() => {
+                    if (currentSlide === onboardingSlides.length - 1) {
+                      setShowSplash(false);
+                      setIsSignUp(true);
+                    } else {
+                      handleNextSlide();
+                    }
+                  }}
                   className="min-w-[100px]"
                 >
                   {currentSlide === onboardingSlides.length - 1 ? "Get Started" : "Next"}
@@ -175,114 +184,116 @@ const Auth = () => {
         </Dialog>
       )}
       
-      <Card className="w-full max-w-md p-8 space-y-6 shadow-lg animate-fadeIn">
-        <h1 className="text-3xl font-bold text-center text-primary">
-          {isSignUp ? "Create Account" : "Welcome Back"}
-        </h1>
-        <form onSubmit={handleAuth} className="space-y-4">
-          <div className="space-y-2">
-            <div className="flex items-center justify-between">
-              <Label htmlFor="email" className="text-sm font-medium">
-                Email
-              </Label>
-              <TooltipProvider>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <Info className="h-4 w-4 text-muted-foreground" />
-                  </TooltipTrigger>
-                  <TooltipContent>
-                    <p>Enter a valid email address</p>
-                  </TooltipContent>
-                </Tooltip>
-              </TooltipProvider>
-            </div>
-            <Input
-              id="email"
-              type="email"
-              placeholder="Enter your email"
-              value={email}
-              onChange={(e) => {
-                setEmail(e.target.value);
-                if (errors.email) setErrors({ ...errors, email: "" });
-              }}
-              required
-              className={`bg-white/50 transition-all duration-200 hover:bg-white/70 focus:bg-white
-                ${errors.email ? "border-red-500 focus:border-red-500" : ""}`}
-            />
-            {errors.email && (
-              <p className="text-sm text-red-500 animate-fade-in">
-                {errors.email}
-              </p>
-            )}
-          </div>
-
-          <div className="space-y-2">
-            <div className="flex items-center justify-between">
-              <Label htmlFor="password" className="text-sm font-medium">
-                Password
-              </Label>
-              <TooltipProvider>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <Info className="h-4 w-4 text-muted-foreground" />
-                  </TooltipTrigger>
-                  <TooltipContent>
-                    <p>Password must be at least 6 characters long</p>
-                  </TooltipContent>
-                </Tooltip>
-              </TooltipProvider>
-            </div>
-            <Input
-              id="password"
-              type="password"
-              placeholder="Enter your password"
-              value={password}
-              onChange={(e) => {
-                setPassword(e.target.value);
-                if (errors.password) setErrors({ ...errors, password: "" });
-              }}
-              required
-              className={`bg-white/50 transition-all duration-200 hover:bg-white/70 focus:bg-white
-                ${errors.password ? "border-red-500 focus:border-red-500" : ""}`}
-            />
-            {errors.password && (
-              <p className="text-sm text-red-500 animate-fade-in">
-                {errors.password}
-              </p>
-            )}
-          </div>
-
-          <Button 
-            type="submit" 
-            className="w-full bg-primary hover:bg-primary/90 transition-all duration-200" 
-            disabled={loading}
-          >
-            {loading ? (
-              <div className="flex items-center justify-center gap-2">
-                <Loader2 className="h-4 w-4 animate-spin" />
-                <span>{isSignUp ? "Creating Account..." : "Signing In..."}</span>
+      {(!showSplash || isSignUp) && (
+        <Card className="w-full max-w-md p-8 space-y-6 shadow-lg animate-fadeIn">
+          <h1 className="text-3xl font-bold text-center text-primary">
+            {isSignUp ? "Create Account" : "Welcome Back"}
+          </h1>
+          <form onSubmit={handleAuth} className="space-y-4">
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <Label htmlFor="email" className="text-sm font-medium">
+                  Email
+                </Label>
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Info className="h-4 w-4 text-muted-foreground" />
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p>Enter a valid email address</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
               </div>
-            ) : (
-              <span>{isSignUp ? "Create Account" : "Sign In"}</span>
-            )}
-          </Button>
-        </form>
+              <Input
+                id="email"
+                type="email"
+                placeholder="Enter your email"
+                value={email}
+                onChange={(e) => {
+                  setEmail(e.target.value);
+                  if (errors.email) setErrors({ ...errors, email: "" });
+                }}
+                required
+                className={`bg-white/50 transition-all duration-200 hover:bg-white/70 focus:bg-white
+                  ${errors.email ? "border-red-500 focus:border-red-500" : ""}`}
+              />
+              {errors.email && (
+                <p className="text-sm text-red-500 animate-fade-in">
+                  {errors.email}
+                </p>
+              )}
+            </div>
 
-        <div className="text-center">
-          <button
-            type="button"
-            onClick={() => {
-              setIsSignUp(!isSignUp);
-              setErrors({ email: "", password: "" });
-            }}
-            className="text-sm text-primary hover:underline transition-all duration-200"
-          >
-            {isSignUp
-              ? "Already have an account? Sign in"
-              : "Don't have an account? Sign up"}
-          </button>
-        </div>
-      </Card>
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <Label htmlFor="password" className="text-sm font-medium">
+                  Password
+                </Label>
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Info className="h-4 w-4 text-muted-foreground" />
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p>Password must be at least 6 characters long</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+              </div>
+              <Input
+                id="password"
+                type="password"
+                placeholder="Enter your password"
+                value={password}
+                onChange={(e) => {
+                  setPassword(e.target.value);
+                  if (errors.password) setErrors({ ...errors, password: "" });
+                }}
+                required
+                className={`bg-white/50 transition-all duration-200 hover:bg-white/70 focus:bg-white
+                  ${errors.password ? "border-red-500 focus:border-red-500" : ""}`}
+              />
+              {errors.password && (
+                <p className="text-sm text-red-500 animate-fade-in">
+                  {errors.password}
+                </p>
+              )}
+            </div>
+
+            <Button 
+              type="submit" 
+              className="w-full bg-primary hover:bg-primary/90 transition-all duration-200" 
+              disabled={loading}
+            >
+              {loading ? (
+                <div className="flex items-center justify-center gap-2">
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  <span>{isSignUp ? "Creating Account..." : "Signing In..."}</span>
+                </div>
+              ) : (
+                <span>{isSignUp ? "Create Account" : "Sign In"}</span>
+              )}
+            </Button>
+          </form>
+
+          <div className="text-center">
+            <button
+              type="button"
+              onClick={() => {
+                setIsSignUp(!isSignUp);
+                setErrors({ email: "", password: "" });
+              }}
+              className="text-sm text-primary hover:underline transition-all duration-200"
+            >
+              {isSignUp
+                ? "Already have an account? Sign in"
+                : "Don't have an account? Sign up"}
+            </button>
+          </div>
+        </Card>
+      )}
     </div>
   );
 };
