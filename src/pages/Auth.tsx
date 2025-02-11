@@ -125,13 +125,18 @@ const Auth = () => {
       setCurrentSlide(prev => prev + 1);
     } else {
       setCurrentSlide(0);
+      setShowSignupForm();
     }
+  };
+
+  const setShowSignupForm = () => {
+    setIsSignUp(true);
   };
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-primary/20 to-background flex items-center justify-center p-4">
-      {isSignUp ? (
-        <Dialog open={true} onOpenChange={() => setCurrentSlide(0)}>
+      {isSignUp && currentSlide < onboardingSlides.length ? (
+        <Dialog open={true} onOpenChange={() => setShowSignupForm()}>
           <DialogContent className="sm:max-w-md p-0 overflow-hidden">
             <div className="relative">
               <img 
