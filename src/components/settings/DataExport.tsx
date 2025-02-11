@@ -5,6 +5,7 @@ import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/com
 import { toast } from "@/components/ui/use-toast";
 import { Download, Loader2 } from "lucide-react";
 import { supabase } from "@/lib/supabase";
+import { trackFeatureUsage, trackError } from "@/utils/analytics";
 
 export const DataExport = () => {
   const [loading, setLoading] = useState(false);
@@ -12,6 +13,8 @@ export const DataExport = () => {
   const handleExport = async () => {
     try {
       setLoading(true);
+      await trackFeatureUsage('data_export', { status: 'started' });
+      
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) throw new Error('No active session');
 
@@ -34,12 +37,15 @@ export const DataExport = () => {
       window.URL.revokeObjectURL(url);
       document.body.removeChild(a);
 
+      await trackFeatureUsage('data_export', { status: 'completed', size: blob.size });
+      
       toast({
         title: "Success",
         description: "Your data has been exported successfully",
       });
     } catch (error) {
       console.error('Error exporting data:', error);
+      await trackError('data_export_failed', error);
       toast({
         title: "Error",
         description: "Failed to export data",
