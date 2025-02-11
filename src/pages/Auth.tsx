@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/lib/supabase";
@@ -49,11 +50,14 @@ const Auth = () => {
   useEffect(() => {
     // Check if we should show signup form
     const showSignup = localStorage.getItem("showSignup");
-    if (showSignup) {
+    if (showSignup === "true") {
       setIsSignUp(true);
       localStorage.removeItem("showSignup"); // Clean up after reading
     }
-  }, []);
+  }, []); // We only want this to run once on mount
+
+  // Add a console log to help debug
+  console.log('Auth component rendered, isSignUp:', isSignUp, 'showSignup in localStorage:', localStorage.getItem("showSignup"));
 
   const validateForm = () => {
     const newErrors = {
