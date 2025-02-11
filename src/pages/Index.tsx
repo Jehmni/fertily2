@@ -1,3 +1,4 @@
+
 import { ChatWindow } from "@/components/ChatWindow";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/lib/supabase";
@@ -56,7 +57,7 @@ const Index = () => {
         return <Community />;
       default:
         return (
-          <div className="space-y-6">
+          <div className="space-y-6 animate-fade-in">
             <FertilityDashboard />
             <FertilityCalendar />
           </div>
@@ -65,31 +66,43 @@ const Index = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-secondary to-white p-4">
-      <div className="max-w-6xl mx-auto">
-        <div className="flex justify-between items-center mb-4 relative">
-          {isMobile ? (
-            <MobileNav
-              isMenuOpen={isMenuOpen}
-              setIsMenuOpen={setIsMenuOpen}
-              activeView={activeView}
-              onNavigate={handleNavigate}
-            />
-          ) : (
-            <DesktopNav
-              activeView={activeView}
-              onNavigate={handleNavigate}
-            />
-          )}
-          <div className="flex items-center gap-2">
+    <div className="min-h-screen bg-gradient-to-b from-secondary to-white">
+      <div className="max-w-6xl mx-auto px-4 py-4 md:py-6">
+        <div className="flex justify-between items-center mb-6 relative">
+          <div className="animate-fade-in">
+            {isMobile ? (
+              <MobileNav
+                isMenuOpen={isMenuOpen}
+                setIsMenuOpen={setIsMenuOpen}
+                activeView={activeView}
+                onNavigate={handleNavigate}
+              />
+            ) : (
+              <DesktopNav
+                activeView={activeView}
+                onNavigate={handleNavigate}
+              />
+            )}
+          </div>
+          <div className="flex items-center gap-3 animate-fade-in">
             <NotificationBell />
-            <Button variant="outline" onClick={handleLogout}>
+            <Button 
+              variant="outline" 
+              onClick={handleLogout}
+              className="transition-all duration-200 hover:scale-105"
+            >
               Sign Out
             </Button>
           </div>
         </div>
-        <Header />
-        {renderContent()}
+        
+        <div className="animate-fade-in">
+          <Header />
+        </div>
+
+        <div className="transition-all duration-300 ease-in-out">
+          {renderContent()}
+        </div>
       </div>
     </div>
   );

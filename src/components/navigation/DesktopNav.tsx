@@ -15,6 +15,7 @@ export const DesktopNav = ({ activeView, onNavigate }: DesktopNavProps) => {
           key={item.key}
           variant={activeView === item.key ? "default" : "ghost"}
           onClick={() => onNavigate(item.key)}
+          className="transition-all duration-200 hover:scale-105"
         >
           {item.icon}
           {item.label}
