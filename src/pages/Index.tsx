@@ -49,13 +49,10 @@ const Index = () => {
   const location = useLocation();
 
   useEffect(() => {
-    // Only show onboarding if we're not already on the auth page
-    if (location.pathname !== '/auth') {
-      const hasSeenOnboarding = localStorage.getItem("hasSeenOnboarding");
-      if (!hasSeenOnboarding) {
-        setShowOnboarding(true);
-        localStorage.setItem("hasSeenOnboarding", "true");
-      }
+    const hasSeenOnboarding = localStorage.getItem("hasSeenOnboarding");
+    if (!hasSeenOnboarding) {
+      setShowOnboarding(true);
+      localStorage.setItem("hasSeenOnboarding", "true");
     }
     
     const timer = setTimeout(() => {
@@ -63,16 +60,14 @@ const Index = () => {
     }, 1000);
 
     return () => clearTimeout(timer);
-  }, [location]);
+  }, []);
 
   const handleNextSlide = () => {
     if (currentSlide < onboardingSlides.length - 1) {
       setCurrentSlide(prev => prev + 1);
     } else {
       setShowOnboarding(false);
-      if (location.pathname !== '/auth') {
-        navigate("/auth");
-      }
+      navigate("/auth", { replace: true });
     }
   };
 
@@ -127,14 +122,14 @@ const Index = () => {
       <Dialog 
         open={showOnboarding} 
         onOpenChange={(open) => {
-          setShowOnboarding(open);
-          if (!open && location.pathname !== '/auth') {
-            navigate("/auth");
+          if (!open) {
+            setShowOnboarding(false);
+            navigate("/auth", { replace: true });
           }
         }}
       >
         <DialogPortal>
-          <DialogOverlay className="bg-gradient-to-b from-accent/80 via-background/80 to-secondary/80 backdrop-blur-sm" />
+          <DialogOverlay className="bg-gradient-to-b from-accent/80 via-background/80 to-secondary/80 backdrop-blur-sm fixed inset-0" />
           <DialogContent className="sm:max-w-md p-0 overflow-hidden bg-gradient-to-b from-accent via-background to-secondary/30">
             <div className="relative">
               <img 
