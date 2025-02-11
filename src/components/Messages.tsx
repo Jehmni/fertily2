@@ -65,7 +65,7 @@ export const Messages = () => {
 
   const subscribeToMessages = () => {
     const channel = supabase
-      .channel('private-messages')
+      .channel('private_messages')  // Fixed: using underscore instead of hyphen
       .on(
         'postgres_changes',
         {
@@ -226,15 +226,36 @@ export const Messages = () => {
       if (!user) throw new Error('No user logged in');
 
       // First insert the message
-      const { error: insertError } = await supabase
+      const { data, error: insertError } = await supabase
         .from('private_messages')
         .insert({
           sender_id: user.id,
           recipient_id: selectedUserId,
           content: newMessage.trim()
-        });
+        })
+        .select(`
+          *,
+          sender:profiles!private_messages_sender_id_fkey(
+            first_name,
+            last_name,
+            avatar_url,
+            avatar_color
+          ),
+          recipient:profiles!private_messages_recipient_id_fkey(
+            first_name,
+            last_name,
+            avatar_url,
+            avatar_color
+          )
+        `)
+        .single();
 
       if (insertError) throw insertError;
+      
+      // Immediately add the new message to the UI
+      if (data) {
+        setMessages(prev => [...prev, data]);
+      }
       
       // Clear the input only after successful send
       setNewMessage("");
