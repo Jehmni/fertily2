@@ -28,15 +28,22 @@ export const MessageInput = ({
     }
   };
 
+  const handleTextareaChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    onMessageChange(e.target.value);
+    // Auto-adjust height
+    e.target.style.height = 'inherit';
+    e.target.style.height = `${e.target.scrollHeight}px`;
+  };
+
   return (
     <form onSubmit={handleSubmit} className="p-4 border-t">
       <div className="flex gap-2">
         <textarea
           value={newMessage}
-          onChange={(e) => onMessageChange(e.target.value)}
+          onChange={handleTextareaChange}
           onKeyDown={handleKeyPress}
-          placeholder="Type your message..."
-          className="flex-1 p-2 border rounded-md resize-none min-h-[40px] max-h-[120px]"
+          placeholder="Type your message... (Shift + Enter for new line)"
+          className="flex-1 p-2 border rounded-md resize-none overflow-y-hidden min-h-[40px] max-h-[120px]"
           rows={1}
         />
         <Button

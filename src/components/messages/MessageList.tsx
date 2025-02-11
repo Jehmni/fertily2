@@ -38,9 +38,9 @@ export const MessageList = ({ messages, selectedUserId }: MessageListProps) => {
                 </AvatarFallback>
               </Avatar>
             )}
-            <div className="flex flex-col">
+            <div className="flex flex-col max-w-[70%]">
               <div
-                className={`max-w-[70%] p-3 rounded-lg ${
+                className={`w-full p-3 rounded-lg ${
                   message.sender_id === selectedUserId
                     ? "bg-secondary"
                     : "bg-primary text-primary-foreground"
