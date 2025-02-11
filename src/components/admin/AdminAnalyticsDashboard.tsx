@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -6,6 +5,7 @@ import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContai
 import { supabase } from "@/lib/supabase";
 import { format, subDays } from "date-fns";
 import { AlertCircle, ArrowUpRight, Users, Activity, Calendar } from "lucide-react";
+import { UserRoleManagement } from "./UserRoleManagement";
 
 type DailyMetric = {
   date: string;
@@ -117,6 +117,7 @@ export const AdminAnalyticsDashboard = () => {
           <TabsTrigger value="overview">Overview</TabsTrigger>
           <TabsTrigger value="features">Feature Usage</TabsTrigger>
           <TabsTrigger value="events">Event Types</TabsTrigger>
+          <TabsTrigger value="users">User Management</TabsTrigger>
         </TabsList>
 
         <TabsContent value="overview" className="space-y-4">
@@ -208,6 +209,10 @@ export const AdminAnalyticsDashboard = () => {
               </ResponsiveContainer>
             </CardContent>
           </Card>
+        </TabsContent>
+
+        <TabsContent value="users">
+          <UserRoleManagement />
         </TabsContent>
       </Tabs>
     </div>
