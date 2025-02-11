@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/lib/supabase";
@@ -6,11 +7,17 @@ import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
 import { useToast } from "@/components/ui/use-toast";
 import { Label } from "@/components/ui/label";
-import { Loader2 } from "lucide-react";
+import { Loader2, Info } from "lucide-react";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { Calendar } from "@/components/ui/calendar";
 import { format } from "date-fns";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { 
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
 import { CalendarIcon } from "lucide-react";
 
@@ -42,6 +49,8 @@ const Auth = () => {
   const [cycleLength, setCycleLength] = useState("");
   const [lastPeriodDate, setLastPeriodDate] = useState<Date>();
   const [fertilityGoals, setFertilityGoals] = useState("");
+  const [medicalConditions, setMedicalConditions] = useState("");
+  const [medications, setMedications] = useState("");
   const [loading, setLoading] = useState(false);
   const [currentSlide, setCurrentSlide] = useState(0);
   const [showOnboarding, setShowOnboarding] = useState(true);
@@ -124,6 +133,7 @@ const Auth = () => {
         });
         if (error) throw error;
 
+        // Update the profile with additional information
         const { error: profileError } = await supabase
           .from('profiles')
           .update({
@@ -133,6 +143,8 @@ const Auth = () => {
             cycle_length: cycleLength ? parseInt(cycleLength) : null,
             last_period_date: lastPeriodDate?.toISOString(),
             fertility_goals: fertilityGoals,
+            medical_conditions: medicalConditions.split(',').map(c => c.trim()).filter(Boolean),
+            medications: medications.split(',').map(m => m.trim()).filter(Boolean),
           })
           .eq('id', (await supabase.auth.getUser()).data.user?.id);
 
@@ -314,6 +326,51 @@ const Auth = () => {
                     />
                   </PopoverContent>
                 </Popover>
+              </div>
+
+              <div className="space-y-2">
+                <TooltipProvider>
+                  <div className="flex items-center gap-2">
+                    <Label htmlFor="medicalConditions">Medical Conditions</Label>
+                    <Tooltip>
+                      <TooltipTrigger>
+                        <Info className="h-4 w-4 text-muted-foreground" />
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <p>Enter any medical conditions, separated by commas</p>
+                        <p>Example: PCOS, Endometriosis</p>
+                      </TooltipContent>
+                    </Tooltip>
+                  </div>
+                </TooltipProvider>
+                <Input
+                  id="medicalConditions"
+                  value={medicalConditions}
+                  onChange={(e) => setMedicalConditions(e.target.value)}
+                  placeholder="e.g., PCOS, Endometriosis"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <TooltipProvider>
+                  <div className="flex items-center gap-2">
+                    <Label htmlFor="medications">Medications</Label>
+                    <Tooltip>
+                      <TooltipTrigger>
+                        <Info className="h-4 w-4 text-muted-foreground" />
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <p>Enter any medications you're taking, separated by commas</p>
+                      </TooltipContent>
+                    </Tooltip>
+                  </div>
+                </TooltipProvider>
+                <Input
+                  id="medications"
+                  value={medications}
+                  onChange={(e) => setMedications(e.target.value)}
+                  placeholder="Enter medications, separated by commas"
+                />
               </div>
 
               <div className="space-y-2">
