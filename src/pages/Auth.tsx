@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/lib/supabase";
@@ -6,15 +5,14 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
 import { useToast } from "@/components/ui/use-toast";
-import { 
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
 import { Label } from "@/components/ui/label";
-import { Loader2, Info } from "lucide-react";
+import { Loader2 } from "lucide-react";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
+import { Calendar } from "@/components/ui/calendar";
+import { format } from "date-fns";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { cn } from "@/lib/utils";
+import { CalendarIcon } from "lucide-react";
 
 const onboardingSlides = [
   {
@@ -40,6 +38,10 @@ const Auth = () => {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
+  const [dateOfBirth, setDateOfBirth] = useState<Date>();
+  const [cycleLength, setCycleLength] = useState("");
+  const [lastPeriodDate, setLastPeriodDate] = useState<Date>();
+  const [fertilityGoals, setFertilityGoals] = useState("");
   const [loading, setLoading] = useState(false);
   const [currentSlide, setCurrentSlide] = useState(0);
   const [showOnboarding, setShowOnboarding] = useState(true);
@@ -50,13 +52,13 @@ const Auth = () => {
     confirmPassword: "",
     firstName: "",
     lastName: "",
+    cycleLength: "",
   });
   
   const navigate = useNavigate();
   const { toast } = useToast();
 
   useEffect(() => {
-    // Check if user has completed onboarding before
     const hasCompletedOnboarding = localStorage.getItem("hasCompletedOnboarding");
     if (hasCompletedOnboarding === "true") {
       setShowOnboarding(false);
@@ -70,6 +72,7 @@ const Auth = () => {
       confirmPassword: "",
       firstName: "",
       lastName: "",
+      cycleLength: "",
     };
 
     if (!email.includes("@")) {
@@ -88,6 +91,9 @@ const Auth = () => {
       }
       if (!lastName.trim()) {
         newErrors.lastName = "Last name is required";
+      }
+      if (cycleLength && (isNaN(Number(cycleLength)) || Number(cycleLength) < 20 || Number(cycleLength) > 40)) {
+        newErrors.cycleLength = "Cycle length must be between 20 and 40 days";
       }
     }
 
@@ -117,6 +123,21 @@ const Auth = () => {
           }
         });
         if (error) throw error;
+
+        const { error: profileError } = await supabase
+          .from('profiles')
+          .update({
+            first_name: firstName,
+            last_name: lastName,
+            date_of_birth: dateOfBirth?.toISOString(),
+            cycle_length: cycleLength ? parseInt(cycleLength) : null,
+            last_period_date: lastPeriodDate?.toISOString(),
+            fertility_goals: fertilityGoals,
+          })
+          .eq('id', (await supabase.auth.getUser()).data.user?.id);
+
+        if (profileError) throw profileError;
+
         toast({
           title: "✨ Account Created!",
           description: "Please check your email to verify your account.",
@@ -149,7 +170,6 @@ const Auth = () => {
     if (currentSlide < onboardingSlides.length - 1) {
       setCurrentSlide(prev => prev + 1);
     } else {
-      // On last slide, complete onboarding
       setShowOnboarding(false);
       setShowSignUpForm(true);
       localStorage.setItem("hasCompletedOnboarding", "true");
@@ -158,26 +178,28 @@ const Auth = () => {
 
   const toggleAuthMode = () => {
     if (showSignUpForm) {
-      // Switch to login
       setShowSignUpForm(false);
       setShowOnboarding(false);
     } else {
-      // Switch to signup flow
       setShowOnboarding(true);
       setCurrentSlide(0);
     }
-    // Reset form
     setEmail("");
     setPassword("");
     setConfirmPassword("");
     setFirstName("");
     setLastName("");
+    setDateOfBirth(undefined);
+    setCycleLength("");
+    setLastPeriodDate(undefined);
+    setFertilityGoals("");
     setErrors({
       email: "",
       password: "",
       confirmPassword: "",
       firstName: "",
       lastName: "",
+      cycleLength: "",
     });
   };
 
@@ -263,6 +285,89 @@ const Auth = () => {
                     <p className="text-sm text-red-500">{errors.lastName}</p>
                   )}
                 </div>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="dateOfBirth">Date of Birth</Label>
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant="outline"
+                      className={cn(
+                        "w-full justify-start text-left font-normal",
+                        !dateOfBirth && "text-muted-foreground"
+                      )}
+                    >
+                      <CalendarIcon className="mr-2 h-4 w-4" />
+                      {dateOfBirth ? format(dateOfBirth, "PPP") : "Pick a date"}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0" align="start">
+                    <Calendar
+                      mode="single"
+                      selected={dateOfBirth}
+                      onSelect={setDateOfBirth}
+                      disabled={(date) =>
+                        date > new Date() || date < new Date("1900-01-01")
+                      }
+                      initialFocus
+                    />
+                  </PopoverContent>
+                </Popover>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="cycleLength">Average Cycle Length (days)</Label>
+                <Input
+                  id="cycleLength"
+                  type="number"
+                  value={cycleLength}
+                  onChange={(e) => setCycleLength(e.target.value)}
+                  min="20"
+                  max="40"
+                  placeholder="e.g., 28"
+                  className={errors.cycleLength ? "border-red-500" : ""}
+                />
+                {errors.cycleLength && (
+                  <p className="text-sm text-red-500">{errors.cycleLength}</p>
+                )}
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="lastPeriodDate">Last Period Start Date</Label>
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant="outline"
+                      className={cn(
+                        "w-full justify-start text-left font-normal",
+                        !lastPeriodDate && "text-muted-foreground"
+                      )}
+                    >
+                      <CalendarIcon className="mr-2 h-4 w-4" />
+                      {lastPeriodDate ? format(lastPeriodDate, "PPP") : "Pick a date"}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0" align="start">
+                    <Calendar
+                      mode="single"
+                      selected={lastPeriodDate}
+                      onSelect={setLastPeriodDate}
+                      disabled={(date) => date > new Date()}
+                      initialFocus
+                    />
+                  </PopoverContent>
+                </Popover>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="fertilityGoals">Fertility Goals</Label>
+                <Input
+                  id="fertilityGoals"
+                  value={fertilityGoals}
+                  onChange={(e) => setFertilityGoals(e.target.value)}
+                  placeholder="e.g., Trying to conceive, tracking cycle, etc."
+                />
               </div>
             </>
           )}
