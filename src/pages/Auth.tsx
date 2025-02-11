@@ -20,17 +20,17 @@ const onboardingSlides = [
   {
     title: "Welcome to Your Fertility Journey! 👋",
     description: "Track your fertility cycle with personalized insights and support.",
-    image: "/photo-1649972904349-6e44c42644a7",
+    image: "https://images.unsplash.com/photo-1649972904349-6e44c42644a7?auto=format&fit=crop&w=800&q=80",
   },
   {
     title: "Personal AI Assistant",
     description: "Chat with our AI assistant for 24/7 support and guidance.",
-    image: "/photo-1581091226825-a6a2a5aee158",
+    image: "https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?auto=format&fit=crop&w=800&q=80",
   },
   {
     title: "Join Our Community",
     description: "Connect with others and share experiences in a supportive environment.",
-    image: "/photo-1519389950473-47ba0277781c",
+    image: "https://images.unsplash.com/photo-1519389950473-47ba0277781c?auto=format&fit=crop&w=800&q=80",
   },
 ];
 
