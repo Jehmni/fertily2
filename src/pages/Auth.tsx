@@ -51,7 +51,7 @@ const Auth = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-primary/20 to-background flex items-center justify-center p-4">
-      <Card className="w-full max-w-md p-8 space-y-6 shadow-lg">
+      <Card className="w-full max-w-md p-8 space-y-6 shadow-lg animate-fadeIn">
         <h1 className="text-3xl font-bold text-center text-primary">
           {isSignUp ? "Create Account" : "Welcome Back"}
         </h1>
@@ -63,7 +63,7 @@ const Auth = () => {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
-              className="bg-white/50"
+              className="bg-white/50 transition-all duration-200 hover:bg-white/70 focus:bg-white"
             />
           </div>
           <div className="space-y-2">
@@ -73,12 +73,12 @@ const Auth = () => {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
-              className="bg-white/50"
+              className="bg-white/50 transition-all duration-200 hover:bg-white/70 focus:bg-white"
             />
           </div>
           <Button 
             type="submit" 
-            className="w-full bg-primary hover:bg-primary/90" 
+            className="w-full bg-primary hover:bg-primary/90 transition-all duration-200" 
             disabled={loading}
           >
             {loading
@@ -92,7 +92,7 @@ const Auth = () => {
           <button
             type="button"
             onClick={() => setIsSignUp(!isSignUp)}
-            className="text-sm text-primary hover:underline"
+            className="text-sm text-primary hover:underline transition-all duration-200"
           >
             {isSignUp
               ? "Already have an account? Sign in"
