@@ -60,12 +60,14 @@ export const Messages = () => {
   useEffect(() => {
     if (selectedUserId) {
       loadMessages(selectedUserId);
+    } else {
+      setMessages([]);
     }
   }, [selectedUserId]);
 
   const subscribeToMessages = () => {
     const channel = supabase
-      .channel('private_messages')  // Fixed: using underscore instead of hyphen
+      .channel('private_messages')
       .on(
         'postgres_changes',
         {
@@ -75,12 +77,14 @@ export const Messages = () => {
         },
         async (payload) => {
           const newMessage = payload.new as Message;
+          const { data: { user } } = await supabase.auth.getUser();
+          if (!user) return;
           
-          // If the message belongs to the current conversation, add it
-          if (selectedUserId && (newMessage.sender_id === selectedUserId || newMessage.recipient_id === selectedUserId)) {
-            const { data: { user } } = await supabase.auth.getUser();
-            if (!user) return;
-
+          // Check if message belongs to current conversation (either as sender or recipient)
+          if (selectedUserId && 
+              ((newMessage.sender_id === user.id && newMessage.recipient_id === selectedUserId) ||
+               (newMessage.recipient_id === user.id && newMessage.sender_id === selectedUserId))) {
+            
             // Fetch full message data with profiles
             const { data, error } = await supabase
               .from('private_messages')
