@@ -11,6 +11,8 @@ import Auth from "./pages/Auth";
 import NotFound from "./pages/NotFound";
 import { ResourceDetail } from "@/components/ResourceDetail";
 import { ErrorBoundary } from "@/components/ui/error-boundary";
+import TermsOfService from "./pages/TermsOfService";
+import PrivacyPolicy from "./pages/PrivacyPolicy";
 
 const queryClient = new QueryClient();
 
@@ -32,7 +34,26 @@ const App = () => {
       setSession(session);
     });
 
-    return () => subscription.unsubscribe();
+    // Session timeout handling (30 minutes)
+    const checkSession = setInterval(async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session) {
+        const lastActivity = new Date(session.created_at).getTime();
+        const now = new Date().getTime();
+        const inactiveTime = now - lastActivity;
+        
+        // If inactive for more than 30 minutes, sign out
+        if (inactiveTime > 30 * 60 * 1000) {
+          await supabase.auth.signOut();
+          setSession(null);
+        }
+      }
+    }, 60000); // Check every minute
+
+    return () => {
+      subscription.unsubscribe();
+      clearInterval(checkSession);
+    };
   }, []);
 
   if (loading) {
@@ -75,6 +96,8 @@ const App = () => {
                   )
                 }
               />
+              <Route path="/terms" element={<TermsOfService />} />
+              <Route path="/privacy" element={<PrivacyPolicy />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
             <Toaster />

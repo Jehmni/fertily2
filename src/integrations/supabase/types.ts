@@ -200,6 +200,36 @@ export type Database = {
         }
         Relationships: []
       }
+      data_retention_preferences: {
+        Row: {
+          created_at: string
+          data_deletion_period: number | null
+          id: string
+          retain_activity_logs: boolean | null
+          retain_messages: boolean | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          data_deletion_period?: number | null
+          id?: string
+          retain_activity_logs?: boolean | null
+          retain_messages?: boolean | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          data_deletion_period?: number | null
+          id?: string
+          retain_activity_logs?: boolean | null
+          retain_messages?: boolean | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       educational_resources: {
         Row: {
           category: string
@@ -806,6 +836,36 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      user_security_settings: {
+        Row: {
+          created_at: string
+          id: string
+          two_factor_enabled: boolean | null
+          two_factor_method: string | null
+          two_factor_secret: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          two_factor_enabled?: boolean | null
+          two_factor_method?: string | null
+          two_factor_secret?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          two_factor_enabled?: boolean | null
+          two_factor_method?: string | null
+          two_factor_secret?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
       }
     }
     Views: {
