@@ -38,7 +38,8 @@ const App = () => {
     const checkSession = setInterval(async () => {
       const { data: { session } } = await supabase.auth.getSession();
       if (session) {
-        const lastActivity = new Date(session.created_at).getTime();
+        // Get last activity from session metadata or user's last sign in
+        const lastActivity = new Date(session.user.last_sign_in_at).getTime();
         const now = new Date().getTime();
         const inactiveTime = now - lastActivity;
         
