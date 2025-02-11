@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/lib/supabase";
@@ -46,6 +45,15 @@ const Auth = () => {
   });
   const navigate = useNavigate();
   const { toast } = useToast();
+
+  useEffect(() => {
+    // Check if we should show signup form
+    const showSignup = localStorage.getItem("showSignup");
+    if (showSignup) {
+      setIsSignUp(true);
+      localStorage.removeItem("showSignup"); // Clean up after reading
+    }
+  }, []);
 
   const validateForm = () => {
     const newErrors = {

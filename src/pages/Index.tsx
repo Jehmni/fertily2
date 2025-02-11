@@ -1,4 +1,3 @@
-
 import { ChatWindow } from "@/components/ChatWindow";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/lib/supabase";
@@ -50,12 +49,6 @@ const Index = () => {
   const location = useLocation();
 
   useEffect(() => {
-    // Don't show onboarding if already on auth page
-    if (location.pathname === '/auth') {
-      setShowOnboarding(false);
-      return;
-    }
-
     const hasSeenOnboarding = localStorage.getItem("hasSeenOnboarding");
     if (!hasSeenOnboarding) {
       setShowOnboarding(true);
@@ -67,14 +60,19 @@ const Index = () => {
     }, 1000);
 
     return () => clearTimeout(timer);
-  }, [location.pathname]);
+  }, []);
+
+  const redirectToSignup = () => {
+    localStorage.setItem("showSignup", "true");
+    navigate("/auth", { replace: true });
+  };
 
   const handleNextSlide = () => {
     if (currentSlide < onboardingSlides.length - 1) {
       setCurrentSlide(prev => prev + 1);
     } else {
       setShowOnboarding(false);
-      navigate("/auth", { replace: true });
+      redirectToSignup();
     }
   };
 
@@ -131,9 +129,7 @@ const Index = () => {
         onOpenChange={(open) => {
           if (!open) {
             setShowOnboarding(false);
-            if (location.pathname !== '/auth') {
-              navigate("/auth", { replace: true });
-            }
+            redirectToSignup();
           }
         }}
       >
