@@ -19,8 +19,8 @@ export const MessageInput = ({
     }
   };
 
-  const handleKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === 'Enter') {
+  const handleKeyPress = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
       if (newMessage.trim()) {
         onSendMessage();
@@ -31,13 +31,13 @@ export const MessageInput = ({
   return (
     <form onSubmit={handleSubmit} className="p-4 border-t">
       <div className="flex gap-2">
-        <input
-          type="text"
+        <textarea
           value={newMessage}
           onChange={(e) => onMessageChange(e.target.value)}
           onKeyDown={handleKeyPress}
           placeholder="Type your message..."
-          className="flex-1 p-2 border rounded-md"
+          className="flex-1 p-2 border rounded-md resize-none min-h-[40px] max-h-[120px]"
+          rows={1}
         />
         <Button
           type="submit"

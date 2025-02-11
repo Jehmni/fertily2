@@ -2,6 +2,7 @@
 import { useEffect, useRef } from "react";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import type { Message } from "../Messages";
+import { format } from "date-fns";
 
 interface MessageListProps {
   messages: Message[];
@@ -37,14 +38,21 @@ export const MessageList = ({ messages, selectedUserId }: MessageListProps) => {
                 </AvatarFallback>
               </Avatar>
             )}
-            <div
-              className={`max-w-[70%] p-3 rounded-lg ${
-                message.sender_id === selectedUserId
-                  ? "bg-secondary"
-                  : "bg-primary text-primary-foreground"
-              }`}
-            >
-              {message.content}
+            <div className="flex flex-col">
+              <div
+                className={`max-w-[70%] p-3 rounded-lg ${
+                  message.sender_id === selectedUserId
+                    ? "bg-secondary"
+                    : "bg-primary text-primary-foreground"
+                }`}
+              >
+                {message.content}
+              </div>
+              <span className={`text-xs text-muted-foreground mt-1 ${
+                message.sender_id === selectedUserId ? "text-left" : "text-right"
+              }`}>
+                {format(new Date(message.created_at), "h:mm a")}
+              </span>
             </div>
             {message.sender_id !== selectedUserId && (
               <Avatar className="h-8 w-8" style={{ backgroundColor: message.sender.avatar_color || '#E2E8F0' }}>
