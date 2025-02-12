@@ -953,6 +953,10 @@ export type Database = {
       }
     }
     Functions: {
+      add_first_admin: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
+      }
       are_mutual_followers: {
         Args: {
           user1_id: string
@@ -1020,7 +1024,7 @@ export type Database = {
       }
     }
     Enums: {
-      [_ in never]: never
+      app_role: "admin" | "moderator" | "user"
     }
     CompositeTypes: {
       [_ in never]: never
