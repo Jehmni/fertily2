@@ -67,17 +67,26 @@ const Auth = () => {
   const { toast } = useToast();
 
   useEffect(() => {
+    const hasCompletedOnboarding = localStorage.getItem("hasCompletedOnboarding");
+    if (hasCompletedOnboarding === "true") {
+      setShowOnboarding(false);
+    }
+
     const checkSession = async () => {
-      const { data: { session }, error } = await supabase.auth.getSession();
-      if (session) {
-        navigate("/");
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (session?.user) {
+          navigate("/");
+        }
+      } catch (error) {
+        console.error("Session check error:", error);
       }
     };
     
     checkSession();
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      if (event === 'SIGNED_IN' && session) {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+      if (event === 'SIGNED_IN' && session?.user) {
         navigate("/");
       }
     });
@@ -141,7 +150,8 @@ const Auth = () => {
             data: {
               first_name: firstName,
               last_name: lastName,
-            }
+            },
+            emailRedirectTo: window.location.origin
           }
         });
         
@@ -163,27 +173,30 @@ const Auth = () => {
             .eq('id', signUpData.user.id);
 
           if (profileError) throw profileError;
-        }
 
-        toast({
-          title: "✨ Account Created!",
-          description: "Please check your email to verify your account.",
-        });
-        localStorage.setItem("hasCompletedOnboarding", "true");
+          toast({
+            title: "✨ Account Created!",
+            description: "Please check your email to verify your account.",
+          });
+          localStorage.setItem("hasCompletedOnboarding", "true");
+        }
       } else {
-        const { error: signInError } = await supabase.auth.signInWithPassword({
+        const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
           email,
           password,
         });
         
         if (signInError) throw signInError;
 
-        toast({
-          title: "👋 Welcome back!",
-          description: "Successfully signed in.",
-        });
+        if (signInData.user) {
+          toast({
+            title: "👋 Welcome back!",
+            description: "Successfully signed in.",
+          });
+        }
       }
     } catch (error: any) {
+      console.error("Auth error:", error);
       toast({
         title: "Error",
         description: error.message,
