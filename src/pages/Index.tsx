@@ -1,3 +1,4 @@
+
 import { ChatWindow } from "@/components/ChatWindow";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/lib/supabase";
@@ -17,7 +18,7 @@ import { Header } from "@/components/layout/Header";
 import { Messages } from "@/components/Messages";
 import { LoadingSkeleton } from "@/components/ui/loading-skeleton";
 import { Dialog, DialogContent, DialogOverlay, DialogPortal } from "@/components/ui/dialog";
-import { useNavigate, useLocation } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { AdminAnalyticsDashboard } from "@/components/admin/AdminAnalyticsDashboard";
 
@@ -48,7 +49,6 @@ const Index = () => {
   const [currentSlide, setCurrentSlide] = useState(0);
   const isMobile = useIsMobile();
   const navigate = useNavigate();
-  const location = useLocation();
   const { isAdmin } = useAuth();
 
   useEffect(() => {
