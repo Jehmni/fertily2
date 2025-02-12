@@ -17,7 +17,6 @@ import { DesktopNav } from "@/components/navigation/DesktopNav";
 import { Header } from "@/components/layout/Header";
 import { Messages } from "@/components/Messages";
 import { LoadingSkeleton } from "@/components/ui/loading-skeleton";
-import { Dialog, DialogContent, DialogOverlay, DialogPortal } from "@/components/ui/dialog";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { AdminAnalyticsDashboard } from "@/components/admin/AdminAnalyticsDashboard";
@@ -26,17 +25,21 @@ const Index = () => {
   const { toast } = useToast();
   const [activeView, setActiveView] = useState("home");
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
-  const [showOnboarding, setShowOnboarding] = useState(false);
-  const [currentSlide, setCurrentSlide] = useState(0);
   const isMobile = useIsMobile();
   const navigate = useNavigate();
-  const { isAdmin } = useAuth();
+  const { user, isAdmin, loading } = useAuth();
+
+  useEffect(() => {
+    if (!loading && !user) {
+      navigate("/auth");
+    }
+  }, [user, loading, navigate]);
 
   const handleLogout = async () => {
     try {
       const { error } = await supabase.auth.signOut();
       if (error) throw error;
+      navigate("/auth");
     } catch (error: any) {
       toast({
         title: "Error",
@@ -51,41 +54,23 @@ const Index = () => {
     setIsMenuOpen(false);
   };
 
-  const renderContent = () => {
-    if (isLoading) {
-      return <LoadingSkeleton rows={3} className="mt-6" />;
-    }
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <LoadingSkeleton rows={3} className="w-96" />
+      </div>
+    );
+  }
 
-    switch (activeView) {
-      case "profile":
-        return <ProfileSection />;
-      case "resources":
-        return <EducationalResources />;
-      case "favorites":
-        return <UserFavorites />;
-      case "chat":
-        return <ChatWindow />;
-      case "messages":
-        return <Messages />;
-      case "community":
-        return <Community />;
-      case "admin":
-        return isAdmin ? <AdminAnalyticsDashboard /> : null;
-      default:
-        return (
-          <div className="space-y-6 animate-fade-in">
-            <FertilityDashboard />
-            <FertilityCalendar />
-          </div>
-        );
-    }
-  };
+  if (!user) {
+    return null;
+  }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-accent via-background to-secondary/30">
-      <div className="max-w-6xl mx-auto px-4 py-4 md:py-6">
-        <div className="flex justify-between items-center mb-6 relative">
-          <div className="animate-fade-in">
+    <div className="min-h-screen w-full bg-background">
+      <div className="w-full max-w-7xl mx-auto px-4 py-4 md:py-6">
+        <nav className="flex justify-between items-center mb-6">
+          <div className="flex-1">
             {isMobile ? (
               <MobileNav
                 isMenuOpen={isMenuOpen}
@@ -102,7 +87,7 @@ const Index = () => {
               />
             )}
           </div>
-          <div className="flex items-center gap-3 animate-fade-in">
+          <div className="flex items-center gap-3">
             <NotificationBell />
             <Button 
               variant="outline" 
@@ -112,14 +97,24 @@ const Index = () => {
               Sign Out
             </Button>
           </div>
-        </div>
+        </nav>
         
-        <div className="animate-fade-in">
-          <Header />
-        </div>
+        <Header />
 
         <main className="mt-6">
-          {renderContent()}
+          {activeView === "profile" && <ProfileSection />}
+          {activeView === "resources" && <EducationalResources />}
+          {activeView === "favorites" && <UserFavorites />}
+          {activeView === "chat" && <ChatWindow />}
+          {activeView === "messages" && <Messages />}
+          {activeView === "community" && <Community />}
+          {activeView === "admin" && isAdmin && <AdminAnalyticsDashboard />}
+          {activeView === "home" && (
+            <div className="space-y-6">
+              <FertilityDashboard />
+              <FertilityCalendar />
+            </div>
+          )}
         </main>
       </div>
     </div>
