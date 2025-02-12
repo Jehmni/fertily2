@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { supabase } from "@/lib/supabase";
 import { useToast } from "@/hooks/use-toast";
 import { ProfileSection } from "@/components/ProfileSection";
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { EducationalResources } from "@/components/EducationalResources";
 import { UserFavorites } from "@/components/UserFavorites";
 import { FertilityCalendar } from "@/components/FertilityCalendar";
@@ -22,35 +22,18 @@ import { useAuth } from "@/hooks/useAuth";
 import { AdminAnalyticsDashboard } from "@/components/admin/AdminAnalyticsDashboard";
 
 const Index = () => {
+  console.log("Index component rendering"); // Debug log
   const { toast } = useToast();
   const [activeView, setActiveView] = useState("home");
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
   const isMobile = useIsMobile();
   const navigate = useNavigate();
-  const { user, isAdmin, loading: authLoading } = useAuth();
+  const { user, isAdmin, loading } = useAuth();
 
-  useEffect(() => {
-    const checkAuth = async () => {
-      try {
-        const { data: { session } } = await supabase.auth.getSession();
-        if (!session) {
-          navigate("/auth");
-        }
-      } catch (error) {
-        console.error("Auth check error:", error);
-        navigate("/auth");
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    checkAuth();
-  }, [navigate]);
+  console.log("Auth state:", { user, isAdmin, loading }); // Debug log
 
   const handleLogout = async () => {
     try {
-      setIsLoading(true);
       const { error } = await supabase.auth.signOut();
       if (error) throw error;
       navigate("/auth");
@@ -60,8 +43,6 @@ const Index = () => {
         description: error.message,
         variant: "destructive",
       });
-    } finally {
-      setIsLoading(false);
     }
   };
 
@@ -70,7 +51,9 @@ const Index = () => {
     setIsMenuOpen(false);
   };
 
-  if (isLoading || authLoading) {
+  // Show loading state
+  if (loading) {
+    console.log("Showing loading state"); // Debug log
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
         <LoadingSkeleton rows={3} className="w-96" />
@@ -78,9 +61,14 @@ const Index = () => {
     );
   }
 
+  // Redirect if no user
   if (!user) {
+    console.log("No user, redirecting to auth"); // Debug log
+    navigate("/auth");
     return null;
   }
+
+  console.log("Rendering main content"); // Debug log
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-accent via-background to-secondary/30">
