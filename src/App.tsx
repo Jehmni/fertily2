@@ -15,15 +15,7 @@ import TermsOfService from "./pages/TermsOfService";
 import PrivacyPolicy from "./pages/PrivacyPolicy";
 import { LoadingSkeleton } from "@/components/ui/loading-skeleton";
 
-// Initialize QueryClient outside of component to prevent recreation
-const queryClient = new QueryClient({
-  defaultOptions: {
-    queries: {
-      retry: 1,
-      staleTime: 5 * 60 * 1000, // 5 minutes
-    },
-  },
-});
+const queryClient = new QueryClient();
 
 const App = () => {
   const [session, setSession] = useState<any>(null);
@@ -31,15 +23,10 @@ const App = () => {
 
   useEffect(() => {
     const initializeAuth = async () => {
-      try {
-        const { data: { session: currentSession } } = await supabase.auth.getSession();
-        console.log("Current session:", currentSession);
-        setSession(currentSession);
-      } catch (error) {
-        console.error("Auth initialization error:", error);
-      } finally {
-        setLoading(false);
-      }
+      const { data: { session: currentSession } } = await supabase.auth.getSession();
+      console.log("Current session:", currentSession);
+      setSession(currentSession);
+      setLoading(false);
     };
 
     initializeAuth();
@@ -49,28 +36,23 @@ const App = () => {
       setSession(session);
     });
 
-    return () => {
-      subscription.unsubscribe();
-    };
+    return () => subscription.unsubscribe();
   }, []);
 
-  // Show loading state
   if (loading) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center p-4">
-        <LoadingSkeleton className="w-full max-w-[600px] h-[400px] rounded-lg" />
+      <div className="min-h-screen bg-background">
+        <LoadingSkeleton className="w-full h-[400px]" />
       </div>
     );
   }
 
-  console.log("Rendering with session:", session);
-
   return (
-    <QueryClientProvider client={queryClient}>
-      <BrowserRouter>
-        <ErrorBoundary>
-          <TooltipProvider>
-            <div className="min-h-screen bg-background">
+    <BrowserRouter>
+      <QueryClientProvider client={queryClient}>
+        <div className="min-h-screen bg-background">
+          <ErrorBoundary>
+            <TooltipProvider>
               <Routes>
                 <Route
                   path="/"
@@ -92,27 +74,17 @@ const App = () => {
                     )
                   }
                 />
-                <Route
-                  path="/resources/:id"
-                  element={
-                    session ? (
-                      <ResourceDetail />
-                    ) : (
-                      <Navigate to="/auth" replace />
-                    )
-                  }
-                />
                 <Route path="/terms" element={<TermsOfService />} />
                 <Route path="/privacy" element={<PrivacyPolicy />} />
                 <Route path="*" element={<NotFound />} />
               </Routes>
               <Toaster />
               <Sonner />
-            </div>
-          </TooltipProvider>
-        </ErrorBoundary>
-      </BrowserRouter>
-    </QueryClientProvider>
+            </TooltipProvider>
+          </ErrorBoundary>
+        </div>
+      </QueryClientProvider>
+    </BrowserRouter>
   );
 };
 
