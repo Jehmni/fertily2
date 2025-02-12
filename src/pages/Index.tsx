@@ -18,6 +18,8 @@ import { Messages } from "@/components/Messages";
 import { LoadingSkeleton } from "@/components/ui/loading-skeleton";
 import { Dialog, DialogContent, DialogOverlay, DialogPortal } from "@/components/ui/dialog";
 import { useNavigate, useLocation } from "react-router-dom";
+import { useAuth } from "@/hooks/useAuth";
+import { AdminAnalyticsDashboard } from "@/components/admin/AdminAnalyticsDashboard";
 
 const onboardingSlides = [
   {
@@ -47,6 +49,7 @@ const Index = () => {
   const isMobile = useIsMobile();
   const navigate = useNavigate();
   const location = useLocation();
+  const { isAdmin } = useAuth();
 
   useEffect(() => {
     const hasSeenOnboarding = localStorage.getItem("hasSeenOnboarding");
@@ -112,6 +115,8 @@ const Index = () => {
         return <Messages />;
       case "community":
         return <Community />;
+      case "admin":
+        return isAdmin ? <AdminAnalyticsDashboard /> : null;
       default:
         return (
           <div className="space-y-6 animate-fade-in">
@@ -183,11 +188,13 @@ const Index = () => {
                 setIsMenuOpen={setIsMenuOpen}
                 activeView={activeView}
                 onNavigate={handleNavigate}
+                isAdmin={isAdmin}
               />
             ) : (
               <DesktopNav
                 activeView={activeView}
                 onNavigate={handleNavigate}
+                isAdmin={isAdmin}
               />
             )}
           </div>
