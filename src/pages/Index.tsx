@@ -16,7 +16,7 @@ import { MobileNav } from "@/components/navigation/MobileNav";
 import { DesktopNav } from "@/components/navigation/DesktopNav";
 import { Header } from "@/components/layout/Header";
 import { Messages } from "@/components/Messages";
-import { LoadingSkeleton } from "@/components/ui/loading-skeleton";
+import { Skeleton } from "@/components/ui/skeleton";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { AdminAnalyticsDashboard } from "@/components/admin/AdminAnalyticsDashboard";
@@ -55,8 +55,15 @@ const Index = () => {
   if (loading) {
     console.log("Showing loading state"); // Debug log
     return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
-        <LoadingSkeleton rows={3} className="w-96" />
+      <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-b from-accent via-background to-secondary/30 p-4">
+        <div className="w-full max-w-6xl mx-auto space-y-4">
+          <Skeleton className="h-12 w-full" />
+          <Skeleton className="h-12 w-full" />
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <Skeleton className="h-[200px]" />
+            <Skeleton className="h-[200px]" />
+          </div>
+        </div>
       </div>
     );
   }
