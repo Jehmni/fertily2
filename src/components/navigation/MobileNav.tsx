@@ -1,16 +1,19 @@
 
 import { Button } from "@/components/ui/button";
 import { Menu, X } from "lucide-react";
-import { navigationItems } from "./NavigationItems";
+import { getNavigationItems } from "./NavigationItems";
 
 interface MobileNavProps {
   isMenuOpen: boolean;
   setIsMenuOpen: (open: boolean) => void;
   activeView: string;
   onNavigate: (key: string) => void;
+  isAdmin: boolean;
 }
 
-export const MobileNav = ({ isMenuOpen, setIsMenuOpen, activeView, onNavigate }: MobileNavProps) => {
+export const MobileNav = ({ isMenuOpen, setIsMenuOpen, activeView, onNavigate, isAdmin }: MobileNavProps) => {
+  const items = getNavigationItems(isAdmin);
+  
   return (
     <>
       <Button
@@ -28,7 +31,7 @@ export const MobileNav = ({ isMenuOpen, setIsMenuOpen, activeView, onNavigate }:
           />
           <div className="fixed inset-y-0 left-0 w-3/4 bg-white p-6 shadow-lg z-50 overflow-y-auto animate-slide-in-right">
             <div className="flex flex-col space-y-2">
-              {navigationItems.map((item) => (
+              {items.map((item) => (
                 <Button
                   key={item.key}
                   variant={activeView === item.key ? "default" : "ghost"}

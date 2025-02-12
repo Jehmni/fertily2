@@ -1,16 +1,19 @@
 
 import { Button } from "@/components/ui/button";
-import { navigationItems } from "./NavigationItems";
+import { getNavigationItems } from "./NavigationItems";
 
 interface DesktopNavProps {
   activeView: string;
   onNavigate: (key: string) => void;
+  isAdmin: boolean;
 }
 
-export const DesktopNav = ({ activeView, onNavigate }: DesktopNavProps) => {
+export const DesktopNav = ({ activeView, onNavigate, isAdmin }: DesktopNavProps) => {
+  const items = getNavigationItems(isAdmin);
+  
   return (
     <div className="flex gap-2">
-      {navigationItems.map((item) => (
+      {items.map((item) => (
         <Button
           key={item.key}
           variant={activeView === item.key ? "default" : "ghost"}
