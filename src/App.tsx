@@ -22,11 +22,20 @@ const App = () => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    // Set loading to true when effect starts
+    setLoading(true);
+    
     const initializeAuth = async () => {
-      const { data: { session: currentSession } } = await supabase.auth.getSession();
-      console.log("Current session:", currentSession);
-      setSession(currentSession);
-      setLoading(false);
+      try {
+        const { data: { session: currentSession } } = await supabase.auth.getSession();
+        console.log("Current session:", currentSession);
+        setSession(currentSession);
+      } catch (error) {
+        console.error("Auth initialization error:", error);
+      } finally {
+        // Ensure loading is set to false after auth check completes
+        setLoading(false);
+      }
     };
 
     initializeAuth();
@@ -34,18 +43,25 @@ const App = () => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       console.log("Auth state changed:", session);
       setSession(session);
+      // Don't set loading to false here as we don't want to show loading on every auth change
     });
 
     return () => subscription.unsubscribe();
   }, []);
 
+  // Show loading state with a better visual indicator
   if (loading) {
     return (
-      <div className="min-h-screen bg-background">
-        <LoadingSkeleton className="w-full h-[400px]" />
+      <div className="min-h-screen bg-background flex items-center justify-center p-4">
+        <div className="w-full max-w-md mx-auto">
+          <LoadingSkeleton className="h-12 w-full mb-4" />
+          <LoadingSkeleton className="h-64 w-full" />
+        </div>
       </div>
     );
   }
+
+  console.log("Rendering main app with session:", !!session);
 
   return (
     <BrowserRouter>
