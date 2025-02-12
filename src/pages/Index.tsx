@@ -25,18 +25,32 @@ const Index = () => {
   const { toast } = useToast();
   const [activeView, setActiveView] = useState("home");
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
   const isMobile = useIsMobile();
   const navigate = useNavigate();
-  const { user, isAdmin, loading } = useAuth();
+  const { user, isAdmin, loading: authLoading } = useAuth();
 
   useEffect(() => {
-    if (!loading && !user) {
-      navigate("/auth");
-    }
-  }, [user, loading, navigate]);
+    const checkAuth = async () => {
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (!session) {
+          navigate("/auth");
+        }
+      } catch (error) {
+        console.error("Auth check error:", error);
+        navigate("/auth");
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    checkAuth();
+  }, [navigate]);
 
   const handleLogout = async () => {
     try {
+      setIsLoading(true);
       const { error } = await supabase.auth.signOut();
       if (error) throw error;
       navigate("/auth");
@@ -46,6 +60,8 @@ const Index = () => {
         description: error.message,
         variant: "destructive",
       });
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -54,9 +70,9 @@ const Index = () => {
     setIsMenuOpen(false);
   };
 
-  if (loading) {
+  if (isLoading || authLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center bg-background">
         <LoadingSkeleton rows={3} className="w-96" />
       </div>
     );
@@ -67,10 +83,10 @@ const Index = () => {
   }
 
   return (
-    <div className="min-h-screen w-full bg-background">
-      <div className="w-full max-w-7xl mx-auto px-4 py-4 md:py-6">
-        <nav className="flex justify-between items-center mb-6">
-          <div className="flex-1">
+    <div className="min-h-screen bg-gradient-to-b from-accent via-background to-secondary/30">
+      <div className="max-w-6xl mx-auto px-4 py-4 md:py-6">
+        <div className="flex justify-between items-center mb-6 relative">
+          <div className="animate-fade-in">
             {isMobile ? (
               <MobileNav
                 isMenuOpen={isMenuOpen}
@@ -87,7 +103,7 @@ const Index = () => {
               />
             )}
           </div>
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-3 animate-fade-in">
             <NotificationBell />
             <Button 
               variant="outline" 
@@ -97,9 +113,11 @@ const Index = () => {
               Sign Out
             </Button>
           </div>
-        </nav>
+        </div>
         
-        <Header />
+        <div className="animate-fade-in">
+          <Header />
+        </div>
 
         <main className="mt-6">
           {activeView === "profile" && <ProfileSection />}
@@ -110,7 +128,7 @@ const Index = () => {
           {activeView === "community" && <Community />}
           {activeView === "admin" && isAdmin && <AdminAnalyticsDashboard />}
           {activeView === "home" && (
-            <div className="space-y-6">
+            <div className="space-y-6 animate-fade-in">
               <FertilityDashboard />
               <FertilityCalendar />
             </div>
