@@ -15,102 +15,104 @@ import TermsOfService from "./pages/TermsOfService";
 import PrivacyPolicy from "./pages/PrivacyPolicy";
 import { LoadingSkeleton } from "@/components/ui/loading-skeleton";
 
-const queryClient = new QueryClient();
+// Initialize QueryClient outside of component to prevent recreation
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      retry: 1,
+      staleTime: 5 * 60 * 1000, // 5 minutes
+    },
+  },
+});
 
 const App = () => {
   const [session, setSession] = useState<any>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Check current session
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-      setLoading(false);
-    });
-
-    // Listen for auth changes
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
-      setSession(session);
-    });
-
-    // Session timeout handling (30 minutes)
-    const checkSession = setInterval(async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (session) {
-        const lastActivity = new Date(session.user.last_sign_in_at).getTime();
-        const now = new Date().getTime();
-        const inactiveTime = now - lastActivity;
-        
-        // If inactive for more than 30 minutes, sign out
-        if (inactiveTime > 30 * 60 * 1000) {
-          await supabase.auth.signOut();
-          setSession(null);
-        }
+    const initializeAuth = async () => {
+      try {
+        const { data: { session: currentSession } } = await supabase.auth.getSession();
+        console.log("Current session:", currentSession);
+        setSession(currentSession);
+      } catch (error) {
+        console.error("Auth initialization error:", error);
+      } finally {
+        setLoading(false);
       }
-    }, 60000); // Check every minute
+    };
+
+    initializeAuth();
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      console.log("Auth state changed:", session);
+      setSession(session);
+    });
 
     return () => {
       subscription.unsubscribe();
-      clearInterval(checkSession);
     };
   }, []);
 
+  // Show loading state
   if (loading) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <LoadingSkeleton className="w-[600px] h-[400px]" />
+      <div className="min-h-screen bg-background flex items-center justify-center p-4">
+        <LoadingSkeleton className="w-full max-w-[600px] h-[400px] rounded-lg" />
       </div>
     );
   }
 
+  console.log("Rendering with session:", session);
+
   return (
-    <ErrorBoundary>
-      <QueryClientProvider client={queryClient}>
-        <TooltipProvider>
-          <BrowserRouter>
-            <Routes>
-              <Route
-                path="/"
-                element={
-                  session ? (
-                    <Index />
-                  ) : (
-                    <Navigate to="/auth" replace />
-                  )
-                }
-              />
-              <Route
-                path="/auth"
-                element={
-                  !session ? (
-                    <Auth />
-                  ) : (
-                    <Navigate to="/" replace />
-                  )
-                }
-              />
-              <Route
-                path="/resources/:id"
-                element={
-                  session ? (
-                    <ResourceDetail />
-                  ) : (
-                    <Navigate to="/auth" replace />
-                  )
-                }
-              />
-              <Route path="/terms" element={<TermsOfService />} />
-              <Route path="/privacy" element={<PrivacyPolicy />} />
-              <Route path="*" element={<NotFound />} />
-            </Routes>
-            <Toaster />
-            <Sonner />
-          </BrowserRouter>
-        </TooltipProvider>
-      </QueryClientProvider>
-    </ErrorBoundary>
+    <QueryClientProvider client={queryClient}>
+      <BrowserRouter>
+        <ErrorBoundary>
+          <TooltipProvider>
+            <div className="min-h-screen bg-background">
+              <Routes>
+                <Route
+                  path="/"
+                  element={
+                    session ? (
+                      <Index />
+                    ) : (
+                      <Navigate to="/auth" replace />
+                    )
+                  }
+                />
+                <Route
+                  path="/auth"
+                  element={
+                    !session ? (
+                      <Auth />
+                    ) : (
+                      <Navigate to="/" replace />
+                    )
+                  }
+                />
+                <Route
+                  path="/resources/:id"
+                  element={
+                    session ? (
+                      <ResourceDetail />
+                    ) : (
+                      <Navigate to="/auth" replace />
+                    )
+                  }
+                />
+                <Route path="/terms" element={<TermsOfService />} />
+                <Route path="/privacy" element={<PrivacyPolicy />} />
+                <Route path="*" element={<NotFound />} />
+              </Routes>
+              <Toaster />
+              <Sonner />
+            </div>
+          </TooltipProvider>
+        </ErrorBoundary>
+      </BrowserRouter>
+    </QueryClientProvider>
   );
 };
 
