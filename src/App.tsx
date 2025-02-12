@@ -13,6 +13,7 @@ import { ResourceDetail } from "@/components/ResourceDetail";
 import { ErrorBoundary } from "@/components/ui/error-boundary";
 import TermsOfService from "./pages/TermsOfService";
 import PrivacyPolicy from "./pages/PrivacyPolicy";
+import { LoadingSkeleton } from "@/components/ui/loading-skeleton";
 
 const queryClient = new QueryClient();
 
@@ -38,7 +39,6 @@ const App = () => {
     const checkSession = setInterval(async () => {
       const { data: { session } } = await supabase.auth.getSession();
       if (session) {
-        // Get last activity from session metadata or user's last sign in
         const lastActivity = new Date(session.user.last_sign_in_at).getTime();
         const now = new Date().getTime();
         const inactiveTime = now - lastActivity;
@@ -58,14 +58,18 @@ const App = () => {
   }, []);
 
   if (loading) {
-    return <div>Loading...</div>;
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <LoadingSkeleton className="w-[600px] h-[400px]" />
+      </div>
+    );
   }
 
   return (
     <ErrorBoundary>
       <QueryClientProvider client={queryClient}>
-        <BrowserRouter>
-          <TooltipProvider>
+        <TooltipProvider>
+          <BrowserRouter>
             <Routes>
               <Route
                 path="/"
@@ -103,8 +107,8 @@ const App = () => {
             </Routes>
             <Toaster />
             <Sonner />
-          </TooltipProvider>
-        </BrowserRouter>
+          </BrowserRouter>
+        </TooltipProvider>
       </QueryClientProvider>
     </ErrorBoundary>
   );
