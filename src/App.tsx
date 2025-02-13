@@ -13,6 +13,7 @@ import { ResourceDetail } from "@/components/ResourceDetail";
 import { ErrorBoundary } from "@/components/ui/error-boundary";
 import TermsOfService from "./pages/TermsOfService";
 import PrivacyPolicy from "./pages/PrivacyPolicy";
+import { Skeleton } from "@/components/ui/skeleton";
 
 const queryClient = new QueryClient();
 
@@ -21,8 +22,11 @@ const App = () => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    console.log("App mounting, checking session..."); // Debug log
+
     // Check current session
     supabase.auth.getSession().then(({ data: { session } }) => {
+      console.log("Session check complete:", session); // Debug log
       setSession(session);
       setLoading(false);
     });
@@ -31,34 +35,24 @@ const App = () => {
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((_event, session) => {
+      console.log("Auth state changed:", session); // Debug log
       setSession(session);
     });
 
-    // Session timeout handling (30 minutes)
-    const checkSession = setInterval(async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (session) {
-        // Get last activity from session metadata or user's last sign in
-        const lastActivity = new Date(session.user.last_sign_in_at).getTime();
-        const now = new Date().getTime();
-        const inactiveTime = now - lastActivity;
-        
-        // If inactive for more than 30 minutes, sign out
-        if (inactiveTime > 30 * 60 * 1000) {
-          await supabase.auth.signOut();
-          setSession(null);
-        }
-      }
-    }, 60000); // Check every minute
-
-    return () => {
-      subscription.unsubscribe();
-      clearInterval(checkSession);
-    };
+    return () => subscription.unsubscribe();
   }, []);
 
+  // Show loading state
   if (loading) {
-    return <div>Loading...</div>;
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-accent via-background to-secondary/30 p-4">
+        <div className="w-full max-w-md space-y-4">
+          <Skeleton className="h-8 w-3/4 mx-auto" />
+          <Skeleton className="h-32 w-full" />
+          <Skeleton className="h-8 w-1/2 mx-auto" />
+        </div>
+      </div>
+    );
   }
 
   return (

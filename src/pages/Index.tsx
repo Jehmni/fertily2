@@ -15,11 +15,11 @@ import { MobileNav } from "@/components/navigation/MobileNav";
 import { DesktopNav } from "@/components/navigation/DesktopNav";
 import { Header } from "@/components/layout/Header";
 import { Messages } from "@/components/Messages";
-import { LoadingSkeleton } from "@/components/ui/loading-skeleton";
 import { Dialog, DialogContent, DialogOverlay, DialogPortal } from "@/components/ui/dialog";
-import { useNavigate, useLocation } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { AdminAnalyticsDashboard } from "@/components/admin/AdminAnalyticsDashboard";
+import { Skeleton } from "@/components/ui/skeleton";
 
 const onboardingSlides = [
   {
@@ -43,27 +43,36 @@ const Index = () => {
   const { toast } = useToast();
   const [activeView, setActiveView] = useState("home");
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
   const [showOnboarding, setShowOnboarding] = useState(false);
   const [currentSlide, setCurrentSlide] = useState(0);
   const isMobile = useIsMobile();
   const navigate = useNavigate();
-  const location = useLocation();
-  const { isAdmin } = useAuth();
+  const { user, isAdmin, loading } = useAuth();
 
   useEffect(() => {
+    console.log("Index component mounted"); // Debug log
     const hasSeenOnboarding = localStorage.getItem("hasSeenOnboarding");
     if (!hasSeenOnboarding) {
       setShowOnboarding(true);
       localStorage.setItem("hasSeenOnboarding", "true");
     }
-    
-    const timer = setTimeout(() => {
-      setIsLoading(false);
-    }, 1000);
-
-    return () => clearTimeout(timer);
   }, []);
+
+  // Show loading state
+  if (loading) {
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-b from-accent via-background to-secondary/30 p-4">
+        <div className="w-full max-w-6xl mx-auto space-y-4">
+          <Skeleton className="h-12 w-full" />
+          <Skeleton className="h-12 w-full" />
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <Skeleton className="h-[200px]" />
+            <Skeleton className="h-[200px]" />
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   const redirectToSignup = () => {
     localStorage.setItem("showSignup", "true");
@@ -98,10 +107,6 @@ const Index = () => {
   };
 
   const renderContent = () => {
-    if (isLoading) {
-      return <LoadingSkeleton rows={3} className="mt-6" />;
-    }
-
     switch (activeView) {
       case "profile":
         return <ProfileSection />;
