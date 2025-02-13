@@ -5,7 +5,8 @@ const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
   'Access-Control-Allow-Methods': 'POST, OPTIONS',
-  'Content-Type': 'application/json'
+  'Content-Type': 'application/json',
+  'Vary': 'Origin'
 }
 
 serve(async (req) => {
@@ -19,7 +20,8 @@ serve(async (req) => {
   if (req.method === 'OPTIONS') {
     console.log('Handling CORS preflight request');
     return new Response(null, { 
-      headers: corsHeaders
+      headers: corsHeaders,
+      status: 204
     })
   }
 
@@ -42,7 +44,12 @@ serve(async (req) => {
 
     return new Response(
       JSON.stringify(responseData),
-      { headers: corsHeaders }
+      { 
+        headers: {
+          ...corsHeaders,
+          'Cache-Control': 'no-store'
+        }
+      }
     )
   } catch (error) {
     console.error('Error in widget-chat function:', error);
