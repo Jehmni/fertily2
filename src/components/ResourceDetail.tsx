@@ -7,18 +7,19 @@ import { ArrowLeft, Book } from "lucide-react";
 import { Card } from "@/components/ui/card";
 
 export const ResourceDetail = () => {
-  const { id } = useParams<{ id: string }>();
+  const params = useParams();
+  const resourceId = params.id;
   const navigate = useNavigate();
 
   const { data: resource, isLoading } = useQuery({
-    queryKey: ['educational-resource', id],
+    queryKey: ['educational-resource', resourceId],
     queryFn: async () => {
-      if (!id) throw new Error('Resource ID is required');
+      if (!resourceId) throw new Error('Resource ID is required');
       
       const { data, error } = await supabase
         .from('educational_resources')
-        .select('*')
-        .eq('id', id)
+        .select()
+        .match({ id: resourceId })
         .maybeSingle();
       
       if (error) {
@@ -32,7 +33,7 @@ export const ResourceDetail = () => {
       
       return data;
     },
-    enabled: !!id, // Only run the query if we have an ID
+    enabled: !!resourceId,
   });
 
   if (isLoading) {
