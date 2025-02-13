@@ -10,25 +10,41 @@ const corsHeaders = {
 }
 
 serve(async (req) => {
+  // Log incoming request details
+  console.log('Incoming request method:', req.method);
+  console.log('Incoming request headers:', Object.fromEntries(req.headers));
+
+  // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
-    return new Response(null, { headers: corsHeaders })
+    console.log('Handling CORS preflight request');
+    return new Response(null, { 
+      headers: {
+        ...corsHeaders,
+        'Access-Control-Allow-Methods': 'POST, OPTIONS'
+      } 
+    })
   }
 
   try {
-    const { message } = await req.json()
+    // Parse request body
+    const requestBody = await req.json();
+    console.log('Received request body:', requestBody);
+
+    const { message } = requestBody;
 
     // Initialize Supabase client
     const supabaseUrl = Deno.env.get('SUPABASE_URL')
     const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')
     
     if (!supabaseUrl || !supabaseKey) {
+      console.error('Missing Supabase configuration');
       throw new Error('Missing Supabase configuration')
     }
 
     const supabase = createClient(supabaseUrl, supabaseKey)
 
-    // Get embeddings for the message using existing RAG system
-    const response = await fetch('https://api.openai.com/v1/chat/completions', {
+    // Fetch OpenAI response
+    const openAIResponse = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${Deno.env.get('OPENAI_API_KEY')}`,
@@ -44,23 +60,37 @@ serve(async (req) => {
           { role: 'user', content: message }
         ],
       }),
-    })
+    });
 
-    const data = await response.json()
-    const aiResponse = data.choices[0].message.content
+    // Log OpenAI response status
+    console.log('OpenAI response status:', openAIResponse.status);
+
+    const data = await openAIResponse.json();
+    console.log('OpenAI response data:', data);
+
+    const aiResponse = data.choices[0].message.content;
 
     return new Response(
       JSON.stringify({ response: aiResponse }),
-      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      { 
+        headers: { 
+          ...corsHeaders, 
+          'Content-Type': 'application/json' 
+        } 
+      }
     )
   } catch (error) {
-    console.error('Error in widget-chat function:', error)
+    console.error('Error in widget-chat function:', error);
     return new Response(
       JSON.stringify({ error: error.message }),
       { 
         status: 500,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        headers: { 
+          ...corsHeaders, 
+          'Content-Type': 'application/json' 
+        } 
       }
     )
   }
 })
+
