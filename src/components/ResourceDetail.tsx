@@ -1,3 +1,4 @@
+
 import { useParams, useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/lib/supabase";
@@ -6,21 +7,32 @@ import { ArrowLeft, Book } from "lucide-react";
 import { Card } from "@/components/ui/card";
 
 export const ResourceDetail = () => {
-  const { id } = useParams();
+  const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
 
   const { data: resource, isLoading } = useQuery({
     queryKey: ['educational-resource', id],
     queryFn: async () => {
+      if (!id) throw new Error('Resource ID is required');
+      
       const { data, error } = await supabase
         .from('educational_resources')
         .select('*')
         .eq('id', id)
-        .single();
+        .maybeSingle();
       
-      if (error) throw error;
+      if (error) {
+        console.error('Error fetching resource:', error);
+        throw error;
+      }
+      
+      if (!data) {
+        throw new Error('Resource not found');
+      }
+      
       return data;
     },
+    enabled: !!id, // Only run the query if we have an ID
   });
 
   if (isLoading) {
