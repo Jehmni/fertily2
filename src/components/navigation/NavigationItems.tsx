@@ -1,8 +1,8 @@
 
-import { Home, User, Book, Heart, Stethoscope, Users, MessageSquare, LayoutDashboard } from "lucide-react";
+import { Home, User, Book, Heart, Stethoscope, Users, MessageSquare } from "lucide-react";
 
-export const getNavigationItems = (isAdmin: boolean) => {
-  const baseItems = [
+export const getNavigationItems = () => {
+  return [
     {
       icon: <Home className="w-4 h-4 mr-2" />,
       label: "Home",
@@ -39,19 +39,6 @@ export const getNavigationItems = (isAdmin: boolean) => {
       key: "community"
     }
   ];
-
-  if (isAdmin) {
-    return [
-      ...baseItems,
-      {
-        icon: <LayoutDashboard className="w-4 h-4 mr-2" />,
-        label: "Admin",
-        key: "admin"
-      }
-    ];
-  }
-
-  return baseItems;
 };
 
-export const navigationItems = getNavigationItems(false);
+export const navigationItems = getNavigationItems();
