@@ -3,7 +3,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/lib/supabase";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Book } from "lucide-react";
+import { ArrowLeft, Home } from "lucide-react";
 import { Card } from "@/components/ui/card";
 
 export const ResourceDetail = () => {
@@ -58,8 +58,8 @@ export const ResourceDetail = () => {
           onClick={() => navigate('/')}
           className="flex items-center gap-2"
         >
-          <Book className="h-4 w-4" />
-          All Resources
+          <Home className="h-4 w-4" />
+          Home
         </Button>
       </div>
 
