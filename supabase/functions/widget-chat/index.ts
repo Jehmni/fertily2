@@ -9,6 +9,7 @@ const corsHeaders = {
   'Access-Control-Allow-Methods': 'POST, OPTIONS',
 }
 
+// Remove JWT verification middleware
 serve(async (req) => {
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
@@ -29,16 +30,11 @@ serve(async (req) => {
       throw new Error('Message is required');
     }
 
-    // Initialize Supabase client
-    const supabaseUrl = Deno.env.get('SUPABASE_URL')
-    const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')
-    
-    if (!supabaseUrl || !supabaseKey) {
-      console.error('Missing Supabase configuration');
-      throw new Error('Missing Supabase configuration')
-    }
+    // Initialize Supabase client with anon key for public access
+    const supabaseUrl = Deno.env.get('SUPABASE_URL') || '';
+    const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZnYmh4dXZkb2Jta3FvamZtYm9hIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzgyNzE4NzIsImV4cCI6MjA1Mzg0Nzg3Mn0.1oCLHiM1UcC0qn2eif1tv54r_TBGyoqbC6y2pqC_dkk';
 
-    const supabase = createClient(supabaseUrl, supabaseKey)
+    const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
     // Fetch OpenAI response
     const openAIResponse = await fetch('https://api.openai.com/v1/chat/completions', {
@@ -67,7 +63,7 @@ serve(async (req) => {
 
     const aiResponse = data.choices[0].message.content;
 
-    // Store the message and response in the database
+    // Store the message and response in the database using anon access
     const { error: dbError } = await supabase
       .from('widget_chat_history')
       .insert({
