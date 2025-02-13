@@ -3,12 +3,18 @@ import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': '*',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
   'Access-Control-Allow-Methods': 'POST, OPTIONS',
   'Content-Type': 'application/json'
 }
 
 serve(async (req) => {
+  // Log all incoming requests
+  console.log('New request received');
+  console.log('Method:', req.method);
+  console.log('URL:', req.url);
+  console.log('Headers:', Object.fromEntries(req.headers.entries()));
+
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
     console.log('Handling CORS preflight request');
@@ -18,13 +24,11 @@ serve(async (req) => {
   }
 
   try {
-    const url = new URL(req.url);
-    console.log('Request details:', {
-      method: req.method,
-      url: url.toString(),
-      headers: Object.fromEntries(req.headers.entries())
-    });
+    if (req.method !== 'POST') {
+      throw new Error(`Method ${req.method} not allowed`);
+    }
 
+    // Log request body
     const body = await req.json();
     console.log('Request body:', body);
 
