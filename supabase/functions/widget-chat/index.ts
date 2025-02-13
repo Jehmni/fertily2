@@ -22,12 +22,22 @@ serve(async (req) => {
 
   try {
     console.log('Processing request method:', req.method);
-    
+    console.log('Request headers:', Object.fromEntries(req.headers.entries()));
+
     // Get and validate the API key
-    const apiKey = req.headers.get('apikey');
-    if (!apiKey) {
-      console.error('Authentication error: No API key provided');
-      throw new Error('No API key provided');
+    const apiKey = req.headers.get('apikey') || req.headers.get('Authorization')?.split(' ')[1];
+    const serviceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
+    const anonKey = Deno.env.get('SUPABASE_ANON_KEY');
+
+    console.log('API key status:', {
+      hasApiKey: !!apiKey,
+      matchesServiceRole: apiKey === serviceRoleKey,
+      matchesAnonKey: apiKey === anonKey
+    });
+
+    if (!apiKey || (apiKey !== serviceRoleKey && apiKey !== anonKey)) {
+      console.error('Authentication error: Invalid API key');
+      throw new Error('Invalid API key');
     }
 
     // Parse request body
@@ -40,12 +50,12 @@ serve(async (req) => {
       throw new Error('Message is required');
     }
 
-    // Initialize Supabase client with service role key for admin access
+    // Initialize Supabase client
     const supabaseUrl = Deno.env.get('SUPABASE_URL') || '';
-    const serviceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') || '';
     const supabase = createClient(supabaseUrl, serviceRoleKey);
 
     // Fetch OpenAI response
+    console.log('Fetching OpenAI response...');
     const openAIResponse = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
       headers: {
@@ -64,15 +74,21 @@ serve(async (req) => {
       }),
     });
 
-    // Log OpenAI response status
     console.log('OpenAI response status:', openAIResponse.status);
+    
+    if (!openAIResponse.ok) {
+      const errorData = await openAIResponse.text();
+      console.error('OpenAI error:', errorData);
+      throw new Error('Failed to get AI response');
+    }
 
     const data = await openAIResponse.json();
-    console.log('OpenAI response data:', data);
+    console.log('OpenAI response received');
 
     const aiResponse = data.choices[0].message.content;
 
-    // Store the message and response in the database using service role
+    // Store the message in database
+    console.log('Storing message in database...');
     const { error: dbError } = await supabase
       .from('widget_chat_history')
       .insert({
@@ -86,6 +102,7 @@ serve(async (req) => {
       throw dbError;
     }
 
+    console.log('Successfully processed request');
     return new Response(
       JSON.stringify({ response: aiResponse }),
       { 
@@ -98,7 +115,7 @@ serve(async (req) => {
     return new Response(
       JSON.stringify({ error: error.message }),
       { 
-        status: error.message.includes('No API key provided') ? 401 : 500,
+        status: error.message.includes('Invalid API key') ? 401 : 500,
         headers: corsHeaders
       }
     )
