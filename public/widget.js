@@ -1,4 +1,4 @@
-
+<lov-codelov-code>
 (function() {
   // Create widget styles
   const styles = `
@@ -179,8 +179,7 @@
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'apikey': anonKey,
-          'Authorization': `Bearer ${anonKey}`
+          'apikey': anonKey
         },
         body: JSON.stringify({ 
           message,
@@ -213,3 +212,4 @@
     if (e.key === 'Enter') sendMessage();
   });
 })();
+</lov-code>

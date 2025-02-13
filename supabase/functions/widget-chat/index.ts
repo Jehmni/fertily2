@@ -19,20 +19,12 @@ serve(async (req) => {
   }
 
   try {
-    // Get the auth header and API key
-    const authHeader = req.headers.get('Authorization')?.split(' ')[1]; // Remove 'Bearer ' prefix
+    // Get the API key from header
     const apiKey = req.headers.get('apikey');
-    
-    console.log('Auth header received:', authHeader ? 'Present' : 'Missing');
     console.log('API key received:', apiKey ? 'Present' : 'Missing');
 
-    // Verify that both headers are present and match
-    if (!authHeader || !apiKey || authHeader !== apiKey) {
-      console.error('Authentication error:', {
-        authHeaderPresent: !!authHeader,
-        apiKeyPresent: !!apiKey,
-        match: authHeader === apiKey
-      });
+    if (!apiKey) {
+      console.error('Authentication error: Missing API key');
       throw new Error('Invalid authentication');
     }
 
