@@ -19,12 +19,13 @@ serve(async (req) => {
   }
 
   try {
-    // Verify service role key
+    // Allow requests with anon key
     const authHeader = req.headers.get('Authorization');
-    const serviceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
+    const apiKey = req.headers.get('apikey');
     
-    if (!authHeader || !authHeader.startsWith('Bearer ') || authHeader.split(' ')[1] !== serviceRoleKey) {
-      throw new Error('Unauthorized');
+    if (!authHeader || !apiKey) {
+      console.error('Missing auth headers');
+      throw new Error('Missing authentication');
     }
 
     // Parse request body
@@ -39,7 +40,8 @@ serve(async (req) => {
 
     // Initialize Supabase client with service role key for admin access
     const supabaseUrl = Deno.env.get('SUPABASE_URL') || '';
-    const supabase = createClient(supabaseUrl, serviceRoleKey || '');
+    const serviceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') || '';
+    const supabase = createClient(supabaseUrl, serviceRoleKey);
 
     // Fetch OpenAI response
     const openAIResponse = await fetch('https://api.openai.com/v1/chat/completions', {
@@ -96,7 +98,7 @@ serve(async (req) => {
     return new Response(
       JSON.stringify({ error: error.message }),
       { 
-        status: error.message === 'Unauthorized' ? 401 : 500,
+        status: error.message.includes('authentication') ? 401 : 500,
         headers: { 
           ...corsHeaders, 
           'Content-Type': 'application/json' 
