@@ -23,7 +23,7 @@ serve(async (req) => {
     const requestBody = await req.json();
     console.log('Received request body:', requestBody);
 
-    const { message } = requestBody;
+    const { message, sessionId } = requestBody;
 
     // Initialize Supabase client
     const supabaseUrl = Deno.env.get('SUPABASE_URL')
@@ -62,6 +62,20 @@ serve(async (req) => {
     console.log('OpenAI response data:', data);
 
     const aiResponse = data.choices[0].message.content;
+
+    // Store the message and response in the database
+    const { error: dbError } = await supabase
+      .from('widget_chat_history')
+      .insert({
+        message,
+        response: aiResponse,
+        session_id: sessionId || 'anonymous',
+      });
+
+    if (dbError) {
+      console.error('Database error:', dbError);
+      throw dbError;
+    }
 
     return new Response(
       JSON.stringify({ response: aiResponse }),
