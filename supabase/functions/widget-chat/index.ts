@@ -5,7 +5,6 @@ const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': '*',
   'Access-Control-Allow-Methods': 'POST, OPTIONS',
-  'Access-Control-Max-Age': '86400',
   'Content-Type': 'application/json'
 }
 
@@ -14,29 +13,40 @@ serve(async (req) => {
   if (req.method === 'OPTIONS') {
     console.log('Handling CORS preflight request');
     return new Response(null, { 
-      headers: corsHeaders,
-      status: 204
+      headers: corsHeaders
     })
   }
 
   try {
-    console.log('Request received:', req.method);
-    console.log('Headers:', Object.fromEntries(req.headers.entries()));
+    const url = new URL(req.url);
+    console.log('Request details:', {
+      method: req.method,
+      url: url.toString(),
+      headers: Object.fromEntries(req.headers.entries())
+    });
 
     const body = await req.json();
     console.log('Request body:', body);
 
     // Simple echo response for testing
+    const responseData = {
+      response: "Hello! This is a test response. Your message was: " + body.message,
+      timestamp: new Date().toISOString()
+    };
+
+    console.log('Sending response:', responseData);
+
     return new Response(
-      JSON.stringify({ 
-        response: "Hello! This is a test response. Your message was: " + body.message 
-      }),
+      JSON.stringify(responseData),
       { headers: corsHeaders }
     )
   } catch (error) {
-    console.error('Error:', error);
+    console.error('Error in widget-chat function:', error);
     return new Response(
-      JSON.stringify({ error: error.message }),
+      JSON.stringify({ 
+        error: error.message,
+        timestamp: new Date().toISOString()
+      }),
       { 
         headers: corsHeaders,
         status: 500
