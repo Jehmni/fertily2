@@ -26,13 +26,14 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
     autoRefreshToken: true,
     persistSession: true,
     detectSessionInUrl: true,
-    storage: localStorage,
+    storage: window.localStorage,
   }
 });
 
 // Test the connection and log the result
 (async () => {
   try {
+    console.log('Testing Supabase connection...'); // Debug log
     const { data, error } = await supabase.auth.getSession();
     if (error) {
       console.error('Error connecting to Supabase:', error);
