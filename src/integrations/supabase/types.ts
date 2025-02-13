@@ -966,6 +966,30 @@ export type Database = {
         }
         Relationships: []
       }
+      widget_chat_history: {
+        Row: {
+          created_at: string
+          id: string
+          message: string
+          response: string
+          session_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          message: string
+          response: string
+          session_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          message?: string
+          response?: string
+          session_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       post_reaction_counts: {
