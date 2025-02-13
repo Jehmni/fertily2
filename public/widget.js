@@ -1,3 +1,4 @@
+
 (function() {
   // Create widget styles
   const styles = `
@@ -172,8 +173,10 @@
       const response = await fetch('https://fgbhxuvdobmkqojfmboa.functions.supabase.co/widget-chat', {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json'
+          'Content-Type': 'application/json',
+          'Accept': 'application/json'
         },
+        mode: 'cors',
         body: JSON.stringify({ message })
       });
       
