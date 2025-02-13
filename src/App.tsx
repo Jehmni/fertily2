@@ -22,28 +22,41 @@ const App = () => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    console.log("App mounting, checking session..."); // Debug log
+    const initializeAuth = async () => {
+      try {
+        console.log("Starting auth initialization..."); // Debug log
+        const { data, error } = await supabase.auth.getSession();
+        
+        if (error) {
+          console.error("Error getting session:", error);
+          setLoading(false);
+          return;
+        }
 
-    // Check current session
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      console.log("Session check complete:", session); // Debug log
-      setSession(session);
-      setLoading(false);
-    });
+        console.log("Session data received:", data.session); // Debug log
+        setSession(data.session);
+        setLoading(false);
 
-    // Listen for auth changes
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
-      console.log("Auth state changed:", session); // Debug log
+      } catch (error) {
+        console.error("Caught error during auth initialization:", error);
+        setLoading(false);
+      }
+    };
+
+    initializeAuth();
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      console.log("Auth state changed:", _event, session); // Debug log
       setSession(session);
     });
 
     return () => subscription.unsubscribe();
   }, []);
 
-  // Show loading state
+  console.log("Current state - loading:", loading, "session:", session); // Debug log
+
   if (loading) {
+    console.log("Rendering loading state..."); // Debug log
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-accent via-background to-secondary/30 p-4">
         <div className="w-full max-w-md space-y-4">
@@ -54,6 +67,8 @@ const App = () => {
       </div>
     );
   }
+
+  console.log("Rendering main app content..."); // Debug log
 
   return (
     <ErrorBoundary>
