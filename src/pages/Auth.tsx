@@ -246,9 +246,16 @@ const Auth = () => {
 
   if (showOnboarding) {
     return (
-      <div className="min-h-screen bg-gradient-to-b from-primary/20 to-background flex items-center justify-center p-4">
+      <div className="min-h-screen bg-gradient-to-b from-primary/10 to-background flex items-center justify-center p-4">
         <Dialog open={true} onOpenChange={() => {}}>
           <DialogContent className="sm:max-w-md p-0 overflow-hidden">
+            <div className="flex justify-center p-4">
+              <img 
+                src="/lovable-uploads/27ff8345-8e52-4baf-a8f5-d267b1b7c37f.png"
+                alt="Fertily Logo"
+                className="w-24 h-24 object-contain"
+              />
+            </div>
             <DialogTitle className="sr-only">Onboarding</DialogTitle>
             <DialogDescription className="sr-only">
               Welcome to your fertility journey. Follow the steps to get started.
@@ -294,8 +301,15 @@ const Auth = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-primary/20 to-background flex items-center justify-center p-4">
-      <Card className="w-full max-w-md p-8 space-y-6 shadow-lg animate-fadeIn">
+    <div className="min-h-screen bg-gradient-to-b from-primary/10 to-background flex flex-col items-center justify-center p-4">
+      <div className="mb-8">
+        <img 
+          src="/lovable-uploads/27ff8345-8e52-4baf-a8f5-d267b1b7c37f.png"
+          alt="Fertily Logo"
+          className="w-32 h-32 object-contain"
+        />
+      </div>
+      <Card className="w-full max-w-md p-8 space-y-6 shadow-lg animate-fadeIn bg-white/95 backdrop-blur-sm">
         <h1 className="text-3xl font-bold text-center text-primary">
           {showSignUpForm ? "Create Account" : "Welcome Back"}
         </h1>
