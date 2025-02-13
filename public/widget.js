@@ -40,6 +40,7 @@
       display: none;
       flex-direction: column;
       overflow: hidden;
+      border: 1px solid #e5e7eb;
     }
 
     .fertility-chat-header {
@@ -47,12 +48,22 @@
       background: #7c3aed;
       color: white;
       font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .fertility-chat-header img {
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
     }
 
     .fertility-chat-messages {
       flex: 1;
       overflow-y: auto;
       padding: 16px;
+      background: #f9fafb;
     }
 
     .fertility-message {
@@ -61,11 +72,19 @@
       padding: 8px 12px;
       border-radius: 12px;
       line-height: 1.4;
+      font-size: 14px;
+      animation: fadeIn 0.3s ease-in-out;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
     }
 
     .fertility-message.bot {
-      background: #f3f4f6;
+      background: white;
       margin-right: auto;
+      border: 1px solid #e5e7eb;
     }
 
     .fertility-message.user {
@@ -79,6 +98,7 @@
       border-top: 1px solid #e5e7eb;
       display: flex;
       gap: 8px;
+      background: white;
     }
 
     .fertility-chat-input input {
@@ -87,6 +107,12 @@
       border: 1px solid #e5e7eb;
       border-radius: 6px;
       outline: none;
+      font-size: 14px;
+    }
+
+    .fertility-chat-input input:focus {
+      border-color: #7c3aed;
+      box-shadow: 0 0 0 2px rgba(124, 58, 237, 0.1);
     }
 
     .fertility-chat-input button {
@@ -96,6 +122,12 @@
       border: none;
       border-radius: 6px;
       cursor: pointer;
+      font-weight: 500;
+      transition: background-color 0.2s;
+    }
+
+    .fertility-chat-input button:hover {
+      background: #6d28d9;
     }
 
     .fertility-chat-input button:disabled {
@@ -112,19 +144,20 @@
   // Create widget HTML
   const widgetHTML = `
     <div class="fertility-widget">
-      <button class="fertility-widget-button">
+      <button class="fertility-widget-button" aria-label="Open chat">
         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2">
           <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
         </svg>
       </button>
       <div class="fertility-chat-window">
         <div class="fertility-chat-header">
+          <img src="https://fertily.lovable.ai/logo.png" alt="Fertily Chat" />
           Fertility Assistant
         </div>
         <div class="fertility-chat-messages">
         </div>
         <div class="fertility-chat-input">
-          <input type="text" placeholder="Type your message...">
+          <input type="text" placeholder="Type your message..." aria-label="Chat message">
           <button>Send</button>
         </div>
       </div>
@@ -146,7 +179,12 @@
 
   // Toggle chat window
   chatButton.addEventListener('click', () => {
-    chatWindow.style.display = chatWindow.style.display === 'flex' ? 'none' : 'flex';
+    const isVisible = chatWindow.style.display === 'flex';
+    chatWindow.style.display = isVisible ? 'none' : 'flex';
+    if (!isVisible && messagesContainer.children.length === 0) {
+      // Add welcome message when opening for the first time
+      addMessage("Hello! I'm your fertility assistant. How can I help you today?", true);
+    }
   });
 
   // Add message to chat
@@ -168,8 +206,6 @@
     addMessage(message, false);
 
     try {
-      console.log('Sending message:', message);
-      
       const response = await fetch('https://fgbhxuvdobmkqojfmboa.functions.supabase.co/widget-chat', {
         method: 'POST',
         headers: {
@@ -180,18 +216,12 @@
         cache: 'no-cache',
         body: JSON.stringify({ message })
       });
-      
-      console.log('Response status:', response.status);
+
       const data = await response.json();
-      console.log('Response data:', data);
-
-      if (data.error) {
-        throw new Error(data.error);
-      }
-
+      if (data.error) throw new Error(data.error);
       addMessage(data.response, true);
     } catch (error) {
-      console.error('Error:', error);
+      console.error('Chat error:', error);
       addMessage('Sorry, I encountered an error. Please try again.', true);
     } finally {
       sendButton.disabled = false;
