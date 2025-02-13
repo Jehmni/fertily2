@@ -25,15 +25,23 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
   auth: {
     autoRefreshToken: true,
     persistSession: true,
-    detectSessionInUrl: true
+    detectSessionInUrl: true,
+    storageKey: 'supabase.auth.token',
+    storage: window.localStorage,
+    flowType: 'pkce'
   }
 });
 
-// Test the connection
-supabase.auth.getSession().then(({ data, error }) => {
-  if (error) {
-    console.error('Error connecting to Supabase:', error);
-  } else {
-    console.log('Successfully connected to Supabase');
+// Test the connection and log the result
+(async () => {
+  try {
+    const { data, error } = await supabase.auth.getSession();
+    if (error) {
+      console.error('Error connecting to Supabase:', error);
+    } else {
+      console.log('Successfully connected to Supabase. Session:', data);
+    }
+  } catch (err) {
+    console.error('Caught error testing Supabase connection:', err);
   }
-});
+})();
