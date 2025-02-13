@@ -6,8 +6,7 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-  'Access-Control-Allow-Methods': 'POST, OPTIONS',
-  'Access-Control-Allow-Credentials': 'true'
+  'Access-Control-Allow-Methods': 'POST, OPTIONS'
 }
 
 serve(async (req) => {
@@ -20,6 +19,14 @@ serve(async (req) => {
   }
 
   try {
+    // Verify service role key
+    const authHeader = req.headers.get('Authorization');
+    const serviceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
+    
+    if (!authHeader || !authHeader.startsWith('Bearer ') || authHeader.split(' ')[1] !== serviceRoleKey) {
+      throw new Error('Unauthorized');
+    }
+
     // Parse request body
     const requestBody = await req.json();
     console.log('Received request body:', requestBody);
@@ -30,11 +37,9 @@ serve(async (req) => {
       throw new Error('Message is required');
     }
 
-    // Initialize Supabase client with anon key for public access
+    // Initialize Supabase client with service role key for admin access
     const supabaseUrl = Deno.env.get('SUPABASE_URL') || '';
-    const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZnYmh4dXZkb2Jta3FvamZtYm9hIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzgyNzE4NzIsImV4cCI6MjA1Mzg0Nzg3Mn0.1oCLHiM1UcC0qn2eif1tv54r_TBGyoqbC6y2pqC_dkk';
-
-    const supabase = createClient(supabaseUrl, supabaseAnonKey);
+    const supabase = createClient(supabaseUrl, serviceRoleKey || '');
 
     // Fetch OpenAI response
     const openAIResponse = await fetch('https://api.openai.com/v1/chat/completions', {
@@ -63,7 +68,7 @@ serve(async (req) => {
 
     const aiResponse = data.choices[0].message.content;
 
-    // Store the message and response in the database using anon access
+    // Store the message and response in the database using service role
     const { error: dbError } = await supabase
       .from('widget_chat_history')
       .insert({
@@ -91,7 +96,7 @@ serve(async (req) => {
     return new Response(
       JSON.stringify({ error: error.message }),
       { 
-        status: 500,
+        status: error.message === 'Unauthorized' ? 401 : 500,
         headers: { 
           ...corsHeaders, 
           'Content-Type': 'application/json' 
