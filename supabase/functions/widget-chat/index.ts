@@ -19,18 +19,6 @@ serve(async (req) => {
   }
 
   try {
-    // Get the API key from header
-    const apiKey = req.headers.get('apikey');
-    const anonKey = Deno.env.get('SUPABASE_ANON_KEY');
-    
-    console.log('API key received:', apiKey ? 'Present' : 'Missing');
-    console.log('Comparing with anon key:', apiKey === anonKey ? 'Match' : 'No match');
-
-    if (!apiKey || apiKey !== anonKey) {
-      console.error('Authentication error: Invalid API key');
-      throw new Error('Invalid authentication');
-    }
-
     // Parse request body
     const requestBody = await req.json();
     console.log('Received request body:', requestBody);
@@ -101,7 +89,7 @@ serve(async (req) => {
     return new Response(
       JSON.stringify({ error: error.message }),
       { 
-        status: error.message.includes('authentication') ? 401 : 500,
+        status: 500,
         headers: { 
           ...corsHeaders, 
           'Content-Type': 'application/json' 
