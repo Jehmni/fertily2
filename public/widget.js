@@ -180,7 +180,7 @@
         headers: {
           'Content-Type': 'application/json',
           'apikey': anonKey,
-          'Authorization': anonKey // Remove Bearer prefix as we'll handle it in the Edge Function
+          'Authorization': `Bearer ${anonKey}`
         },
         body: JSON.stringify({ 
           message,

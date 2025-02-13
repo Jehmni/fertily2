@@ -19,8 +19,8 @@ serve(async (req) => {
   }
 
   try {
-    // Get the raw auth header and API key
-    const authHeader = req.headers.get('Authorization');
+    // Get the auth header and API key
+    const authHeader = req.headers.get('Authorization')?.split(' ')[1]; // Remove 'Bearer ' prefix
     const apiKey = req.headers.get('apikey');
     
     console.log('Auth header received:', authHeader ? 'Present' : 'Missing');
