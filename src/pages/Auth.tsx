@@ -253,7 +253,7 @@ const Auth = () => {
               <img 
                 src="/lovable-uploads/27ff8345-8e52-4baf-a8f5-d267b1b7c37f.png"
                 alt="Fertily Logo"
-                className="w-24 h-24 object-contain"
+                className="w-16 h-16 object-contain bg-white rounded-full"
               />
             </div>
             <DialogTitle className="sr-only">Onboarding</DialogTitle>
@@ -302,11 +302,11 @@ const Auth = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-primary/10 to-background flex flex-col items-center justify-center p-4">
-      <div className="mb-8">
+      <div className="mb-6">
         <img 
           src="/lovable-uploads/27ff8345-8e52-4baf-a8f5-d267b1b7c37f.png"
           alt="Fertily Logo"
-          className="w-32 h-32 object-contain"
+          className="w-20 h-20 object-contain bg-white rounded-full"
         />
       </div>
       <Card className="w-full max-w-md p-8 space-y-6 shadow-lg animate-fadeIn bg-white/95 backdrop-blur-sm">
