@@ -143,9 +143,6 @@
   const input = widget.querySelector('input');
   const sendButton = widget.querySelector('button:not(.fertility-widget-button)');
 
-  // Generate a unique session ID
-  const sessionId = crypto.randomUUID();
-
   // Toggle chat window
   chatButton.addEventListener('click', () => {
     chatWindow.style.display = chatWindow.style.display === 'flex' ? 'none' : 'flex';
@@ -170,19 +167,20 @@
     addMessage(message, false);
 
     try {
+      console.log('Sending message:', message);
+      
       const response = await fetch('https://fgbhxuvdobmkqojfmboa.functions.supabase.co/widget-chat', {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json',
+          'Content-Type': 'application/json'
         },
-        body: JSON.stringify({ 
-          message,
-          sessionId 
-        })
+        body: JSON.stringify({ message })
       });
       
+      console.log('Response status:', response.status);
       const data = await response.json();
-      
+      console.log('Response data:', data);
+
       if (data.error) {
         throw new Error(data.error);
       }
