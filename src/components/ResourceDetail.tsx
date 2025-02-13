@@ -19,22 +19,19 @@ export const ResourceDetail = () => {
       const { data, error } = await supabase
         .from('educational_resources')
         .select()
-        .match({ id: resourceId })
-        .maybeSingle();
+        .single();
       
       if (error) {
         console.error('Error fetching resource:', error);
         throw error;
       }
       
-      if (!data) {
-        throw new Error('Resource not found');
-      }
-      
       return data;
     },
     enabled: !!resourceId,
   });
+
+  console.log('Resource:', resource); // Debug log
 
   if (isLoading) {
     return <div className="flex items-center justify-center p-8">Loading resource...</div>;
