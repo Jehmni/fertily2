@@ -25,6 +25,10 @@ serve(async (req) => {
 
     const { message, sessionId } = requestBody;
 
+    if (!message) {
+      throw new Error('Message is required');
+    }
+
     // Initialize Supabase client
     const supabaseUrl = Deno.env.get('SUPABASE_URL')
     const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')
