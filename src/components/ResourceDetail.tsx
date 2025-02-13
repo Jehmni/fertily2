@@ -19,6 +19,7 @@ export const ResourceDetail = () => {
       const { data, error } = await supabase
         .from('educational_resources')
         .select()
+        .eq('id', resourceId)
         .single();
       
       if (error) {
