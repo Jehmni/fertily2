@@ -6,7 +6,8 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-  'Access-Control-Allow-Methods': 'POST, OPTIONS'
+  'Access-Control-Allow-Methods': 'POST, OPTIONS',
+  'Content-Type': 'application/json'
 }
 
 serve(async (req) => {
@@ -14,11 +15,15 @@ serve(async (req) => {
   if (req.method === 'OPTIONS') {
     console.log('Handling CORS preflight request');
     return new Response(null, { 
-      headers: corsHeaders 
+      headers: corsHeaders,
+      status: 204
     })
   }
 
   try {
+    console.log('Processing request method:', req.method);
+    console.log('Request headers:', Object.fromEntries(req.headers.entries()));
+
     // Get the API key from header
     const apiKey = req.headers.get('apikey');
     const anonKey = Deno.env.get('SUPABASE_ANON_KEY');
@@ -90,10 +95,8 @@ serve(async (req) => {
     return new Response(
       JSON.stringify({ response: aiResponse }),
       { 
-        headers: { 
-          ...corsHeaders, 
-          'Content-Type': 'application/json' 
-        } 
+        headers: corsHeaders,
+        status: 200
       }
     )
   } catch (error) {
@@ -102,10 +105,7 @@ serve(async (req) => {
       JSON.stringify({ error: error.message }),
       { 
         status: error.message.includes('authentication') ? 401 : 500,
-        headers: { 
-          ...corsHeaders, 
-          'Content-Type': 'application/json' 
-        } 
+        headers: corsHeaders
       }
     )
   }
