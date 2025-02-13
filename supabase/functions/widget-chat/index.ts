@@ -19,13 +19,15 @@ serve(async (req) => {
   }
 
   try {
-    // Allow requests with anon key
-    const authHeader = req.headers.get('Authorization');
+    const authHeader = req.headers.get('Authorization')?.split(' ')[1];
     const apiKey = req.headers.get('apikey');
     
-    if (!authHeader || !apiKey) {
-      console.error('Missing auth headers');
-      throw new Error('Missing authentication');
+    console.log('Auth header received:', authHeader ? 'Present' : 'Missing');
+    console.log('API key received:', apiKey ? 'Present' : 'Missing');
+
+    if (!authHeader || !apiKey || authHeader !== apiKey) {
+      console.error('Invalid authentication headers');
+      throw new Error('Invalid authentication');
     }
 
     // Parse request body
