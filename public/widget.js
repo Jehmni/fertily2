@@ -1,4 +1,3 @@
-
 (function() {
   // Create widget styles
   const styles = `
@@ -146,7 +145,6 @@
 
   // Generate a unique session ID
   const sessionId = crypto.randomUUID();
-  console.log('Generated session ID:', sessionId);
 
   // Toggle chat window
   chatButton.addEventListener('click', () => {
@@ -172,41 +170,26 @@
     addMessage(message, false);
 
     try {
-      const ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZnYmh4dXZkb2Jta3FvamZtYm9hIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzgyNzE4NzIsImV4cCI6MjA1Mzg0Nzg3Mn0.1oCLHiM1UcC0qn2eif1tv54r_TBGyoqbC6y2pqC_dkk';
-      
-      console.log('Preparing to send message:', { message, sessionId });
       const response = await fetch('https://fgbhxuvdobmkqojfmboa.functions.supabase.co/widget-chat', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'apikey': ANON_KEY
         },
         body: JSON.stringify({ 
           message,
           sessionId 
-        }),
-        credentials: 'omit'
+        })
       });
-
-      console.log('Response status:', response.status);
-      
-      if (!response.ok) {
-        const errorText = await response.text();
-        console.error('Server error:', errorText);
-        throw new Error(`Server error: ${response.status}`);
-      }
       
       const data = await response.json();
-      console.log('Response data:', data);
-
+      
       if (data.error) {
-        console.error('API Error:', data.error);
         throw new Error(data.error);
       }
 
       addMessage(data.response, true);
     } catch (error) {
-      console.error('Full error:', error);
+      console.error('Error:', error);
       addMessage('Sorry, I encountered an error. Please try again.', true);
     } finally {
       sendButton.disabled = false;
