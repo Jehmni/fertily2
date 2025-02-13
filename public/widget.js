@@ -1,4 +1,4 @@
-<lov-codelov-code>
+
 (function() {
   // Create widget styles
   const styles = `
@@ -175,11 +175,12 @@
 
     try {
       console.log('Sending message:', { message, sessionId });
-      const response = await fetch('https://fgbhxuvdobmkqojfmboa.supabase.co/functions/v1/widget-chat', {
+      const response = await fetch('https://fgbhxuvdobmkqojfmboa.functions.supabase.co/widget-chat', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'apikey': anonKey
+          'apikey': anonKey,
+          'Authorization': `Bearer ${anonKey}`
         },
         body: JSON.stringify({ 
           message,
@@ -212,4 +213,3 @@
     if (e.key === 'Enter') sendMessage();
   });
 })();
-</lov-code>
