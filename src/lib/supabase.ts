@@ -21,20 +21,6 @@ try {
 
 console.log('Initializing Supabase client with URL:', supabaseUrl); // Debug log
 
-// Create a temporary client to test the connection
-const testClient = createClient(supabaseUrl, supabaseAnonKey);
-
-// First test the connection without any auth configuration
-(async () => {
-  try {
-    console.log('Testing basic Supabase connection...'); // Debug log
-    const { data, error } = await testClient.from('profiles').select('count').limit(1);
-    console.log('Basic connection test result:', { data, error });
-  } catch (err) {
-    console.error('Basic connection test error:', err);
-  }
-})();
-
 // Create the main client with full configuration
 export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
   auth: {

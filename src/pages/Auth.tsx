@@ -7,7 +7,7 @@ import { Card } from "@/components/ui/card";
 import { useToast } from "@/components/ui/use-toast";
 import { Label } from "@/components/ui/label";
 import { Loader2, Info } from "lucide-react";
-import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Calendar } from "@/components/ui/calendar";
 import { format } from "date-fns";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -250,6 +250,9 @@ const Auth = () => {
         <Dialog open={true} onOpenChange={() => {}}>
           <DialogContent className="sm:max-w-md p-0 overflow-hidden">
             <DialogTitle className="sr-only">Onboarding</DialogTitle>
+            <DialogDescription className="sr-only">
+              Welcome to your fertility journey. Follow the steps to get started.
+            </DialogDescription>
             <div className="relative">
               <img 
                 src={onboardingSlides[currentSlide].image}
