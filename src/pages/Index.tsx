@@ -18,7 +18,6 @@ import { Messages } from "@/components/Messages";
 import { Dialog, DialogContent, DialogOverlay, DialogPortal } from "@/components/ui/dialog";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
-import { AdminAnalyticsDashboard } from "@/components/admin/AdminAnalyticsDashboard";
 import { Skeleton } from "@/components/ui/skeleton";
 
 const onboardingSlides = [
@@ -47,7 +46,7 @@ const Index = () => {
   const [currentSlide, setCurrentSlide] = useState(0);
   const isMobile = useIsMobile();
   const navigate = useNavigate();
-  const { user, isAdmin, loading } = useAuth();
+  const { user, loading } = useAuth();
 
   useEffect(() => {
     console.log("Index component mounted"); // Debug log
@@ -58,7 +57,6 @@ const Index = () => {
     }
   }, []);
 
-  // Show loading state
   if (loading) {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-b from-accent via-background to-secondary/30 p-4">
@@ -120,8 +118,6 @@ const Index = () => {
         return <Messages />;
       case "community":
         return <Community />;
-      case "admin":
-        return isAdmin ? <AdminAnalyticsDashboard /> : null;
       default:
         return (
           <div className="space-y-6 animate-fade-in">
@@ -193,13 +189,11 @@ const Index = () => {
                 setIsMenuOpen={setIsMenuOpen}
                 activeView={activeView}
                 onNavigate={handleNavigate}
-                isAdmin={isAdmin}
               />
             ) : (
               <DesktopNav
                 activeView={activeView}
                 onNavigate={handleNavigate}
-                isAdmin={isAdmin}
               />
             )}
           </div>

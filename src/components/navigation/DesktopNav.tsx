@@ -5,11 +5,10 @@ import { getNavigationItems } from "./NavigationItems";
 interface DesktopNavProps {
   activeView: string;
   onNavigate: (key: string) => void;
-  isAdmin: boolean;
 }
 
-export const DesktopNav = ({ activeView, onNavigate, isAdmin }: DesktopNavProps) => {
-  const items = getNavigationItems(isAdmin);
+export const DesktopNav = ({ activeView, onNavigate }: DesktopNavProps) => {
+  const items = getNavigationItems();
   
   return (
     <div className="flex gap-2">

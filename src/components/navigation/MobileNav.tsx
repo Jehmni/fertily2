@@ -8,11 +8,10 @@ interface MobileNavProps {
   setIsMenuOpen: (open: boolean) => void;
   activeView: string;
   onNavigate: (key: string) => void;
-  isAdmin: boolean;
 }
 
-export const MobileNav = ({ isMenuOpen, setIsMenuOpen, activeView, onNavigate, isAdmin }: MobileNavProps) => {
-  const items = getNavigationItems(isAdmin);
+export const MobileNav = ({ isMenuOpen, setIsMenuOpen, activeView, onNavigate }: MobileNavProps) => {
+  const items = getNavigationItems();
   
   return (
     <>
