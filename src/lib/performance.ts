@@ -1,3 +1,4 @@
+
 interface PerformanceMetrics {
   timeToFirstByte: number;
   firstContentfulPaint: number;
@@ -13,7 +14,6 @@ class PerformanceMonitor {
   }
 
   private initializeObservers() {
-    // First Contentful Paint
     const paintObserver = new PerformanceObserver((entries) => {
       for (const entry of entries.getEntries()) {
         if (entry.name === 'first-contentful-paint') {
@@ -23,7 +23,6 @@ class PerformanceMonitor {
     });
     paintObserver.observe({ entryTypes: ['paint'] });
 
-    // Largest Contentful Paint
     const lcpObserver = new PerformanceObserver((entries) => {
       const lastEntry = entries.getEntries().pop();
       if (lastEntry) {
@@ -32,9 +31,8 @@ class PerformanceMonitor {
     });
     lcpObserver.observe({ entryTypes: ['largest-contentful-paint'] });
 
-    // First Input Delay
     const fidObserver = new PerformanceObserver((entries) => {
-      for (const entry of entries.getEntries()) {
+      for (const entry of entries.getEntries() as PerformanceEventTiming[]) {
         if (entry.name === 'first-input') {
           this.metrics.firstInputDelay = entry.processingStart - entry.startTime;
         }
@@ -57,4 +55,4 @@ class PerformanceMonitor {
   }
 }
 
-export const performanceMonitor = new PerformanceMonitor(); 
+export const performanceMonitor = new PerformanceMonitor();

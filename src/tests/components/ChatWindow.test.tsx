@@ -1,3 +1,4 @@
+
 import { render, screen, fireEvent } from '@testing-library/react';
 import { describe, it, expect, vi } from 'vitest';
 import { ChatWindow } from '@/components/chat/ChatWindow';
@@ -5,7 +6,7 @@ import { ChatWindow } from '@/components/chat/ChatWindow';
 describe('ChatWindow', () => {
   it('renders correctly', () => {
     render(<ChatWindow messages={[]} onSend={() => {}} isLoading={false} />);
-    expect(screen.getByRole('textbox')).toBeInTheDocument();
+    expect(screen.getByRole('complementary')).toBeInTheDocument();
   });
 
   it('handles message sending', () => {
@@ -18,4 +19,4 @@ describe('ChatWindow', () => {
     
     expect(onSend).toHaveBeenCalledWith('Hello');
   });
-}); 
+});

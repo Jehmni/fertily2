@@ -1,3 +1,4 @@
+
 interface Config {
   env: 'development' | 'production' | 'test';
   supabaseUrl: string;
@@ -10,7 +11,7 @@ interface Config {
 }
 
 export const Config: Config = {
-  env: process.env.NODE_ENV,
+  env: (process.env.NODE_ENV || 'development') as 'development' | 'production' | 'test',
   supabaseUrl: process.env.VITE_SUPABASE_URL!,
   supabaseKey: process.env.VITE_SUPABASE_ANON_KEY!,
   features: {
@@ -18,4 +19,4 @@ export const Config: Config = {
     chat: true,
     voice: true,
   },
-}; 
+};

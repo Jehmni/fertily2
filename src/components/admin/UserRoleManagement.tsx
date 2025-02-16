@@ -75,7 +75,7 @@ export const UserRoleManagement = () => {
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             className="max-w-sm"
-            prefix={<Search className="h-4 w-4 text-muted-foreground" />}
+            prefixIcon={<Search className="h-4 w-4 text-muted-foreground" />}
           />
         </div>
         <Table>

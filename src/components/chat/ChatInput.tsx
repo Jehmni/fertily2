@@ -1,6 +1,8 @@
+
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Send } from "lucide-react";
+import { useState } from "react";
 import { a11yMessages, focusStyles } from "@/lib/a11y";
 
 interface ChatInputProps {
@@ -37,10 +39,10 @@ export const ChatInput = ({ onSend, disabled }: ChatInputProps) => {
         type="submit" 
         disabled={disabled || !message.trim()}
         className={focusStyles.base}
-        aria-label={a11yMessages.actions.send}
+        aria-label="Send message"
       >
         <Send className="h-4 w-4" />
       </Button>
     </form>
   );
-}; 
+};
