@@ -1,4 +1,3 @@
-
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -14,14 +13,30 @@ import { ErrorBoundary } from "@/components/ui/error-boundary";
 import TermsOfService from "./pages/TermsOfService";
 import PrivacyPolicy from "./pages/PrivacyPolicy";
 import { Skeleton } from "@/components/ui/skeleton";
+import { AdminAnalyticsDashboard } from "@/components/admin/AdminAnalyticsDashboard";
+import { AdminGuard } from "@/components/admin/AdminGuard";
+import { Layout } from "@/components/Layout";
+import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
+import { performanceMonitor } from "@/lib/performance";
 
-const queryClient = new QueryClient();
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 0,
+      cacheTime: 0,
+      refetchOnWindowFocus: true,
+      retry: false,
+    },
+  },
+});
 
 const App = () => {
   const [session, setSession] = useState<any>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    performanceMonitor.trackPageLoad('App');
+
     const initializeAuth = async () => {
       try {
         console.log("Starting auth initialization..."); // Debug log
@@ -75,45 +90,58 @@ const App = () => {
       <QueryClientProvider client={queryClient}>
         <BrowserRouter>
           <TooltipProvider>
-            <Routes>
-              <Route
-                path="/"
-                element={
-                  session ? (
-                    <Index />
-                  ) : (
-                    <Navigate to="/auth" replace />
-                  )
-                }
-              />
-              <Route
-                path="/auth"
-                element={
-                  !session ? (
-                    <Auth />
-                  ) : (
-                    <Navigate to="/" replace />
-                  )
-                }
-              />
-              <Route
-                path="/resources/:id"
-                element={
-                  session ? (
-                    <ResourceDetail />
-                  ) : (
-                    <Navigate to="/auth" replace />
-                  )
-                }
-              />
-              <Route path="/terms" element={<TermsOfService />} />
-              <Route path="/privacy" element={<PrivacyPolicy />} />
-              <Route path="*" element={<NotFound />} />
-            </Routes>
+            <Layout>
+              <Routes>
+                <Route
+                  path="/"
+                  element={
+                    session ? (
+                      <Index />
+                    ) : (
+                      <Navigate to="/auth" replace />
+                    )
+                  }
+                />
+                <Route
+                  path="/auth"
+                  element={
+                    !session ? (
+                      <Auth />
+                    ) : (
+                      <Navigate to="/" replace />
+                    )
+                  }
+                />
+                <Route
+                  path="/resources/:id"
+                  element={
+                    session ? (
+                      <ResourceDetail />
+                    ) : (
+                      <Navigate to="/auth" replace />
+                    )
+                  }
+                />
+                <Route path="/terms" element={<TermsOfService />} />
+                <Route path="/privacy" element={<PrivacyPolicy />} />
+                <Route
+                  path="/admin"
+                  element={
+                    <AdminGuard>
+                      <AdminAnalyticsDashboard />
+                    </AdminGuard>
+                  }
+                />
+                <Route path="*" element={<NotFound />} />
+              </Routes>
+            </Layout>
             <Toaster />
             <Sonner />
           </TooltipProvider>
         </BrowserRouter>
+        {process.env.NODE_ENV === 'development' && (
+          <ReactQueryDevtools initialIsOpen={false} />
+        )}
       </QueryClientProvider>
     </ErrorBoundary>
   );

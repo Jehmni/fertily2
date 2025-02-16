@@ -1,4 +1,3 @@
-
 import { Button } from "@/components/ui/button";
 import { PostCard } from "./PostCard";
 import type { CommunityPost } from "@/types/community";
@@ -7,6 +6,9 @@ import { CommunityService } from "@/services/CommunityService";
 import { useToast } from "@/hooks/use-toast";
 import { EmptyState } from "@/components/ui/empty-state";
 import { FileText } from "lucide-react";
+import { useInfiniteScroll } from "@/hooks/useInfiniteScroll";
+import { useEffect } from "react";
+import { performanceMonitor } from "@/lib/performance";
 
 interface PostListProps {
   posts: CommunityPost[];
@@ -27,12 +29,14 @@ export const PostList = ({
 }: PostListProps) => {
   const { toast } = useToast();
   
-  const loadMoreRef = useIntersectionObserver<HTMLDivElement>({
-    onChange: (isIntersecting) => {
-      if (isIntersecting && hasNextPage && !isFetchingNextPage) {
-        fetchNextPage();
-      }
-    },
+  // Track component performance
+  useEffect(() => {
+    performanceMonitor.trackPageLoad('PostList');
+  }, []);
+
+  const loadMoreRef = useInfiniteScroll({
+    onIntersect: fetchNextPage,
+    enabled: hasNextPage && !isFetchingNextPage,
   });
 
   if (posts.length === 0) {
@@ -51,7 +55,7 @@ export const PostList = ({
   }
 
   return (
-    <div className="grid gap-6">
+    <div className="space-y-4">
       {posts.map((post) => (
         <PostCard 
           key={post.id} 
@@ -71,17 +75,7 @@ export const PostList = ({
           }}
         />
       ))}
-      {hasNextPage && (
-        <div ref={loadMoreRef} className="flex justify-center p-4">
-          {isFetchingNextPage ? (
-            <div>Loading more posts...</div>
-          ) : (
-            <Button variant="ghost" onClick={() => fetchNextPage()}>
-              Load More
-            </Button>
-          )}
-        </div>
-      )}
+      <div ref={loadMoreRef} className="h-4" />
     </div>
   );
 };

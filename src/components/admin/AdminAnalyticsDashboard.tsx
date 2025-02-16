@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar, PieChart, Pie, Cell } from "recharts";
@@ -6,6 +6,10 @@ import { supabase } from "@/lib/supabase";
 import { format, subDays } from "date-fns";
 import { AlertCircle, ArrowUpRight, Users, Activity, Calendar } from "lucide-react";
 import { UserRoleManagement } from "./UserRoleManagement";
+import { DashboardSkeleton } from "./DashboardSkeleton";
+import { DashboardErrorBoundary } from "./DashboardErrorBoundary";
+import { useQuery, useQueries } from "@tanstack/react-query";
+import { useMediaQuery } from "@/hooks/useMediaQuery";
 
 type DailyMetric = {
   date: string;
@@ -23,116 +27,103 @@ type FeatureUsage = {
 
 const COLORS = ['#8884d8', '#82ca9d', '#ffc658', '#ff8042', '#a4de6c'];
 
+const fetchDailyMetrics = async () => {
+  const { data, error } = await supabase
+    .from('analytics_daily_metrics')
+    .select('*')
+    .gte('date', format(subDays(new Date(), 30), 'yyyy-MM-dd'));
+  
+  if (error) throw error;
+  return data;
+};
+
+const fetchFeatureUsage = async () => {
+  const { data, error } = await supabase
+    .from('feature_usage_summary')
+    .select('*')
+    .order('usage_count', { ascending: false });
+  
+  if (error) throw error;
+  return data;
+};
+
 export const AdminAnalyticsDashboard = () => {
-  const [dailyMetrics, setDailyMetrics] = useState<DailyMetric[]>([]);
-  const [featureUsage, setFeatureUsage] = useState<FeatureUsage[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const isMobile = useMediaQuery("(max-width: 768px)");
+  
+  const queries = useQueries({
+    queries: [
+      {
+        queryKey: ['daily-metrics'],
+        queryFn: fetchDailyMetrics,
+        staleTime: 5 * 60 * 1000, // 5 minutes
+      },
+      {
+        queryKey: ['feature-usage'],
+        queryFn: fetchFeatureUsage,
+        staleTime: 5 * 60 * 1000,
+      },
+    ],
+  });
 
-  useEffect(() => {
-    const fetchAnalytics = async () => {
-      try {
-        const [metricsResponse, featureResponse] = await Promise.all([
-          supabase
-            .from('analytics_daily_metrics')
-            .select('*')
-            .gte('date', format(subDays(new Date(), 30), 'yyyy-MM-dd')),
-          supabase
-            .from('feature_usage_summary')
-            .select('*')
-            .order('usage_count', { ascending: false })
-        ]);
+  const isLoading = queries.some(query => query.isLoading);
+  const isError = queries.some(query => query.isError);
+  const [dailyMetrics, featureUsage] = queries.map(query => query.data ?? []);
 
-        if (metricsResponse.error) throw metricsResponse.error;
-        if (featureResponse.error) throw featureResponse.error;
+  const stats = useMemo(() => ({
+    totalUsers: featureUsage.reduce((max, curr) => Math.max(max, curr.unique_users), 0),
+    totalEvents: dailyMetrics.reduce((sum, curr) => sum + curr.event_count, 0),
+    activeFeatures: featureUsage.length,
+  }), [dailyMetrics, featureUsage]);
 
-        setDailyMetrics(metricsResponse.data);
-        setFeatureUsage(featureResponse.data);
-      } catch (err) {
-        console.error('Error fetching analytics:', err);
-        setError('Failed to load analytics data');
-      } finally {
-        setLoading(false);
-      }
-    };
+  if (isLoading) return <DashboardSkeleton />;
 
-    fetchAnalytics();
-  }, []);
-
-  if (error) {
-    return (
-      <Card>
-        <CardContent className="pt-6">
-          <div className="flex items-center gap-2 text-destructive">
-            <AlertCircle className="h-5 w-5" />
-            <p>{error}</p>
-          </div>
-        </CardContent>
-      </Card>
-    );
-  }
-
-  const totalUsers = featureUsage.reduce((max, curr) => 
-    Math.max(max, curr.unique_users), 0
-  );
-
-  const totalEvents = dailyMetrics.reduce((sum, curr) => 
-    sum + curr.event_count, 0
-  );
+  const chartHeight = isMobile ? 300 : 400;
+  const chartWidth = isMobile ? "100%" : undefined;
 
   return (
-    <div className="space-y-6">
-      <div className="grid gap-4 md:grid-cols-3">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Users</CardTitle>
-            <Users className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{totalUsers}</div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Events</CardTitle>
-            <Activity className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{totalEvents}</div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Active Features</CardTitle>
-            <Calendar className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{featureUsage.length}</div>
-          </CardContent>
-        </Card>
-      </div>
+    <DashboardErrorBoundary>
+      <div className="space-y-6">
+        <div className="grid gap-4 md:grid-cols-3">
+          <MetricCard
+            title="Total Users"
+            value={stats.totalUsers}
+            icon={Users}
+          />
+          <MetricCard
+            title="Total Events"
+            value={stats.totalEvents}
+            icon={Activity}
+          />
+          <MetricCard
+            title="Active Features"
+            value={stats.activeFeatures}
+            icon={Calendar}
+          />
+        </div>
 
-      <Tabs defaultValue="overview" className="space-y-4">
-        <TabsList>
-          <TabsTrigger value="overview">Overview</TabsTrigger>
-          <TabsTrigger value="features">Feature Usage</TabsTrigger>
-          <TabsTrigger value="events">Event Types</TabsTrigger>
-          <TabsTrigger value="users">User Management</TabsTrigger>
-        </TabsList>
+        <Tabs defaultValue="overview" className="space-y-4">
+          <TabsList className="flex-wrap">
+            <TabsTrigger value="overview">Overview</TabsTrigger>
+            <TabsTrigger value="features">Feature Usage</TabsTrigger>
+            <TabsTrigger value="events">Event Types</TabsTrigger>
+            <TabsTrigger value="users">User Management</TabsTrigger>
+          </TabsList>
 
-        <TabsContent value="overview" className="space-y-4">
-          <Card>
-            <CardHeader>
-              <CardTitle>Daily User Activity</CardTitle>
-              <CardDescription>User engagement over the last 30 days</CardDescription>
-            </CardHeader>
-            <CardContent className="h-[400px]">
-              <ResponsiveContainer width="100%" height="100%">
+          <TabsContent value="overview">
+            <ChartCard
+              title="Daily User Activity"
+              description="User engagement over the last 30 days"
+              height={chartHeight}
+            >
+              <ResponsiveContainer width={chartWidth} height="100%">
                 <LineChart data={dailyMetrics}>
                   <CartesianGrid strokeDasharray="3 3" />
                   <XAxis 
                     dataKey="date" 
                     tickFormatter={(date) => format(new Date(date), 'MMM dd')}
+                    angle={isMobile ? -45 : 0}
+                    textAnchor={isMobile ? "end" : "middle"}
+                    height={isMobile ? 60 : 30}
                   />
                   <YAxis />
                   <Tooltip 
@@ -152,18 +143,16 @@ export const AdminAnalyticsDashboard = () => {
                   />
                 </LineChart>
               </ResponsiveContainer>
-            </CardContent>
-          </Card>
-        </TabsContent>
+            </ChartCard>
+          </TabsContent>
 
-        <TabsContent value="features">
-          <Card>
-            <CardHeader>
-              <CardTitle>Feature Usage Distribution</CardTitle>
-              <CardDescription>Most used features in the application</CardDescription>
-            </CardHeader>
-            <CardContent className="h-[400px]">
-              <ResponsiveContainer width="100%" height="100%">
+          <TabsContent value="features">
+            <ChartCard
+              title="Feature Usage Distribution"
+              description="Most used features in the application"
+              height={chartHeight}
+            >
+              <ResponsiveContainer width={chartWidth} height="100%">
                 <BarChart data={featureUsage}>
                   <CartesianGrid strokeDasharray="3 3" />
                   <XAxis 
@@ -178,18 +167,16 @@ export const AdminAnalyticsDashboard = () => {
                   <Bar dataKey="unique_users" fill="#82ca9d" name="Unique Users" />
                 </BarChart>
               </ResponsiveContainer>
-            </CardContent>
-          </Card>
-        </TabsContent>
+            </ChartCard>
+          </TabsContent>
 
-        <TabsContent value="events">
-          <Card>
-            <CardHeader>
-              <CardTitle>Event Type Distribution</CardTitle>
-              <CardDescription>Breakdown of different event types</CardDescription>
-            </CardHeader>
-            <CardContent className="h-[400px]">
-              <ResponsiveContainer width="100%" height="100%">
+          <TabsContent value="events">
+            <ChartCard
+              title="Event Type Distribution"
+              description="Breakdown of different event types"
+              height={chartHeight}
+            >
+              <ResponsiveContainer width={chartWidth} height="100%">
                 <PieChart>
                   <Pie
                     data={dailyMetrics}
@@ -207,14 +194,36 @@ export const AdminAnalyticsDashboard = () => {
                   <Tooltip />
                 </PieChart>
               </ResponsiveContainer>
-            </CardContent>
-          </Card>
-        </TabsContent>
+            </ChartCard>
+          </TabsContent>
 
-        <TabsContent value="users">
-          <UserRoleManagement />
-        </TabsContent>
-      </Tabs>
-    </div>
+          <TabsContent value="users">
+            <UserRoleManagement />
+          </TabsContent>
+        </Tabs>
+      </div>
+    </DashboardErrorBoundary>
   );
 };
+
+const MetricCard = ({ title, value, icon: Icon }) => (
+  <Card>
+    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+      <CardTitle className="text-sm font-medium">{title}</CardTitle>
+      <Icon className="h-4 w-4 text-muted-foreground" />
+    </CardHeader>
+    <CardContent>
+      <div className="text-2xl font-bold">{value.toLocaleString()}</div>
+    </CardContent>
+  </Card>
+);
+
+const ChartCard = ({ title, description, children, height }) => (
+  <Card>
+    <CardHeader>
+      <CardTitle>{title}</CardTitle>
+      {description && <CardDescription>{description}</CardDescription>}
+    </CardHeader>
+    <CardContent style={{ height }}>{children}</CardContent>
+  </Card>
+);

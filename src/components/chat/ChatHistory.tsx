@@ -2,6 +2,8 @@ import { useEffect, useRef } from "react";
 import { ChatMessage } from "@/components/ChatMessage";
 import { type ChatMessage as ChatMessageType } from "@/services/ChatService";
 import { LoadingMessage } from "./LoadingMessage";
+import { VirtualList } from "@/components/ui/virtual-list";
+import { performanceMonitor } from "@/lib/performance";
 
 interface ChatHistoryProps {
   messages: ChatMessageType[];
@@ -9,23 +11,30 @@ interface ChatHistoryProps {
 }
 
 export const ChatHistory = ({ messages, isLoading }: ChatHistoryProps) => {
-  const messagesEndRef = useRef<HTMLDivElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
 
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  };
-
+  // Track component performance
   useEffect(() => {
-    scrollToBottom();
-  }, [messages, isLoading]);
+    performanceMonitor.trackPageLoad('ChatHistory');
+  }, []);
+
+  const renderMessage = (message: ChatMessageType, index: number) => (
+    <ChatMessage 
+      key={index} 
+      message={message.text} 
+      isBot={message.isBot} 
+    />
+  );
 
   return (
-    <div className="flex-1 overflow-y-auto p-4 space-y-4 scrollbar-hide">
-      {messages.map((msg, idx) => (
-        <ChatMessage key={idx} message={msg.text} isBot={msg.isBot} />
-      ))}
+    <div className="flex-1 overflow-hidden" ref={containerRef}>
+      <VirtualList
+        items={messages}
+        renderItem={renderMessage}
+        height={600}
+        estimateSize={100}
+      />
       {isLoading && <LoadingMessage />}
-      <div ref={messagesEndRef} />
     </div>
   );
 };
