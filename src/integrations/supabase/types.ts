@@ -1142,6 +1142,12 @@ export type Database = {
         }
         Returns: unknown
       }
+      is_admin: {
+        Args: {
+          user_id: string
+        }
+        Returns: boolean
+      }
       ivfflat_bit_support: {
         Args: {
           "": unknown
