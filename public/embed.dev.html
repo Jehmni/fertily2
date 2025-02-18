@@ -1,0 +1,80 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fertility Chat Widget Demo (Development)</title>
+    <style>
+        body {
+            font-family: system-ui, -apple-system, sans-serif;
+            line-height: 1.5;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .code-block {
+            background: #f3f4f6;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 20px 0;
+        }
+        .config-section {
+            margin: 20px 0;
+            padding: 20px;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+        }
+        .config-section h2 {
+            margin-top: 0;
+        }
+        #apiUrl {
+            width: 100%;
+            padding: 8px;
+            margin: 8px 0;
+        }
+    </style>
+</head>
+<body>
+    <h1>Fertility Chat Widget Integration (Development)</h1>
+    
+    <div class="config-section">
+        <h2>Development Configuration</h2>
+        <p>Configure the widget endpoint:</p>
+        <input 
+            type="text" 
+            id="apiUrl" 
+            value="https://fgbhxuvdobmkqojfmboa.functions.supabase.co/widget-chat"
+            placeholder="Enter API URL"
+        >
+        <button onclick="updateConfig()">Update Configuration</button>
+    </div>
+
+    <div class="code-block">
+        <p>To add the widget to your site during development, add this script:</p>
+        <pre><code>&lt;script&gt;
+window.FERTILITY_WIDGET_CONFIG = {
+    apiUrl: "your-api-url-here"
+};
+&lt;/script&gt;
+&lt;script src="/widget.dev.js"&gt;&lt;/script&gt;</code></pre>
+    </div>
+    
+    <h2>Live Demo</h2>
+    <p>The chat widget should appear as a floating button in the bottom-right corner of this page.</p>
+    
+    <script>
+        function updateConfig() {
+            const apiUrl = document.getElementById('apiUrl').value;
+            window.FERTILITY_WIDGET_CONFIG = {
+                apiUrl,
+                apiKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZnYmh4dXZkb2Jta3FvamZtYm9hIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzgyNzE4NzIsImV4cCI6MjA1Mzg0Nzg3Mn0.1oCLHiM1UcC0qn2eif1tv54r_TBGyoqbC6y2pqC_dkk'
+            };
+            alert('Configuration updated! Reload the page to apply changes.');
+        }
+    </script>
+    
+    <!-- Widget script -->
+    <script src="/widget.dev.js"></script>
+</body>
+</html>

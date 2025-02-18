@@ -10,8 +10,8 @@ const corsHeaders = {
 }
 
 serve(async (req) => {
-  // Log all incoming requests
-  console.log('New request received');
+  // Log all incoming requests with detailed information
+  console.log('New widget chat request received');
   console.log('Method:', req.method);
   console.log('URL:', req.url);
   console.log('Headers:', Object.fromEntries(req.headers.entries()));
@@ -30,13 +30,40 @@ serve(async (req) => {
       throw new Error(`Method ${req.method} not allowed`);
     }
 
-    // Log request body
+    // Parse and log request body
     const body = await req.json();
     console.log('Request body:', body);
 
-    // Simple echo response for testing
+    const { message, sessionId } = body;
+    
+    if (!message) {
+      throw new Error('Message is required');
+    }
+
+    // Store the chat message in Supabase
+    const { data, error } = await fetch(
+      `${Deno.env.get('SUPABASE_URL')}/rest/v1/widget_chat_history`,
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')}`,
+          'apikey': Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') || '',
+        },
+        body: JSON.stringify({
+          message,
+          response: "This is a test response. In production, this would be an AI-generated response.",
+          session_id: sessionId || 'anonymous',
+        }),
+      }
+    ).then(r => r.json());
+
+    if (error) throw error;
+
+    // Create response
     const responseData = {
-      response: "Hello! This is a test response. Your message was: " + body.message,
+      response: "This is a test response. Your message was: " + message,
+      sessionId: sessionId || 'anonymous',
       timestamp: new Date().toISOString()
     };
 
