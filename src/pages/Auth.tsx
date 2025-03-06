@@ -156,11 +156,14 @@ const Auth = () => {
 
     try {
       if (showSignUpForm) {
-        console.log('Starting signup process...'); // Debug log
+        console.log('Starting signup process with role:', selectedRole); // Debug log
         
         // Verify required fields for consultants
-        if (selectedRole === 'consultant' && (!formData.specialization || !formData.bio)) {
-          throw new Error("Please fill in all required consultant fields");
+        if (selectedRole === 'consultant') {
+          if (!formData.specialization || !formData.qualifications || !formData.yearsOfExperience || !formData.bio) {
+            throw new Error("Please fill in all required consultant fields");
+          }
+          console.log('Consultant form data validated:', formData); // Debug log
         }
 
         const signUpOptions = {
@@ -172,20 +175,23 @@ const Auth = () => {
               last_name: lastName,
               role: selectedRole,
             },
-            emailRedirectTo: window.location.origin
+            emailRedirectTo: `${window.location.origin}/auth/callback`
           }
         };
 
-        console.log('Signup options prepared:', { ...signUpOptions, password: '[REDACTED]' }); // Debug log
+        console.log('Attempting signup with options:', { 
+          ...signUpOptions,
+          password: '[REDACTED]'
+        }); // Debug log
 
         const { data: signUpData, error: signUpError } = await supabase.auth.signUp(signUpOptions);
         
         if (signUpError) {
-          console.error('Signup error details:', signUpError);
+          console.error('Detailed signup error:', signUpError); // Debug log
           throw signUpError;
         }
 
-        console.log('Signup successful, user data:', signUpData);
+        console.log('Signup successful, creating profile...', signUpData); // Debug log
 
         if (!signUpData.user?.id) {
           throw new Error("User ID not returned from signup");
@@ -196,20 +202,22 @@ const Auth = () => {
           
           const { error: expertError } = await supabase
             .from('expert_profiles')
-            .insert({
+            .insert([{
               user_id: signUpData.user.id,
               specialization: formData.specialization,
               qualifications: formData.qualifications.split(',').map(q => q.trim()).filter(Boolean),
-              years_of_experience: parseInt(formData.yearsOfExperience || '0'),
-              bio: formData.bio,
+              years_of_experience: parseInt(formData.yearsOfExperience),
               consultation_fee: 0,
               availability: { "weekdays": ["Monday", "Wednesday", "Friday"] },
-            });
+              bio: formData.bio
+            }]);
 
           if (expertError) {
             console.error('Expert profile creation error:', expertError);
             throw new Error(`Failed to create consultant profile: ${expertError.message}`);
           }
+          
+          console.log('Consultant profile created successfully'); // Debug log
         } else {
           console.log('Creating patient profile...'); // Debug log
           
@@ -254,12 +262,17 @@ const Auth = () => {
         }
       }
     } catch (error: any) {
-      console.error("Detailed auth error:", error);
+      console.error("Authentication error details:", error);
       
-      // Improved error messaging
-      const errorMessage = error.message === 'Failed to fetch' 
-        ? 'Network error. Please check your connection and try again.'
-        : error.message || "An unexpected error occurred during registration";
+      let errorMessage = "An unexpected error occurred";
+      
+      if (error.message?.includes('Failed to fetch') || error.message?.includes('Network')) {
+        errorMessage = "Network error. Please check your internet connection and try again.";
+      } else if (error.message?.includes('User already registered')) {
+        errorMessage = "This email is already registered. Please sign in instead.";
+      } else if (error.message) {
+        errorMessage = error.message;
+      }
       
       toast({
         title: "Error",
