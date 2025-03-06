@@ -35,37 +35,14 @@ export const supabase = createClient(validatedUrl, supabaseAnonKey, {
     autoRefreshToken: true,
     persistSession: true,
     detectSessionInUrl: true,
-    storageKey: 'supabase-auth-token',
     storage: window.localStorage,
+    storageKey: 'supabase-auth-token',
     flowType: 'pkce',
-    retryAttempts: 1, // Reduce retry attempts
   },
   global: {
     headers: {
       'Content-Type': 'application/json',
     },
-    fetch: async (url: RequestInfo | URL, init?: RequestInit) => {
-      const timeoutPromise = new Promise((_, reject) => {
-        setTimeout(() => reject(new Error('Request timeout')), 5000); // 5s timeout
-      });
-      
-      try {
-        const response = await Promise.race([
-          fetch(url, init),
-          timeoutPromise
-        ]) as Response;
-        
-        if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
-        }
-        return response;
-      } catch (err) {
-        if (err.message === 'Failed to fetch' || err.name === 'TypeError') {
-          throw new Error('Unable to connect to Supabase. Please check your network connection and try again.');
-        }
-        throw err;
-      }
-    }
   }
 });
 
