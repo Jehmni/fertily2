@@ -1,12 +1,12 @@
-<lov-codelov-code>
 import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
-import { ImageIcon, Camera, FileText, Loader2 } from "lucide-react";
+import { FileText, Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/lib/supabase";
+import { EmbryoCamera } from "./EmbryoCamera";
+import { EmbryoImagePreview } from "./EmbryoImagePreview";
 
 export const EmbryoSubmissionForm = () => {
   const [imageUrl, setImageUrl] = useState<string | null>(null);
@@ -159,77 +159,18 @@ export const EmbryoSubmissionForm = () => {
         <Label>Embryo Image</Label>
         <div className="space-y-4">
           {isCameraActive ? (
-            <div className="space-y-4">
-              <video 
-                ref={videoRef} 
-                autoPlay 
-                playsInline
-                className="w-full max-w-md mx-auto rounded-lg border"
-              />
-              <div className="flex justify-center gap-4">
-                <Button
-                  type="button"
-                  onClick={captureImage}
-                  variant="secondary"
-                >
-                  <Camera className="w-4 h-4 mr-2" />
-                  Capture
-                </Button>
-                <Button
-                  type="button"
-                  onClick={stopCamera}
-                  variant="outline"
-                >
-                  Cancel
-                </Button>
-              </div>
-            </div>
+            <EmbryoCamera
+              videoRef={videoRef}
+              onCapture={captureImage}
+              onClose={stopCamera}
+            />
           ) : (
-            <div className="flex flex-col items-center gap-4">
-              {imageUrl ? (
-                <div className="relative w-full max-w-md">
-                  <img 
-                    src={imageUrl} 
-                    alt="Uploaded embryo" 
-                    className="w-full rounded-lg border"
-                  />
-                  <Button
-                    type="button"
-                    variant="outline"
-                    className="absolute top-2 right-2"
-                    onClick={() => setImageUrl(null)}
-                  >
-                    Remove
-                  </Button>
-                </div>
-              ) : (
-                <div className="flex gap-4">
-                  <Input
-                    id="image"
-                    type="file"
-                    accept="image/*"
-                    onChange={handleImageUpload}
-                    className="hidden"
-                  />
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={() => document.getElementById('image')?.click()}
-                  >
-                    <ImageIcon className="w-4 h-4 mr-2" />
-                    Choose Image
-                  </Button>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={startCamera}
-                  >
-                    <Camera className="w-4 h-4 mr-2" />
-                    Take Picture
-                  </Button>
-                </div>
-              )}
-            </div>
+            <EmbryoImagePreview
+              imageUrl={imageUrl}
+              onImageRemove={() => setImageUrl(null)}
+              onImageUpload={handleImageUpload}
+              onCameraStart={startCamera}
+            />
           )}
         </div>
       </div>
@@ -261,4 +202,3 @@ export const EmbryoSubmissionForm = () => {
     </form>
   );
 };
-</lov-code>
