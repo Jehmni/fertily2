@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -14,6 +15,7 @@ export const ExpertProfile = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
+  const [initialLoading, setInitialLoading] = useState(true);
   const [profile, setProfile] = useState({
     firstName: "",
     lastName: "",
@@ -31,8 +33,17 @@ export const ExpertProfile = () => {
 
   const loadProfile = async () => {
     try {
+      setInitialLoading(true);
       const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error("Not authenticated");
+      if (!user) {
+        toast({
+          title: "Authentication Error",
+          description: "Please log in to access your profile",
+          variant: "destructive",
+        });
+        navigate('/auth');
+        return;
+      }
 
       const { data, error } = await supabase
         .from('expert_profiles')
@@ -40,7 +51,9 @@ export const ExpertProfile = () => {
         .eq('user_id', user.id)
         .single();
 
-      if (error) throw error;
+      if (error && error.code !== 'PGRST116') { // PGRST116 is "no rows returned" error
+        throw error;
+      }
 
       if (data) {
         setProfile({
@@ -61,6 +74,8 @@ export const ExpertProfile = () => {
         description: "Failed to load profile data",
         variant: "destructive",
       });
+    } finally {
+      setInitialLoading(false);
     }
   };
 
@@ -87,7 +102,7 @@ export const ExpertProfile = () => {
         }
       }
 
-      const { error: uploadError, data } = await supabase.storage
+      const { error: uploadError } = await supabase.storage
         .from('consultant-images')
         .upload(fileName, file, {
           contentType: file.type,
@@ -143,7 +158,6 @@ export const ExpertProfile = () => {
           consultation_fee: parseFloat(profile.consultationFee) || 0,
           bio: profile.bio,
           profile_image: profile.profileImage,
-          availability: {}, // Default empty object for availability
         });
 
       if (error) throw error;
@@ -165,6 +179,23 @@ export const ExpertProfile = () => {
       setLoading(false);
     }
   };
+
+  if (initialLoading) {
+    return (
+      <div className="container max-w-2xl mx-auto py-6">
+        <Card>
+          <CardHeader>
+            <CardTitle>Expert Profile</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="flex justify-center items-center h-64">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
   return (
     <div className="container max-w-2xl mx-auto py-6">
@@ -208,6 +239,7 @@ export const ExpertProfile = () => {
                   onChange={(e) => setProfile(p => ({ ...p, firstName: e.target.value }))}
                   placeholder="Enter your first name"
                   required
+                  disabled={loading}
                 />
               </div>
 
@@ -219,6 +251,7 @@ export const ExpertProfile = () => {
                   onChange={(e) => setProfile(p => ({ ...p, lastName: e.target.value }))}
                   placeholder="Enter your last name"
                   required
+                  disabled={loading}
                 />
               </div>
             </div>
@@ -231,6 +264,7 @@ export const ExpertProfile = () => {
                 onChange={(e) => setProfile(p => ({ ...p, specialization: e.target.value }))}
                 placeholder="e.g., Embryology, IVF Specialist"
                 required
+                disabled={loading}
               />
             </div>
 
@@ -241,6 +275,7 @@ export const ExpertProfile = () => {
                 value={profile.qualifications}
                 onChange={(e) => setProfile(p => ({ ...p, qualifications: e.target.value }))}
                 placeholder="e.g., MD, PhD, Board Certification"
+                disabled={loading}
               />
             </div>
 
@@ -254,6 +289,7 @@ export const ExpertProfile = () => {
                   onChange={(e) => setProfile(p => ({ ...p, yearsOfExperience: e.target.value }))}
                   placeholder="Enter years of experience"
                   min="0"
+                  disabled={loading}
                 />
               </div>
 
@@ -268,6 +304,7 @@ export const ExpertProfile = () => {
                   min="0"
                   step="0.01"
                   required
+                  disabled={loading}
                 />
               </div>
             </div>
@@ -280,6 +317,7 @@ export const ExpertProfile = () => {
                 onChange={(e) => setProfile(p => ({ ...p, bio: e.target.value }))}
                 placeholder="Tell us about your professional background and expertise..."
                 className="min-h-[100px]"
+                disabled={loading}
               />
             </div>
 
@@ -288,6 +326,7 @@ export const ExpertProfile = () => {
                 type="button" 
                 variant="outline" 
                 onClick={() => navigate('/')}
+                disabled={loading}
               >
                 Cancel
               </Button>
