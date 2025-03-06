@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
@@ -9,26 +9,34 @@ import { useToast } from "@/components/ui/use-toast";
 import { Loader2, Search } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-
-type User = {
-  id: string;
-  email: string;
-  is_admin: boolean;
-  first_name: string | null;
-  last_name: string | null;
-  created_at: string;
-  last_sign_in_at: string | null;
-};
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 export const UserRoleManagement = () => {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [searchTerm, setSearchTerm] = useState("");
 
-  const { data: users = [], isLoading } = useQuery({
+  const { data: users = [], isLoading: usersLoading } = useQuery({
     queryKey: ['users'],
     queryFn: async () => {
       const { data, error } = await supabase.rpc('get_users');
+      if (error) throw error;
+      return data;
+    }
+  });
+
+  const { data: consultants = [], isLoading: consultantsLoading } = useQuery({
+    queryKey: ['allConsultants'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('expert_profiles')
+        .select(`
+          *,
+          user:user_id (
+            id,
+            email
+          )
+        `);
       if (error) throw error;
       return data;
     }
@@ -58,10 +66,64 @@ export const UserRoleManagement = () => {
     },
   });
 
+  const toggleConsultantStatusMutation = useMutation({
+    mutationFn: async ({ userId, isConsultant }: { userId: string; isConsultant: boolean }) => {
+      if (isConsultant) {
+        // Remove consultant status
+        const { error } = await supabase
+          .from('expert_profiles')
+          .delete()
+          .eq('user_id', userId);
+        if (error) throw error;
+      } else {
+        // Add consultant status
+        const { error } = await supabase
+          .from('expert_profiles')
+          .insert({
+            user_id: userId,
+            specialization: 'General',
+            qualifications: [],
+            years_of_experience: 0,
+            consultation_fee: 0,
+            availability: {},
+            bio: ''
+          });
+        if (error) throw error;
+      }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['allConsultants'] });
+      toast({
+        title: "Success",
+        description: "Consultant status updated successfully",
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+
   const filteredUsers = users.filter(user => 
     user.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
     `${user.first_name} ${user.last_name}`.toLowerCase().includes(searchTerm.toLowerCase())
   );
+
+  const filteredConsultants = consultants.filter(consultant =>
+    consultant.user?.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    `${consultant.first_name} ${consultant.last_name}`.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+  if (usersLoading || consultantsLoading) {
+    return (
+      <div className="flex items-center justify-center p-8">
+        <Loader2 className="h-8 w-8 animate-spin" />
+      </div>
+    );
+  }
 
   return (
     <Card>
@@ -81,54 +143,99 @@ export const UserRoleManagement = () => {
             />
           </div>
         </div>
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>User</TableHead>
-              <TableHead>Created</TableHead>
-              <TableHead>Last Sign In</TableHead>
-              <TableHead>Role</TableHead>
-              <TableHead>Actions</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {isLoading ? (
-              <TableRow>
-                <TableCell colSpan={5} className="text-center">
-                  <Loader2 className="h-4 w-4 animate-spin mx-auto" />
-                </TableCell>
-              </TableRow>
-            ) : filteredUsers.map((user) => (
-              <TableRow key={user.id}>
-                <TableCell>
-                  <div>
-                    <div className="font-medium">{user.email}</div>
-                    <div className="text-sm text-muted-foreground">
-                      {user.first_name} {user.last_name}
-                    </div>
-                  </div>
-                </TableCell>
-                <TableCell>{new Date(user.created_at).toLocaleDateString()}</TableCell>
-                <TableCell>
-                  {user.last_sign_in_at 
-                    ? new Date(user.last_sign_in_at).toLocaleDateString()
-                    : 'Never'
-                  }
-                </TableCell>
-                <TableCell>
-                  {user.is_admin ? 'Admin' : 'User'}
-                </TableCell>
-                <TableCell>
-                  <Switch
-                    checked={user.is_admin}
-                    onCheckedChange={() => toggleAdminMutation.mutate(user.id)}
-                    disabled={toggleAdminMutation.isPending}
-                  />
-                </TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
+
+        <Tabs defaultValue="users">
+          <TabsList>
+            <TabsTrigger value="users">Users</TabsTrigger>
+            <TabsTrigger value="consultants">Consultants</TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="users">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>User</TableHead>
+                  <TableHead>Role</TableHead>
+                  <TableHead>Actions</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {filteredUsers.map((user) => (
+                  <TableRow key={user.id}>
+                    <TableCell>
+                      <div>
+                        <div className="font-medium">{user.email}</div>
+                        <div className="text-sm text-muted-foreground">
+                          {user.first_name} {user.last_name}
+                        </div>
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      {user.is_admin ? 'Admin' : 'User'}
+                    </TableCell>
+                    <TableCell>
+                      <div className="space-x-2">
+                        <Switch
+                          checked={user.is_admin}
+                          onCheckedChange={() => toggleAdminMutation.mutate(user.id)}
+                          disabled={toggleAdminMutation.isPending}
+                        />
+                        <Switch
+                          checked={consultants.some(c => c.user_id === user.id)}
+                          onCheckedChange={() => toggleConsultantStatusMutation.mutate({
+                            userId: user.id,
+                            isConsultant: consultants.some(c => c.user_id === user.id)
+                          })}
+                          disabled={toggleConsultantStatusMutation.isPending}
+                        />
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </TabsContent>
+
+          <TabsContent value="consultants">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Consultant</TableHead>
+                  <TableHead>Specialization</TableHead>
+                  <TableHead>Experience</TableHead>
+                  <TableHead>Actions</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {filteredConsultants.map((consultant) => (
+                  <TableRow key={consultant.id}>
+                    <TableCell>
+                      <div>
+                        <div className="font-medium">{consultant.user?.email}</div>
+                        <div className="text-sm text-muted-foreground">
+                          {consultant.first_name} {consultant.last_name}
+                        </div>
+                      </div>
+                    </TableCell>
+                    <TableCell>{consultant.specialization}</TableCell>
+                    <TableCell>{consultant.years_of_experience} years</TableCell>
+                    <TableCell>
+                      <Button 
+                        variant="outline"
+                        onClick={() => toggleConsultantStatusMutation.mutate({
+                          userId: consultant.user_id,
+                          isConsultant: true
+                        })}
+                      >
+                        Remove Consultant Status
+                      </Button>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </TabsContent>
+        </Tabs>
       </CardContent>
     </Card>
   );

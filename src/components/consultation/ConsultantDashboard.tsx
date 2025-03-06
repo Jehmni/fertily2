@@ -1,12 +1,15 @@
-
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/lib/supabase";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { CalendarIcon, UserIcon, ImageIcon } from "lucide-react";
+import { CalendarIcon, UserIcon, ImageIcon, Settings } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Button } from "@/components/ui/button";
+import { useNavigate } from "react-router-dom";
 
 export const ConsultantDashboard = () => {
+  const navigate = useNavigate();
+  
   const { data: consultations, isLoading: consultationsLoading } = useQuery({
     queryKey: ['consultantConsultations'],
     queryFn: async () => {
@@ -56,7 +59,13 @@ export const ConsultantDashboard = () => {
 
   return (
     <div className="space-y-6">
-      <h1 className="text-3xl font-bold">Consultant Dashboard</h1>
+      <div className="flex justify-between items-center">
+        <h1 className="text-3xl font-bold">Consultant Dashboard</h1>
+        <Button onClick={() => navigate("/expert/profile")}>
+          <Settings className="w-4 h-4 mr-2" />
+          Edit Profile
+        </Button>
+      </div>
       
       <Tabs defaultValue="appointments" className="w-full">
         <TabsList>
@@ -122,6 +131,12 @@ export const ConsultantDashboard = () => {
                   <p>Grade: {analysis.grade}</p>
                   <p>AI Score: {analysis.ai_score}</p>
                   {analysis.notes && <p className="mt-2">{analysis.notes}</p>}
+                  <Button 
+                    className="mt-4"
+                    onClick={() => navigate(`/embryo-analysis/${analysis.id}`)}
+                  >
+                    View Details
+                  </Button>
                 </CardContent>
               </Card>
             ))}
@@ -136,11 +151,33 @@ export const ConsultantDashboard = () => {
         </TabsContent>
 
         <TabsContent value="patients" className="mt-6">
-          <Card>
-            <CardContent className="py-8 text-center text-muted-foreground">
-              Patient management coming soon
-            </CardContent>
-          </Card>
+          <div className="grid gap-4">
+            {consultations?.map((consultation) => (
+              <Card key={consultation.id}>
+                <CardHeader>
+                  <CardTitle>
+                    {consultation.patient?.first_name} {consultation.patient?.last_name}
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <p>Last Visit: {new Date(consultation.scheduled_for).toLocaleDateString()}</p>
+                  <Button 
+                    className="mt-4"
+                    onClick={() => navigate(`/patient/${consultation.patient_id}`)}
+                  >
+                    View Patient History
+                  </Button>
+                </CardContent>
+              </Card>
+            ))}
+            {!consultations?.length && (
+              <Card>
+                <CardContent className="py-8 text-center text-muted-foreground">
+                  No patients yet
+                </CardContent>
+              </Card>
+            )}
+          </div>
         </TabsContent>
       </Tabs>
     </div>
