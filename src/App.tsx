@@ -1,4 +1,3 @@
-
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -19,6 +18,7 @@ import { AdminGuard } from "@/components/admin/AdminGuard";
 import { Layout } from "@/components/Layout";
 import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 import { performanceMonitor } from "@/lib/performance";
+import { ExpertProfile } from "@/components/consultation/ExpertProfile";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -131,6 +131,16 @@ const App = () => {
                     <AdminGuard>
                       <AdminAnalyticsDashboard />
                     </AdminGuard>
+                  }
+                />
+                <Route
+                  path="/expert/profile"
+                  element={
+                    session ? (
+                      <ExpertProfile />
+                    ) : (
+                      <Navigate to="/auth" replace />
+                    )
                   }
                 />
                 <Route path="*" element={<NotFound />} />
