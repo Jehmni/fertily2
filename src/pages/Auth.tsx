@@ -305,12 +305,11 @@ const Auth = () => {
 
   const toggleAuthMode = () => {
     if (showSignUpForm) {
-      // When switching to sign in, reset all form fields
       setShowSignUpForm(false);
       setShowRoleSelection(false);
       setSelectedRole(null);
+      setShowOnboarding(false);
     } else {
-      // When switching to sign up, show role selection first
       setShowOnboarding(true);
       setCurrentSlide(0);
     }
@@ -335,7 +334,6 @@ const Auth = () => {
       lastName: "",
       cycleLength: "",
     });
-    // Reset form data for consultant fields
     setFormData({
       specialization: "",
       qualifications: "",
