@@ -184,68 +184,75 @@ const Auth = () => {
           password: '[REDACTED]'
         }); // Debug log
 
-        const { data: signUpData, error: signUpError } = await supabase.auth.signUp(signUpOptions);
-        
-        if (signUpError) {
-          console.error('Detailed signup error:', signUpError); // Debug log
+        try {
+          const { data: signUpData, error: signUpError } = await supabase.auth.signUp(signUpOptions);
+          
+          if (signUpError) {
+            console.error('Detailed signup error:', signUpError); // Debug log
+            throw signUpError;
+          }
+
+          console.log('Signup successful, creating profile...', signUpData); // Debug log
+
+          if (!signUpData.user?.id) {
+            throw new Error("User ID not returned from signup");
+          }
+
+          if (selectedRole === 'consultant') {
+            console.log('Creating consultant profile...'); // Debug log
+            
+            const { error: expertError } = await supabase
+              .from('expert_profiles')
+              .insert([{
+                user_id: signUpData.user.id,
+                specialization: formData.specialization,
+                qualifications: formData.qualifications.split(',').map(q => q.trim()).filter(Boolean),
+                years_of_experience: parseInt(formData.yearsOfExperience),
+                consultation_fee: 0,
+                availability: { "weekdays": ["Monday", "Wednesday", "Friday"] },
+                bio: formData.bio
+              }]);
+
+            if (expertError) {
+              console.error('Expert profile creation error:', expertError);
+              throw new Error(`Failed to create consultant profile: ${expertError.message}`);
+            }
+            
+            console.log('Consultant profile created successfully'); // Debug log
+          } else {
+            console.log('Creating patient profile...'); // Debug log
+            
+            const { error: profileError } = await supabase
+              .from('profiles')
+              .insert({
+                id: signUpData.user.id,
+                first_name: firstName,
+                last_name: lastName,
+                date_of_birth: dateOfBirth?.toISOString(),
+                cycle_length: cycleLength ? parseInt(cycleLength) : null,
+                last_period_date: lastPeriodDate?.toISOString(),
+                fertility_goals: fertilityGoals,
+                medical_conditions: medicalConditions.split(',').map(c => c.trim()).filter(Boolean),
+                medications: medications.split(',').map(m => m.trim()).filter(Boolean),
+              });
+
+            if (profileError) {
+              console.error('Profile creation error:', profileError);
+              throw new Error(`Failed to create profile: ${profileError.message}`);
+            }
+          }
+
+          toast({
+            title: "✨ Account Created!",
+            description: "Please check your email to verify your account.",
+          });
+          localStorage.setItem("hasCompletedOnboarding", "true");
+        } catch (signUpError: any) {
+          if (signUpError.message?.includes('Failed to fetch') || !navigator.onLine) {
+            throw new Error('Network error: Please check your internet connection and try again');
+          }
           throw signUpError;
         }
-
-        console.log('Signup successful, creating profile...', signUpData); // Debug log
-
-        if (!signUpData.user?.id) {
-          throw new Error("User ID not returned from signup");
-        }
-
-        if (selectedRole === 'consultant') {
-          console.log('Creating consultant profile...'); // Debug log
-          
-          const { error: expertError } = await supabase
-            .from('expert_profiles')
-            .insert([{
-              user_id: signUpData.user.id,
-              specialization: formData.specialization,
-              qualifications: formData.qualifications.split(',').map(q => q.trim()).filter(Boolean),
-              years_of_experience: parseInt(formData.yearsOfExperience),
-              consultation_fee: 0,
-              availability: { "weekdays": ["Monday", "Wednesday", "Friday"] },
-              bio: formData.bio
-            }]);
-
-          if (expertError) {
-            console.error('Expert profile creation error:', expertError);
-            throw new Error(`Failed to create consultant profile: ${expertError.message}`);
-          }
-          
-          console.log('Consultant profile created successfully'); // Debug log
-        } else {
-          console.log('Creating patient profile...'); // Debug log
-          
-          const { error: profileError } = await supabase
-            .from('profiles')
-            .insert({
-              id: signUpData.user.id,
-              first_name: firstName,
-              last_name: lastName,
-              date_of_birth: dateOfBirth?.toISOString(),
-              cycle_length: cycleLength ? parseInt(cycleLength) : null,
-              last_period_date: lastPeriodDate?.toISOString(),
-              fertility_goals: fertilityGoals,
-              medical_conditions: medicalConditions.split(',').map(c => c.trim()).filter(Boolean),
-              medications: medications.split(',').map(m => m.trim()).filter(Boolean),
-            });
-
-          if (profileError) {
-            console.error('Profile creation error:', profileError);
-            throw new Error(`Failed to create profile: ${profileError.message}`);
-          }
-        }
-
-        toast({
-          title: "✨ Account Created!",
-          description: "Please check your email to verify your account.",
-        });
-        localStorage.setItem("hasCompletedOnboarding", "true");
       } else {
         const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
           email,
@@ -266,8 +273,10 @@ const Auth = () => {
       
       let errorMessage = "An unexpected error occurred";
       
-      if (error.message?.includes('Failed to fetch') || error.message?.includes('Network')) {
-        errorMessage = "Network error. Please check your internet connection and try again.";
+      if (!navigator.onLine) {
+        errorMessage = "You appear to be offline. Please check your internet connection and try again.";
+      } else if (error.message?.includes('Failed to fetch') || error.message?.includes('Network')) {
+        errorMessage = "Unable to connect to the authentication service. Please check your internet connection and try again.";
       } else if (error.message?.includes('User already registered')) {
         errorMessage = "This email is already registered. Please sign in instead.";
       } else if (error.message) {
