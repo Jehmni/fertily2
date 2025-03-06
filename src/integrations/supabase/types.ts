@@ -60,39 +60,84 @@ export type Database = {
       embryo_data: {
         Row: {
           ai_score: number | null
+          blastocyst_expansion_grade: string | null
+          cell_number: number | null
           consultation_id: string | null
           created_at: string | null
+          cytoplasmic_appearance: string | null
+          development_day: number | null
+          embryo_identifier: string | null
           expert_id: string | null
+          fragmentation_percentage: number | null
           grade: string | null
+          has_multinucleation: boolean | null
           id: string
           image_url: string | null
+          inner_cell_mass_grade: string | null
+          ivf_success_history: string | null
           notes: string | null
+          patient_age: number | null
           patient_id: string | null
+          previous_ivf_attempts: number | null
+          symmetry_score: number | null
           text_description: string | null
+          trophectoderm_grade: string | null
+          underlying_conditions: string[] | null
+          zona_pellucida_thickness: number | null
         }
         Insert: {
           ai_score?: number | null
+          blastocyst_expansion_grade?: string | null
+          cell_number?: number | null
           consultation_id?: string | null
           created_at?: string | null
+          cytoplasmic_appearance?: string | null
+          development_day?: number | null
+          embryo_identifier?: string | null
           expert_id?: string | null
+          fragmentation_percentage?: number | null
           grade?: string | null
+          has_multinucleation?: boolean | null
           id?: string
           image_url?: string | null
+          inner_cell_mass_grade?: string | null
+          ivf_success_history?: string | null
           notes?: string | null
+          patient_age?: number | null
           patient_id?: string | null
+          previous_ivf_attempts?: number | null
+          symmetry_score?: number | null
           text_description?: string | null
+          trophectoderm_grade?: string | null
+          underlying_conditions?: string[] | null
+          zona_pellucida_thickness?: number | null
         }
         Update: {
           ai_score?: number | null
+          blastocyst_expansion_grade?: string | null
+          cell_number?: number | null
           consultation_id?: string | null
           created_at?: string | null
+          cytoplasmic_appearance?: string | null
+          development_day?: number | null
+          embryo_identifier?: string | null
           expert_id?: string | null
+          fragmentation_percentage?: number | null
           grade?: string | null
+          has_multinucleation?: boolean | null
           id?: string
           image_url?: string | null
+          inner_cell_mass_grade?: string | null
+          ivf_success_history?: string | null
           notes?: string | null
+          patient_age?: number | null
           patient_id?: string | null
+          previous_ivf_attempts?: number | null
+          symmetry_score?: number | null
           text_description?: string | null
+          trophectoderm_grade?: string | null
+          underlying_conditions?: string[] | null
+          zona_pellucida_thickness?: number | null
         }
         Relationships: [
           {
