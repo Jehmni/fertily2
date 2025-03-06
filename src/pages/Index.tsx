@@ -1,6 +1,5 @@
 
 import { ProfileSection } from "@/components/ProfileSection";
-import { ExpertOnboarding } from "@/components/consultation/ExpertOnboarding";
 import { useAuth } from "@/hooks/useAuth";
 
 const Index = () => {
@@ -12,7 +11,7 @@ const Index = () => {
 
   return (
     <div className="container mx-auto py-6">
-      <ExpertOnboarding />
+      <ProfileSection />
     </div>
   );
 };
