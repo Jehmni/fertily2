@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -19,6 +20,7 @@ export const ExpertProfile = () => {
     lastName: "",
     specialization: "",
     yearsOfExperience: "",
+    qualifications: "",
     bio: "",
     profileImage: "",
   });
@@ -46,6 +48,7 @@ export const ExpertProfile = () => {
           lastName: data.last_name || "",
           specialization: data.specialization || "",
           yearsOfExperience: data.years_of_experience?.toString() || "",
+          qualifications: Array.isArray(data.qualifications) ? data.qualifications.join(', ') : "",
           bio: data.bio || "",
           profileImage: data.profile_image || "",
         });
@@ -70,7 +73,6 @@ export const ExpertProfile = () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error("Not authenticated");
 
-      // Upload image to storage
       const fileExt = file.name.split('.').pop();
       const fileName = `${user.id}-${Date.now()}.${fileExt}`;
       const { error: uploadError, data } = await supabase.storage
@@ -79,12 +81,10 @@ export const ExpertProfile = () => {
 
       if (uploadError) throw uploadError;
 
-      // Get public URL
       const { data: { publicUrl } } = supabase.storage
         .from('consultant-images')
         .getPublicUrl(fileName);
 
-      // Update profile with new image URL
       setProfile(prev => ({ ...prev, profileImage: publicUrl }));
 
       toast({
@@ -118,8 +118,10 @@ export const ExpertProfile = () => {
           last_name: profile.lastName,
           specialization: profile.specialization,
           years_of_experience: parseInt(profile.yearsOfExperience) || 0,
+          qualifications: profile.qualifications.split(',').map(q => q.trim()).filter(Boolean),
           bio: profile.bio,
           profile_image: profile.profileImage,
+          availability: {}, // Default empty object for availability
         });
 
       if (error) throw error;
@@ -131,6 +133,7 @@ export const ExpertProfile = () => {
       
       navigate('/');
     } catch (error: any) {
+      console.error('Error saving profile:', error);
       toast({
         title: "Error",
         description: error.message,
@@ -202,6 +205,16 @@ export const ExpertProfile = () => {
                 value={profile.specialization}
                 onChange={(e) => setProfile(p => ({ ...p, specialization: e.target.value }))}
                 placeholder="e.g., Embryology, IVF Specialist"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="qualifications">Qualifications (comma-separated)</Label>
+              <Input
+                id="qualifications"
+                value={profile.qualifications}
+                onChange={(e) => setProfile(p => ({ ...p, qualifications: e.target.value }))}
+                placeholder="e.g., MD, PhD, Board Certification"
               />
             </div>
 
