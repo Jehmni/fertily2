@@ -155,7 +155,9 @@ export type Database = {
           bio: string
           consultation_fee: number
           created_at: string | null
+          first_name: string | null
           id: string
+          last_name: string | null
           profile_image: string | null
           qualifications: string[]
           rating: number | null
@@ -170,7 +172,9 @@ export type Database = {
           bio: string
           consultation_fee: number
           created_at?: string | null
+          first_name?: string | null
           id?: string
+          last_name?: string | null
           profile_image?: string | null
           qualifications: string[]
           rating?: number | null
@@ -185,7 +189,9 @@ export type Database = {
           bio?: string
           consultation_fee?: number
           created_at?: string | null
+          first_name?: string | null
           id?: string
+          last_name?: string | null
           profile_image?: string | null
           qualifications?: string[]
           rating?: number | null

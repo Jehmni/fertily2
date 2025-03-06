@@ -30,6 +30,11 @@ const validateSupabaseUrl = (url: string) => {
 
 const validatedUrl = validateSupabaseUrl(supabaseUrl);
 
+// Initialize storage configuration
+const storageConfig = {
+  buckets: ['embryo-images', 'consultant-images']
+};
+
 export const supabase = createClient(validatedUrl, supabaseAnonKey, {
   auth: {
     autoRefreshToken: true,

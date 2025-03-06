@@ -59,13 +59,13 @@ export const useEmbryoImage = (): UseEmbryoImageReturn => {
       const fileName = `${user.id}-${timestamp}.${fileExt}`;
 
       const { error: uploadError } = await supabase.storage
-        .from('embryo-images')
+        .from('embryo-images')  // Use the correct bucket name
         .upload(fileName, file);
 
       if (uploadError) throw uploadError;
 
       const { data: { publicUrl } } = supabase.storage
-        .from('embryo-images')
+        .from('embryo-images')  // Use the correct bucket name
         .getPublicUrl(fileName);
 
       setImageUrl(publicUrl);
