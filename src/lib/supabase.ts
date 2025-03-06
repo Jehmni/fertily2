@@ -1,8 +1,8 @@
 
 import { createClient } from '@supabase/supabase-js';
 
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL?.trim();
+const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY?.trim();
 
 if (!supabaseUrl || !supabaseAnonKey) {
   throw new Error(
@@ -10,16 +10,39 @@ if (!supabaseUrl || !supabaseAnonKey) {
   );
 }
 
-// Validate URL format
-try {
-  new URL(supabaseUrl);
-} catch (error) {
-  throw new Error(
-    'Invalid VITE_SUPABASE_URL format. It should be like: https://your-project-id.supabase.co'
-  );
-}
+// Validate URL format and accessibility
+const validateSupabaseUrl = async (url: string) => {
+  try {
+    const urlObj = new URL(url);
+    if (!urlObj.hostname.includes('supabase')) {
+      throw new Error('Invalid Supabase URL format');
+    }
+    
+    // Test if the URL is accessible
+    const response = await fetch(`${url}/rest/v1/`);
+    if (!response.ok) {
+      throw new Error('Could not connect to Supabase');
+    }
+  } catch (error: any) {
+    if (error.message.includes('Failed to fetch') || error instanceof TypeError) {
+      throw new Error(
+        'Cannot connect to Supabase. Please check your internet connection and try again.'
+      );
+    }
+    throw error;
+  }
+};
 
-console.log('Initializing Supabase client with URL:', supabaseUrl); // Debug log
+// Initialize and validate connection
+(async () => {
+  try {
+    console.log('Validating Supabase URL:', supabaseUrl);
+    await validateSupabaseUrl(supabaseUrl);
+    console.log('Supabase URL validation successful');
+  } catch (error) {
+    console.error('Supabase initialization error:', error);
+  }
+})();
 
 // Create the main client with full configuration
 export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
@@ -29,13 +52,23 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
     detectSessionInUrl: true,
     storageKey: 'supabase-auth-token',
     storage: window.localStorage,
+  },
+  global: {
+    fetch: (...args) => {
+      return fetch(...args).catch(err => {
+        if (err.message === 'Failed to fetch') {
+          throw new Error('Network error: Please check your internet connection');
+        }
+        throw err;
+      });
+    }
   }
 });
 
 // Test the auth configuration
 (async () => {
   try {
-    console.log('Testing Supabase auth configuration...'); // Debug log
+    console.log('Testing Supabase auth configuration...');
     const { data, error } = await supabase.auth.getSession();
     if (error) {
       console.error('Error connecting to Supabase:', error);
