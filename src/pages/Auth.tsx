@@ -19,6 +19,7 @@ import {
 } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
 import { CalendarIcon } from "lucide-react";
+import { Textarea } from "@/components/ui/textarea";
 
 const onboardingSlides = [
   {
@@ -37,6 +38,9 @@ const onboardingSlides = [
     image: "https://images.unsplash.com/photo-1519389950473-47ba0277781c?auto=format&fit=crop&w=800&q=80",
   },
 ];
+
+// Add new type for user role
+type UserRole = 'patient' | 'consultant';
 
 const Auth = () => {
   const [email, setEmail] = useState("");
@@ -65,6 +69,8 @@ const Auth = () => {
   
   const navigate = useNavigate();
   const { toast } = useToast();
+  const [selectedRole, setSelectedRole] = useState<UserRole | null>(null);
+  const [showRoleSelection, setShowRoleSelection] = useState(false);
 
   useEffect(() => {
     const hasCompletedOnboarding = localStorage.getItem("hasCompletedOnboarding");
@@ -212,9 +218,15 @@ const Auth = () => {
       setCurrentSlide(prev => prev + 1);
     } else {
       setShowOnboarding(false);
-      setShowSignUpForm(true);
-      localStorage.setItem("hasCompletedOnboarding", "true");
+      setShowRoleSelection(true); // Show role selection instead of sign up form directly
     }
+  };
+
+  const handleRoleSelect = (role: UserRole) => {
+    setSelectedRole(role);
+    setShowRoleSelection(false);
+    setShowSignUpForm(true);
+    localStorage.setItem("hasCompletedOnboarding", "true");
   };
 
   const toggleAuthMode = () => {
@@ -300,6 +312,55 @@ const Auth = () => {
     );
   }
 
+  if (showRoleSelection) {
+    return (
+      <div className="min-h-screen bg-gradient-to-b from-primary/10 to-background flex flex-col items-center justify-center p-4">
+        <div className="mb-6">
+          <img 
+            src="/lovable-uploads/27ff8345-8e52-4baf-a8f5-d267b1b7c37f.png"
+            alt="Fertily Logo"
+            className="w-20 h-20 object-contain bg-white rounded-full"
+          />
+        </div>
+        <Card className="w-full max-w-md p-8 space-y-6 shadow-lg animate-fadeIn bg-white/95 backdrop-blur-sm">
+          <h1 className="text-3xl font-bold text-center text-primary">
+            Choose Your Role
+          </h1>
+          <p className="text-center text-muted-foreground">
+            Select how you would like to use Fertily
+          </p>
+          <div className="grid grid-cols-1 gap-4">
+            <Button
+              variant="outline"
+              className="h-24 flex flex-col items-center justify-center hover:border-primary hover:bg-primary/5"
+              onClick={() => handleRoleSelect('patient')}
+            >
+              <span className="text-lg font-semibold">Join as a Patient</span>
+              <span className="text-sm text-muted-foreground">Track your fertility journey</span>
+            </Button>
+            <Button
+              variant="outline"
+              className="h-24 flex flex-col items-center justify-center hover:border-primary hover:bg-primary/5"
+              onClick={() => handleRoleSelect('consultant')}
+            >
+              <span className="text-lg font-semibold">Join as a Medical Consultant</span>
+              <span className="text-sm text-muted-foreground">Help patients with expert advice</span>
+            </Button>
+          </div>
+          <div className="text-center pt-4">
+            <button
+              type="button"
+              onClick={() => setShowSignUpForm(false)}
+              className="text-sm text-primary hover:underline"
+            >
+              Already have an account? Sign in
+            </button>
+          </div>
+        </Card>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-gradient-to-b from-primary/10 to-background flex flex-col items-center justify-center p-4">
       <div className="mb-6">
@@ -311,167 +372,240 @@ const Auth = () => {
       </div>
       <Card className="w-full max-w-md p-8 space-y-6 shadow-lg animate-fadeIn bg-white/95 backdrop-blur-sm">
         <h1 className="text-3xl font-bold text-center text-primary">
-          {showSignUpForm ? "Create Account" : "Welcome Back"}
+          {showSignUpForm ? (selectedRole === 'consultant' ? "Medical Consultant Registration" : "Create Account") : "Welcome Back"}
         </h1>
         <form onSubmit={handleAuth} className="space-y-4">
           {showSignUpForm && (
             <>
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="firstName">First Name</Label>
-                  <Input
-                    id="firstName"
-                    value={firstName}
-                    onChange={(e) => setFirstName(e.target.value)}
-                    className={errors.firstName ? "border-red-500" : ""}
-                    required
-                  />
-                  {errors.firstName && (
-                    <p className="text-sm text-red-500">{errors.firstName}</p>
-                  )}
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="lastName">Last Name</Label>
-                  <Input
-                    id="lastName"
-                    value={lastName}
-                    onChange={(e) => setLastName(e.target.value)}
-                    className={errors.lastName ? "border-red-500" : ""}
-                    required
-                  />
-                  {errors.lastName && (
-                    <p className="text-sm text-red-500">{errors.lastName}</p>
-                  )}
-                </div>
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="dateOfBirth">Date of Birth</Label>
-                <Popover>
-                  <PopoverTrigger asChild>
-                    <Button
-                      variant="outline"
-                      className={cn(
-                        "w-full justify-start text-left font-normal",
-                        !dateOfBirth && "text-muted-foreground"
+              {selectedRole === 'consultant' ? (
+                <>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="firstName">First Name</Label>
+                      <Input
+                        id="firstName"
+                        value={firstName}
+                        onChange={(e) => setFirstName(e.target.value)}
+                        className={errors.firstName ? "border-red-500" : ""}
+                        required
+                      />
+                      {errors.firstName && (
+                        <p className="text-sm text-red-500">{errors.firstName}</p>
                       )}
-                    >
-                      <CalendarIcon className="mr-2 h-4 w-4" />
-                      {dateOfBirth ? format(dateOfBirth, "PPP") : "Pick a date"}
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-auto p-0" align="start">
-                    <Calendar
-                      mode="single"
-                      selected={dateOfBirth}
-                      onSelect={setDateOfBirth}
-                      disabled={(date) =>
-                        date > new Date() || date < new Date("1900-01-01")
-                      }
-                      initialFocus
-                    />
-                  </PopoverContent>
-                </Popover>
-              </div>
-
-              <div className="space-y-2">
-                <TooltipProvider>
-                  <div className="flex items-center gap-2">
-                    <Label htmlFor="medicalConditions">Medical Conditions</Label>
-                    <Tooltip>
-                      <TooltipTrigger>
-                        <Info className="h-4 w-4 text-muted-foreground" />
-                      </TooltipTrigger>
-                      <TooltipContent>
-                        <p>Enter any medical conditions, separated by commas</p>
-                        <p>Example: PCOS, Endometriosis</p>
-                      </TooltipContent>
-                    </Tooltip>
-                  </div>
-                </TooltipProvider>
-                <Input
-                  id="medicalConditions"
-                  value={medicalConditions}
-                  onChange={(e) => setMedicalConditions(e.target.value)}
-                  placeholder="e.g., PCOS, Endometriosis"
-                />
-              </div>
-
-              <div className="space-y-2">
-                <TooltipProvider>
-                  <div className="flex items-center gap-2">
-                    <Label htmlFor="medications">Medications</Label>
-                    <Tooltip>
-                      <TooltipTrigger>
-                        <Info className="h-4 w-4 text-muted-foreground" />
-                      </TooltipTrigger>
-                      <TooltipContent>
-                        <p>Enter any medications you're taking, separated by commas</p>
-                      </TooltipContent>
-                    </Tooltip>
-                  </div>
-                </TooltipProvider>
-                <Input
-                  id="medications"
-                  value={medications}
-                  onChange={(e) => setMedications(e.target.value)}
-                  placeholder="Enter medications, separated by commas"
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="cycleLength">Average Cycle Length (days)</Label>
-                <Input
-                  id="cycleLength"
-                  type="number"
-                  value={cycleLength}
-                  onChange={(e) => setCycleLength(e.target.value)}
-                  min="20"
-                  max="40"
-                  placeholder="e.g., 28"
-                  className={errors.cycleLength ? "border-red-500" : ""}
-                />
-                {errors.cycleLength && (
-                  <p className="text-sm text-red-500">{errors.cycleLength}</p>
-                )}
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="lastPeriodDate">Last Period Start Date</Label>
-                <Popover>
-                  <PopoverTrigger asChild>
-                    <Button
-                      variant="outline"
-                      className={cn(
-                        "w-full justify-start text-left font-normal",
-                        !lastPeriodDate && "text-muted-foreground"
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="lastName">Last Name</Label>
+                      <Input
+                        id="lastName"
+                        value={lastName}
+                        onChange={(e) => setLastName(e.target.value)}
+                        className={errors.lastName ? "border-red-500" : ""}
+                        required
+                      />
+                      {errors.lastName && (
+                        <p className="text-sm text-red-500">{errors.lastName}</p>
                       )}
-                    >
-                      <CalendarIcon className="mr-2 h-4 w-4" />
-                      {lastPeriodDate ? format(lastPeriodDate, "PPP") : "Pick a date"}
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-auto p-0" align="start">
-                    <Calendar
-                      mode="single"
-                      selected={lastPeriodDate}
-                      onSelect={setLastPeriodDate}
-                      disabled={(date) => date > new Date()}
-                      initialFocus
-                    />
-                  </PopoverContent>
-                </Popover>
-              </div>
+                    </div>
+                  </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="fertilityGoals">Fertility Goals</Label>
-                <Input
-                  id="fertilityGoals"
-                  value={fertilityGoals}
-                  onChange={(e) => setFertilityGoals(e.target.value)}
-                  placeholder="e.g., Trying to conceive, tracking cycle, etc."
-                />
-              </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="specialization">Specialization</Label>
+                    <Input
+                      id="specialization"
+                      placeholder="e.g., Reproductive Endocrinology"
+                      required
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="qualifications">Qualifications (comma-separated)</Label>
+                    <Input
+                      id="qualifications"
+                      placeholder="MD, PhD, FACOG"
+                      required
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="yearsOfExperience">Years of Experience</Label>
+                    <Input
+                      id="yearsOfExperience"
+                      type="number"
+                      min="0"
+                      required
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="bio">Professional Bio</Label>
+                    <Textarea
+                      id="bio"
+                      placeholder="Write about your experience and expertise..."
+                      className="h-32"
+                      required
+                    />
+                  </div>
+                </>
+              ) : (
+                <>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="firstName">First Name</Label>
+                      <Input
+                        id="firstName"
+                        value={firstName}
+                        onChange={(e) => setFirstName(e.target.value)}
+                        className={errors.firstName ? "border-red-500" : ""}
+                        required
+                      />
+                      {errors.firstName && (
+                        <p className="text-sm text-red-500">{errors.firstName}</p>
+                      )}
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="lastName">Last Name</Label>
+                      <Input
+                        id="lastName"
+                        value={lastName}
+                        onChange={(e) => setLastName(e.target.value)}
+                        className={errors.lastName ? "border-red-500" : ""}
+                        required
+                      />
+                      {errors.lastName && (
+                        <p className="text-sm text-red-500">{errors.lastName}</p>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="dateOfBirth">Date of Birth</Label>
+                    <Popover>
+                      <PopoverTrigger asChild>
+                        <Button
+                          variant="outline"
+                          className={cn(
+                            "w-full justify-start text-left font-normal",
+                            !dateOfBirth && "text-muted-foreground"
+                          )}
+                        >
+                          <CalendarIcon className="mr-2 h-4 w-4" />
+                          {dateOfBirth ? format(dateOfBirth, "PPP") : "Pick a date"}
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-auto p-0" align="start">
+                        <Calendar
+                          mode="single"
+                          selected={dateOfBirth}
+                          onSelect={setDateOfBirth}
+                          disabled={(date) =>
+                            date > new Date() || date < new Date("1900-01-01")
+                          }
+                          initialFocus
+                        />
+                      </PopoverContent>
+                    </Popover>
+                  </div>
+
+                  <div className="space-y-2">
+                    <TooltipProvider>
+                      <div className="flex items-center gap-2">
+                        <Label htmlFor="medicalConditions">Medical Conditions</Label>
+                        <Tooltip>
+                          <TooltipTrigger>
+                            <Info className="h-4 w-4 text-muted-foreground" />
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            <p>Enter any medical conditions, separated by commas</p>
+                            <p>Example: PCOS, Endometriosis</p>
+                          </TooltipContent>
+                        </Tooltip>
+                      </div>
+                    </TooltipProvider>
+                    <Input
+                      id="medicalConditions"
+                      value={medicalConditions}
+                      onChange={(e) => setMedicalConditions(e.target.value)}
+                      placeholder="e.g., PCOS, Endometriosis"
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <TooltipProvider>
+                      <div className="flex items-center gap-2">
+                        <Label htmlFor="medications">Medications</Label>
+                        <Tooltip>
+                          <TooltipTrigger>
+                            <Info className="h-4 w-4 text-muted-foreground" />
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            <p>Enter any medications you're taking, separated by commas</p>
+                          </TooltipContent>
+                        </Tooltip>
+                      </div>
+                    </TooltipProvider>
+                    <Input
+                      id="medications"
+                      value={medications}
+                      onChange={(e) => setMedications(e.target.value)}
+                      placeholder="Enter medications, separated by commas"
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="cycleLength">Average Cycle Length (days)</Label>
+                    <Input
+                      id="cycleLength"
+                      type="number"
+                      value={cycleLength}
+                      onChange={(e) => setCycleLength(e.target.value)}
+                      min="20"
+                      max="40"
+                      placeholder="e.g., 28"
+                      className={errors.cycleLength ? "border-red-500" : ""}
+                    />
+                    {errors.cycleLength && (
+                      <p className="text-sm text-red-500">{errors.cycleLength}</p>
+                    )}
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="lastPeriodDate">Last Period Start Date</Label>
+                    <Popover>
+                      <PopoverTrigger asChild>
+                        <Button
+                          variant="outline"
+                          className={cn(
+                            "w-full justify-start text-left font-normal",
+                            !lastPeriodDate && "text-muted-foreground"
+                          )}
+                        >
+                          <CalendarIcon className="mr-2 h-4 w-4" />
+                          {lastPeriodDate ? format(lastPeriodDate, "PPP") : "Pick a date"}
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-auto p-0" align="start">
+                        <Calendar
+                          mode="single"
+                          selected={lastPeriodDate}
+                          onSelect={setLastPeriodDate}
+                          disabled={(date) => date > new Date()}
+                          initialFocus
+                        />
+                      </PopoverContent>
+                    </Popover>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="fertilityGoals">Fertility Goals</Label>
+                    <Input
+                      id="fertilityGoals"
+                      value={fertilityGoals}
+                      onChange={(e) => setFertilityGoals(e.target.value)}
+                      placeholder="e.g., Trying to conceive, tracking cycle, etc."
+                    />
+                  </div>
+                </>
+              )}
             </>
           )}
 
