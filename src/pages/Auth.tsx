@@ -156,76 +156,88 @@ const Auth = () => {
 
     try {
       if (showSignUpForm) {
-        // Log the signup attempt
-        console.log('Attempting signup with role:', selectedRole);
+        console.log('Starting signup process...'); // Debug log
+        
+        // Verify required fields for consultants
+        if (selectedRole === 'consultant' && (!formData.specialization || !formData.bio)) {
+          throw new Error("Please fill in all required consultant fields");
+        }
 
-        const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
+        const signUpOptions = {
           email,
           password,
           options: {
             data: {
               first_name: firstName,
               last_name: lastName,
-              role: selectedRole, // Add role to user metadata
+              role: selectedRole,
             },
             emailRedirectTo: window.location.origin
           }
-        });
+        };
+
+        console.log('Signup options prepared:', { ...signUpOptions, password: '[REDACTED]' }); // Debug log
+
+        const { data: signUpData, error: signUpError } = await supabase.auth.signUp(signUpOptions);
         
         if (signUpError) {
-          console.error('Signup error:', signUpError);
+          console.error('Signup error details:', signUpError);
           throw signUpError;
         }
 
-        console.log('Signup successful:', signUpData);
+        console.log('Signup successful, user data:', signUpData);
 
-        if (signUpData.user) {
-          if (selectedRole === 'consultant') {
-            // Create consultant profile
-            const { error: expertError } = await supabase
-              .from('expert_profiles')
-              .insert({
-                user_id: signUpData.user.id,
-                specialization: formData.specialization || '',
-                qualifications: formData.qualifications?.split(',').map(q => q.trim()).filter(Boolean) || [],
-                years_of_experience: parseInt(formData.yearsOfExperience || '0'),
-                bio: formData.bio || '',
-                consultation_fee: 0, // Default value
-                availability: { "weekdays": ["Monday", "Wednesday", "Friday"] }, // Default availability
-              });
-
-            if (expertError) {
-              console.error('Expert profile creation error:', expertError);
-              throw expertError;
-            }
-          } else {
-            // Create regular user profile
-            const { error: profileError } = await supabase
-              .from('profiles')
-              .insert({
-                id: signUpData.user.id,
-                first_name: firstName,
-                last_name: lastName,
-                date_of_birth: dateOfBirth?.toISOString(),
-                cycle_length: cycleLength ? parseInt(cycleLength) : null,
-                last_period_date: lastPeriodDate?.toISOString(),
-                fertility_goals: fertilityGoals,
-                medical_conditions: medicalConditions.split(',').map(c => c.trim()).filter(Boolean),
-                medications: medications.split(',').map(m => m.trim()).filter(Boolean),
-              });
-
-            if (profileError) {
-              console.error('Profile creation error:', profileError);
-              throw profileError;
-            }
-          }
-
-          toast({
-            title: "✨ Account Created!",
-            description: "Please check your email to verify your account.",
-          });
-          localStorage.setItem("hasCompletedOnboarding", "true");
+        if (!signUpData.user?.id) {
+          throw new Error("User ID not returned from signup");
         }
+
+        if (selectedRole === 'consultant') {
+          console.log('Creating consultant profile...'); // Debug log
+          
+          const { error: expertError } = await supabase
+            .from('expert_profiles')
+            .insert({
+              user_id: signUpData.user.id,
+              specialization: formData.specialization,
+              qualifications: formData.qualifications.split(',').map(q => q.trim()).filter(Boolean),
+              years_of_experience: parseInt(formData.yearsOfExperience || '0'),
+              bio: formData.bio,
+              consultation_fee: 0,
+              availability: { "weekdays": ["Monday", "Wednesday", "Friday"] },
+            });
+
+          if (expertError) {
+            console.error('Expert profile creation error:', expertError);
+            throw new Error(`Failed to create consultant profile: ${expertError.message}`);
+          }
+        } else {
+          console.log('Creating patient profile...'); // Debug log
+          
+          const { error: profileError } = await supabase
+            .from('profiles')
+            .insert({
+              id: signUpData.user.id,
+              first_name: firstName,
+              last_name: lastName,
+              date_of_birth: dateOfBirth?.toISOString(),
+              cycle_length: cycleLength ? parseInt(cycleLength) : null,
+              last_period_date: lastPeriodDate?.toISOString(),
+              fertility_goals: fertilityGoals,
+              medical_conditions: medicalConditions.split(',').map(c => c.trim()).filter(Boolean),
+              medications: medications.split(',').map(m => m.trim()).filter(Boolean),
+            });
+
+          if (profileError) {
+            console.error('Profile creation error:', profileError);
+            throw new Error(`Failed to create profile: ${profileError.message}`);
+          }
+        }
+
+        toast({
+          title: "✨ Account Created!",
+          description: "Please check your email to verify your account.",
+        });
+        localStorage.setItem("hasCompletedOnboarding", "true");
       } else {
         const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
           email,
@@ -242,10 +254,16 @@ const Auth = () => {
         }
       }
     } catch (error: any) {
-      console.error("Auth error:", error);
+      console.error("Detailed auth error:", error);
+      
+      // Improved error messaging
+      const errorMessage = error.message === 'Failed to fetch' 
+        ? 'Network error. Please check your connection and try again.'
+        : error.message || "An unexpected error occurred during registration";
+      
       toast({
         title: "Error",
-        description: error.message || "An error occurred during registration",
+        description: errorMessage,
         variant: "destructive",
       });
     } finally {
@@ -453,6 +471,8 @@ const Auth = () => {
                     <Input
                       id="specialization"
                       placeholder="e.g., Reproductive Endocrinology"
+                      value={formData.specialization}
+                      onChange={(e) => setFormData({...formData, specialization: e.target.value})}
                       required
                     />
                   </div>
@@ -462,6 +482,8 @@ const Auth = () => {
                     <Input
                       id="qualifications"
                       placeholder="MD, PhD, FACOG"
+                      value={formData.qualifications}
+                      onChange={(e) => setFormData({...formData, qualifications: e.target.value})}
                       required
                     />
                   </div>
@@ -472,6 +494,8 @@ const Auth = () => {
                       id="yearsOfExperience"
                       type="number"
                       min="0"
+                      value={formData.yearsOfExperience}
+                      onChange={(e) => setFormData({...formData, yearsOfExperience: e.target.value})}
                       required
                     />
                   </div>
@@ -482,6 +506,8 @@ const Auth = () => {
                       id="bio"
                       placeholder="Write about your experience and expertise..."
                       className="h-32"
+                      value={formData.bio}
+                      onChange={(e) => setFormData({...formData, bio: e.target.value})}
                       required
                     />
                   </div>
