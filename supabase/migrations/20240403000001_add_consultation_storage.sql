@@ -1,9 +1,5 @@
 
--- Create storage bucket for embryo images
-INSERT INTO storage.buckets (id, name, public) 
-VALUES ('embryo-images', 'embryo-images', true);
-
--- Allow authenticated users to upload to the bucket
+-- Allow authenticated users to upload to the embryo-images bucket
 CREATE POLICY "Authenticated users can upload embryo images" 
 ON storage.objects 
 FOR INSERT 

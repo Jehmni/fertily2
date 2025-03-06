@@ -30,7 +30,7 @@ const validateSupabaseUrl = (url: string) => {
 
 const validatedUrl = validateSupabaseUrl(supabaseUrl);
 
-// Initialize storage configuration
+// Initialize storage configuration without trying to create buckets
 const storageConfig = {
   buckets: ['embryo-images', 'consultant-images']
 };
