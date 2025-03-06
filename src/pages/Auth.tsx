@@ -71,6 +71,13 @@ const Auth = () => {
   const { toast } = useToast();
   const [selectedRole, setSelectedRole] = useState<UserRole | null>(null);
   const [showRoleSelection, setShowRoleSelection] = useState(false);
+  const [formData, setFormData] = useState({
+    specialization: "",
+    qualifications: "",
+    yearsOfExperience: "",
+    consultationFee: "",
+    bio: "",
+  });
 
   useEffect(() => {
     const hasCompletedOnboarding = localStorage.getItem("hasCompletedOnboarding");
@@ -149,6 +156,9 @@ const Auth = () => {
 
     try {
       if (showSignUpForm) {
+        // Log the signup attempt
+        console.log('Attempting signup with role:', selectedRole);
+
         const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
           email,
           password,
@@ -156,29 +166,59 @@ const Auth = () => {
             data: {
               first_name: firstName,
               last_name: lastName,
+              role: selectedRole, // Add role to user metadata
             },
             emailRedirectTo: window.location.origin
           }
         });
         
-        if (signUpError) throw signUpError;
+        if (signUpError) {
+          console.error('Signup error:', signUpError);
+          throw signUpError;
+        }
+
+        console.log('Signup successful:', signUpData);
 
         if (signUpData.user) {
-          const { error: profileError } = await supabase
-            .from('profiles')
-            .update({
-              first_name: firstName,
-              last_name: lastName,
-              date_of_birth: dateOfBirth?.toISOString(),
-              cycle_length: cycleLength ? parseInt(cycleLength) : null,
-              last_period_date: lastPeriodDate?.toISOString(),
-              fertility_goals: fertilityGoals,
-              medical_conditions: medicalConditions.split(',').map(c => c.trim()).filter(Boolean),
-              medications: medications.split(',').map(m => m.trim()).filter(Boolean),
-            })
-            .eq('id', signUpData.user.id);
+          if (selectedRole === 'consultant') {
+            // Create consultant profile
+            const { error: expertError } = await supabase
+              .from('expert_profiles')
+              .insert({
+                user_id: signUpData.user.id,
+                specialization: formData.specialization || '',
+                qualifications: formData.qualifications?.split(',').map(q => q.trim()).filter(Boolean) || [],
+                years_of_experience: parseInt(formData.yearsOfExperience || '0'),
+                bio: formData.bio || '',
+                consultation_fee: 0, // Default value
+                availability: { "weekdays": ["Monday", "Wednesday", "Friday"] }, // Default availability
+              });
 
-          if (profileError) throw profileError;
+            if (expertError) {
+              console.error('Expert profile creation error:', expertError);
+              throw expertError;
+            }
+          } else {
+            // Create regular user profile
+            const { error: profileError } = await supabase
+              .from('profiles')
+              .insert({
+                id: signUpData.user.id,
+                first_name: firstName,
+                last_name: lastName,
+                date_of_birth: dateOfBirth?.toISOString(),
+                cycle_length: cycleLength ? parseInt(cycleLength) : null,
+                last_period_date: lastPeriodDate?.toISOString(),
+                fertility_goals: fertilityGoals,
+                medical_conditions: medicalConditions.split(',').map(c => c.trim()).filter(Boolean),
+                medications: medications.split(',').map(m => m.trim()).filter(Boolean),
+              });
+
+            if (profileError) {
+              console.error('Profile creation error:', profileError);
+              throw profileError;
+            }
+          }
 
           toast({
             title: "✨ Account Created!",
@@ -205,7 +245,7 @@ const Auth = () => {
       console.error("Auth error:", error);
       toast({
         title: "Error",
-        description: error.message,
+        description: error.message || "An error occurred during registration",
         variant: "destructive",
       });
     } finally {
