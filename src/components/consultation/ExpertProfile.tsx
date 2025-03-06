@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -8,6 +7,8 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/lib/supabase";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Upload } from "lucide-react";
 
 export const ExpertProfile = () => {
   const navigate = useNavigate();
@@ -19,6 +20,7 @@ export const ExpertProfile = () => {
     specialization: "",
     yearsOfExperience: "",
     bio: "",
+    profileImage: "",
   });
 
   useEffect(() => {
@@ -45,6 +47,7 @@ export const ExpertProfile = () => {
           specialization: data.specialization || "",
           yearsOfExperience: data.years_of_experience?.toString() || "",
           bio: data.bio || "",
+          profileImage: data.profile_image || "",
         });
       }
     } catch (error: any) {
@@ -54,6 +57,48 @@ export const ExpertProfile = () => {
         description: "Failed to load profile data",
         variant: "destructive",
       });
+    }
+  };
+
+  const handleImageUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    try {
+      const file = event.target.files?.[0];
+      if (!file) return;
+
+      setLoading(true);
+      
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error("Not authenticated");
+
+      // Upload image to storage
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${user.id}-${Date.now()}.${fileExt}`;
+      const { error: uploadError, data } = await supabase.storage
+        .from('consultant-images')
+        .upload(fileName, file);
+
+      if (uploadError) throw uploadError;
+
+      // Get public URL
+      const { data: { publicUrl } } = supabase.storage
+        .from('consultant-images')
+        .getPublicUrl(fileName);
+
+      // Update profile with new image URL
+      setProfile(prev => ({ ...prev, profileImage: publicUrl }));
+
+      toast({
+        title: "Success",
+        description: "Profile picture uploaded successfully",
+      });
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -74,6 +119,7 @@ export const ExpertProfile = () => {
           specialization: profile.specialization,
           years_of_experience: parseInt(profile.yearsOfExperience) || 0,
           bio: profile.bio,
+          profile_image: profile.profileImage,
         });
 
       if (error) throw error;
@@ -102,7 +148,31 @@ export const ExpertProfile = () => {
           <CardTitle>Expert Profile</CardTitle>
         </CardHeader>
         <CardContent>
-          <form onSubmit={handleSubmit} className="space-y-4">
+          <form onSubmit={handleSubmit} className="space-y-6">
+            <div className="flex flex-col items-center space-y-4">
+              <Avatar className="h-32 w-32">
+                <AvatarImage src={profile.profileImage} />
+                <AvatarFallback>{profile.firstName?.[0]}{profile.lastName?.[0]}</AvatarFallback>
+              </Avatar>
+              
+              <div className="flex items-center gap-2">
+                <Input
+                  type="file"
+                  accept="image/*"
+                  onChange={handleImageUpload}
+                  className="hidden"
+                  id="profile-image"
+                />
+                <Label
+                  htmlFor="profile-image"
+                  className="cursor-pointer flex items-center gap-2 bg-secondary text-secondary-foreground px-4 py-2 rounded-md hover:bg-secondary/80"
+                >
+                  <Upload className="h-4 w-4" />
+                  Upload Photo
+                </Label>
+              </div>
+            </div>
+
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="firstName">First Name</Label>
