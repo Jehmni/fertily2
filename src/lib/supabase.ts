@@ -1,3 +1,4 @@
+
 import { createClient } from '@supabase/supabase-js';
 
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL?.trim();
@@ -9,41 +10,24 @@ if (!supabaseUrl || !supabaseAnonKey) {
   );
 }
 
-// Validate URL format and accessibility
-const validateSupabaseUrl = async (url: string) => {
+// Validate URL format
+const validateSupabaseUrl = (url: string) => {
   try {
     const urlObj = new URL(url);
     if (!urlObj.hostname.includes('supabase')) {
       throw new Error('Invalid Supabase URL format');
     }
-    
-    // Test if the URL is accessible
-    const response = await fetch(`${url}/rest/v1/`);
-    if (!response.ok) {
-      throw new Error('Could not connect to Supabase');
-    }
-  } catch (error: any) {
-    if (error.message.includes('Failed to fetch') || error instanceof TypeError) {
-      throw new Error(
-        'Cannot connect to Supabase. Please check your internet connection and try again.'
-      );
-    }
-    throw error;
+    return true;
+  } catch (error) {
+    console.error('Invalid Supabase URL:', error);
+    throw new Error('Invalid Supabase URL format');
   }
 };
 
-// Initialize and validate connection
-(async () => {
-  try {
-    console.log('Validating Supabase URL:', supabaseUrl);
-    await validateSupabaseUrl(supabaseUrl);
-    console.log('Supabase URL validation successful');
-  } catch (error) {
-    console.error('Supabase initialization error:', error);
-  }
-})();
+// Validate URL format
+validateSupabaseUrl(supabaseUrl);
 
-// Create the main client with full configuration
+// Create the Supabase client with configuration
 export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
   auth: {
     autoRefreshToken: true,
@@ -64,17 +48,8 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
   }
 });
 
-// Test the auth configuration
-(async () => {
-  try {
-    console.log('Testing Supabase auth configuration...');
-    const { data, error } = await supabase.auth.getSession();
-    if (error) {
-      console.error('Error connecting to Supabase:', error);
-    } else {
-      console.log('Successfully connected to Supabase. Session:', data);
-    }
-  } catch (err) {
-    console.error('Caught error testing Supabase connection:', err);
-  }
-})();
+// Test auth configuration
+supabase.auth.onAuthStateChange((event, session) => {
+  console.log('Auth state changed:', event, session);
+});
+
