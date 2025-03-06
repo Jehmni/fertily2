@@ -188,22 +188,19 @@ const Auth = () => {
         }
 
         // Wait for session to be established
-        const { data: sessionData } = await supabase.auth.getSession();
+        const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
         
-        if (selectedRole === 'consultant') {
-          console.log('Creating consultant profile with data:', {
-            user_id: signUpData.user.id,
-            specialization: formData.specialization,
-            qualifications: formData.qualifications,
-            years_of_experience: formData.yearsOfExperience,
-            bio: formData.bio
-          });
+        if (sessionError) {
+          throw new Error(`Failed to get session: ${sessionError.message}`);
+        }
 
-          // Ensure we have a valid session before proceeding
-          if (!sessionData.session?.access_token) {
-            throw new Error("No valid session found");
-          }
-        
+        if (!sessionData.session?.access_token) {
+          throw new Error("No valid session found after signup");
+        }
+
+        if (selectedRole === 'consultant') {
+          console.log('Creating consultant profile with session:', sessionData.session);
+
           const { data: expertData, error: expertError } = await supabase
             .from('expert_profiles')
             .insert([{
@@ -219,7 +216,7 @@ const Auth = () => {
             .single();
 
           if (expertError) {
-            console.error('Expert profile creation detailed error:', expertError);
+            console.error('Expert profile creation error:', expertError);
             throw new Error(`Failed to create consultant profile: ${expertError.message}`);
           }
           
