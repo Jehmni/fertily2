@@ -437,7 +437,11 @@ const Auth = () => {
           <div className="text-center pt-4">
             <button
               type="button"
-              onClick={() => setShowSignUpForm(false)}
+              onClick={() => {
+                setShowRoleSelection(false);
+                setShowSignUpForm(false);
+                setShowOnboarding(false);
+              }}
               className="text-sm text-primary hover:underline"
             >
               Already have an account? Sign in
@@ -768,12 +772,13 @@ const Auth = () => {
         </form>
 
         <div className="text-center pt-4">
-          <Link
-            to="/auth"
+          <button
+            type="button"
+            onClick={() => toggleAuthMode()}
             className="text-sm text-primary hover:underline"
           >
-            Already have an account? Sign in
-          </Link>
+            {showSignUpForm ? "Already have an account? Sign in" : "Need an account? Create one"}
+          </button>
         </div>
       </Card>
     </div>
