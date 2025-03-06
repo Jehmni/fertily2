@@ -4,8 +4,6 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { FileText, Loader2 } from "lucide-react";
-import { useToast } from "@/hooks/use-toast";
-import { supabase } from "@/lib/supabase";
 import { EmbryoCamera } from "./EmbryoCamera";
 import { EmbryoImagePreview } from "./EmbryoImagePreview";
 import { useEmbryoImage } from "@/hooks/useEmbryoImage";
@@ -13,7 +11,7 @@ import { useEmbryoSubmission } from "@/hooks/useEmbryoSubmission";
 
 export const EmbryoSubmissionForm = () => {
   const [description, setDescription] = useState("");
-  const { toast } = useToast();
+  
   const {
     imageUrl,
     isLoading: isImageLoading,
