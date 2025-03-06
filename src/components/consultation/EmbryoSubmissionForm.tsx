@@ -22,10 +22,12 @@ export const EmbryoSubmissionForm = () => {
     captureImage,
     handleImageUpload,
     handleImageRemove,
+    reset: resetImage,
   } = useEmbryoImage();
 
   const resetForm = () => {
     setDescription("");
+    resetImage();
   };
 
   const { handleSubmit, isLoading: isSubmitting } = useEmbryoSubmission({

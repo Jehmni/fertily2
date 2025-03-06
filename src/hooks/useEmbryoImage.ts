@@ -1,4 +1,3 @@
-
 import { useState, useRef } from 'react';
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/lib/supabase";
@@ -13,6 +12,7 @@ export interface UseEmbryoImageReturn {
   captureImage: () => void;
   handleImageUpload: (e: React.ChangeEvent<HTMLInputElement>) => void;
   handleImageRemove: () => void;
+  reset: () => void;
 }
 
 export const useEmbryoImage = (): UseEmbryoImageReturn => {
@@ -114,6 +114,11 @@ export const useEmbryoImage = (): UseEmbryoImageReturn => {
     setImageUrl(null);
   };
 
+  const reset = () => {
+    setImageUrl(null);
+    stopCamera();
+  };
+
   return {
     imageUrl,
     isLoading,
@@ -124,5 +129,6 @@ export const useEmbryoImage = (): UseEmbryoImageReturn => {
     captureImage,
     handleImageUpload,
     handleImageRemove,
+    reset,
   };
 };
