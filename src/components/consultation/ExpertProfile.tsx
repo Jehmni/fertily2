@@ -21,6 +21,7 @@ export const ExpertProfile = () => {
     specialization: "",
     yearsOfExperience: "",
     qualifications: "",
+    consultationFee: "",
     bio: "",
     profileImage: "",
   });
@@ -49,6 +50,7 @@ export const ExpertProfile = () => {
           specialization: data.specialization || "",
           yearsOfExperience: data.years_of_experience?.toString() || "",
           qualifications: Array.isArray(data.qualifications) ? data.qualifications.join(', ') : "",
+          consultationFee: data.consultation_fee?.toString() || "",
           bio: data.bio || "",
           profileImage: data.profile_image || "",
         });
@@ -110,6 +112,11 @@ export const ExpertProfile = () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error("Not authenticated");
 
+      // Validate required fields
+      if (!profile.firstName || !profile.lastName || !profile.specialization || !profile.consultationFee) {
+        throw new Error("Please fill in all required fields");
+      }
+
       const { error } = await supabase
         .from('expert_profiles')
         .upsert({
@@ -119,6 +126,7 @@ export const ExpertProfile = () => {
           specialization: profile.specialization,
           years_of_experience: parseInt(profile.yearsOfExperience) || 0,
           qualifications: profile.qualifications.split(',').map(q => q.trim()).filter(Boolean),
+          consultation_fee: parseFloat(profile.consultationFee) || 0,
           bio: profile.bio,
           profile_image: profile.profileImage,
           availability: {}, // Default empty object for availability
@@ -178,33 +186,36 @@ export const ExpertProfile = () => {
 
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="firstName">First Name</Label>
+                <Label htmlFor="firstName">First Name *</Label>
                 <Input
                   id="firstName"
                   value={profile.firstName}
                   onChange={(e) => setProfile(p => ({ ...p, firstName: e.target.value }))}
                   placeholder="Enter your first name"
+                  required
                 />
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="lastName">Last Name</Label>
+                <Label htmlFor="lastName">Last Name *</Label>
                 <Input
                   id="lastName"
                   value={profile.lastName}
                   onChange={(e) => setProfile(p => ({ ...p, lastName: e.target.value }))}
                   placeholder="Enter your last name"
+                  required
                 />
               </div>
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="specialization">Specialization</Label>
+              <Label htmlFor="specialization">Specialization *</Label>
               <Input
                 id="specialization"
                 value={profile.specialization}
                 onChange={(e) => setProfile(p => ({ ...p, specialization: e.target.value }))}
                 placeholder="e.g., Embryology, IVF Specialist"
+                required
               />
             </div>
 
@@ -218,16 +229,32 @@ export const ExpertProfile = () => {
               />
             </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="yearsOfExperience">Years of Experience</Label>
-              <Input
-                id="yearsOfExperience"
-                type="number"
-                value={profile.yearsOfExperience}
-                onChange={(e) => setProfile(p => ({ ...p, yearsOfExperience: e.target.value }))}
-                placeholder="Enter years of experience"
-                min="0"
-              />
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="yearsOfExperience">Years of Experience</Label>
+                <Input
+                  id="yearsOfExperience"
+                  type="number"
+                  value={profile.yearsOfExperience}
+                  onChange={(e) => setProfile(p => ({ ...p, yearsOfExperience: e.target.value }))}
+                  placeholder="Enter years of experience"
+                  min="0"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="consultationFee">Consultation Fee (USD) *</Label>
+                <Input
+                  id="consultationFee"
+                  type="number"
+                  value={profile.consultationFee}
+                  onChange={(e) => setProfile(p => ({ ...p, consultationFee: e.target.value }))}
+                  placeholder="Enter consultation fee"
+                  min="0"
+                  step="0.01"
+                  required
+                />
+              </div>
             </div>
 
             <div className="space-y-2">
