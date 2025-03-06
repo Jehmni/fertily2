@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import { supabase } from "@/lib/supabase";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -767,16 +767,13 @@ const Auth = () => {
           </Button>
         </form>
 
-        <div className="text-center">
-          <button
-            type="button"
-            onClick={toggleAuthMode}
+        <div className="text-center pt-4">
+          <Link
+            to="/auth"
             className="text-sm text-primary hover:underline"
           >
-            {showSignUpForm 
-              ? "Already have an account? Sign in" 
-              : "Don't have an account? Sign up"}
-          </button>
+            Already have an account? Sign in
+          </Link>
         </div>
       </Card>
     </div>
