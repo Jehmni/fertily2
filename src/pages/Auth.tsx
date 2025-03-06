@@ -305,12 +305,17 @@ const Auth = () => {
 
   const toggleAuthMode = () => {
     if (showSignUpForm) {
+      // When switching to sign in, reset all form fields
       setShowSignUpForm(false);
-      setShowOnboarding(false);
+      setShowRoleSelection(false);
+      setSelectedRole(null);
     } else {
+      // When switching to sign up, show role selection first
       setShowOnboarding(true);
       setCurrentSlide(0);
     }
+    
+    // Reset all form fields
     setEmail("");
     setPassword("");
     setConfirmPassword("");
@@ -320,6 +325,8 @@ const Auth = () => {
     setCycleLength("");
     setLastPeriodDate(undefined);
     setFertilityGoals("");
+    setMedicalConditions("");
+    setMedications("");
     setErrors({
       email: "",
       password: "",
@@ -327,6 +334,14 @@ const Auth = () => {
       firstName: "",
       lastName: "",
       cycleLength: "",
+    });
+    // Reset form data for consultant fields
+    setFormData({
+      specialization: "",
+      qualifications: "",
+      yearsOfExperience: "",
+      consultationFee: "",
+      bio: "",
     });
   };
 
