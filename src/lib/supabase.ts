@@ -1,7 +1,6 @@
 
 import { createClient } from '@supabase/supabase-js';
 
-// Ensure URL and key are properly formatted
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL?.trim();
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY?.trim();
 
@@ -11,7 +10,6 @@ if (!supabaseUrl || !supabaseAnonKey) {
   );
 }
 
-// Validate URL format with improved error messages
 const validateSupabaseUrl = (url: string) => {
   try {
     const urlObj = new URL(url);
@@ -19,7 +17,6 @@ const validateSupabaseUrl = (url: string) => {
       throw new Error('Invalid Supabase URL format');
     }
     
-    // Add protocol if missing
     if (!url.startsWith('https://')) {
       url = `https://${url}`;
     }
@@ -31,10 +28,8 @@ const validateSupabaseUrl = (url: string) => {
   }
 };
 
-// Validate and normalize URL
 const validatedUrl = validateSupabaseUrl(supabaseUrl);
 
-// Create the Supabase client with improved configuration
 export const supabase = createClient(validatedUrl, supabaseAnonKey, {
   auth: {
     autoRefreshToken: true,
@@ -42,34 +37,45 @@ export const supabase = createClient(validatedUrl, supabaseAnonKey, {
     detectSessionInUrl: true,
     storageKey: 'supabase-auth-token',
     storage: window.localStorage,
+    flowType: 'pkce',
+    retryAttempts: 1, // Reduce retry attempts
   },
   global: {
     headers: {
       'Content-Type': 'application/json',
     },
-    fetch: (url: RequestInfo | URL, init?: RequestInit) => {
-      return fetch(url, init).then(response => {
+    fetch: async (url: RequestInfo | URL, init?: RequestInit) => {
+      const timeoutPromise = new Promise((_, reject) => {
+        setTimeout(() => reject(new Error('Request timeout')), 5000); // 5s timeout
+      });
+      
+      try {
+        const response = await Promise.race([
+          fetch(url, init),
+          timeoutPromise
+        ]) as Response;
+        
         if (!response.ok) {
           throw new Error(`HTTP error! status: ${response.status}`);
         }
         return response;
-      }).catch(err => {
+      } catch (err) {
         if (err.message === 'Failed to fetch' || err.name === 'TypeError') {
           throw new Error('Unable to connect to Supabase. Please check your network connection and try again.');
         }
         throw err;
-      });
+      }
     }
   }
 });
 
-// Test auth configuration with improved error handling
-supabase.auth.onAuthStateChange((event, session) => {
-  if (event === 'SIGNED_IN') {
-    console.log('Successfully authenticated:', session);
-  } else if (event === 'SIGNED_OUT') {
-    console.log('User signed out');
-  } else {
-    console.log('Auth state changed:', event, session);
-  }
-});
+// Only add listeners in development
+if (process.env.NODE_ENV === 'development') {
+  supabase.auth.onAuthStateChange((event, session) => {
+    if (event === 'SIGNED_IN') {
+      console.log('Successfully authenticated:', session?.user?.email);
+    } else if (event === 'SIGNED_OUT') {
+      console.log('User signed out');
+    }
+  });
+}
