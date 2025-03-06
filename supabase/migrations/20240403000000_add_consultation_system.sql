@@ -1,6 +1,8 @@
+-- Enable UUID extension if not already enabled
+CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 
 -- Create expert_profiles table
-CREATE TABLE expert_profiles (
+CREATE TABLE IF NOT EXISTS expert_profiles (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE,
   specialization TEXT NOT NULL,
@@ -72,3 +74,21 @@ CREATE POLICY "Embryo data visible to involved parties"
     auth.uid() = patient_id OR 
     auth.uid() = expert_id
   );
+
+-- Add RLS policies for expert_profiles
+ALTER TABLE expert_profiles ENABLE ROW LEVEL SECURITY;
+
+-- Policy for experts to manage their own profiles
+CREATE POLICY "Experts can manage their own profiles"
+  ON expert_profiles
+  FOR ALL
+  TO authenticated
+  USING (auth.uid() = user_id)
+  WITH CHECK (auth.uid() = user_id);
+
+-- Policy for public to view expert profiles
+CREATE POLICY "Public can view expert profiles"
+  ON expert_profiles
+  FOR SELECT
+  TO authenticated
+  USING (true);

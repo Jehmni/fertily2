@@ -156,14 +156,12 @@ const Auth = () => {
 
     try {
       if (showSignUpForm) {
-        console.log('Starting signup process with role:', selectedRole); // Debug log
+        console.log('Starting signup process with role:', selectedRole);
         
-        // Verify required fields for consultants
         if (selectedRole === 'consultant') {
           if (!formData.specialization || !formData.qualifications || !formData.yearsOfExperience || !formData.bio) {
             throw new Error("Please fill in all required consultant fields");
           }
-          console.log('Consultant form data validated:', formData); // Debug log
         }
 
         const signUpOptions = {
@@ -179,49 +177,46 @@ const Auth = () => {
           }
         };
 
-        console.log('Attempting signup with options:', { 
-          ...signUpOptions,
-          password: '[REDACTED]'
-        }); // Debug log
+        const { data: signUpData, error: signUpError } = await supabase.auth.signUp(signUpOptions);
+      
+        if (signUpError) throw signUpError;
 
-        try {
-          const { data: signUpData, error: signUpError } = await supabase.auth.signUp(signUpOptions);
-          
-          if (signUpError) {
-            console.error('Detailed signup error:', signUpError); // Debug log
-            throw signUpError;
-          }
+        console.log('Signup successful, user data:', signUpData);
 
-          console.log('Signup successful, creating profile...', signUpData); // Debug log
+        if (!signUpData.user?.id) {
+          throw new Error("User ID not returned from signup");
+        }
 
-          if (!signUpData.user?.id) {
-            throw new Error("User ID not returned from signup");
-          }
+        if (selectedRole === 'consultant') {
+          console.log('Creating consultant profile with data:', {
+            user_id: signUpData.user.id,
+            specialization: formData.specialization,
+            qualifications: formData.qualifications,
+            years_of_experience: formData.yearsOfExperience,
+            bio: formData.bio
+          });
+        
+          const { data: expertData, error: expertError } = await supabase
+            .from('expert_profiles')
+            .insert([{
+              user_id: signUpData.user.id,
+              specialization: formData.specialization,
+              qualifications: formData.qualifications.split(',').map(q => q.trim()).filter(Boolean),
+              years_of_experience: parseInt(formData.yearsOfExperience),
+              consultation_fee: 0,
+              availability: { "weekdays": ["Monday", "Wednesday", "Friday"] },
+              bio: formData.bio
+            }])
+            .select()
+            .single();
 
-          if (selectedRole === 'consultant') {
-            console.log('Creating consultant profile...'); // Debug log
-            
-            const { error: expertError } = await supabase
-              .from('expert_profiles')
-              .insert([{
-                user_id: signUpData.user.id,
-                specialization: formData.specialization,
-                qualifications: formData.qualifications.split(',').map(q => q.trim()).filter(Boolean),
-                years_of_experience: parseInt(formData.yearsOfExperience),
-                consultation_fee: 0,
-                availability: { "weekdays": ["Monday", "Wednesday", "Friday"] },
-                bio: formData.bio
-              }]);
-
-            if (expertError) {
-              console.error('Expert profile creation error:', expertError);
-              throw new Error(`Failed to create consultant profile: ${expertError.message}`);
-            }
-            
-            console.log('Consultant profile created successfully'); // Debug log
-          } else {
-            console.log('Creating patient profile...'); // Debug log
-            
+        if (expertError) {
+          console.error('Expert profile creation detailed error:', expertError);
+          throw new Error(`Failed to create consultant profile: ${expertError.message}`);
+        }
+        
+        console.log('Consultant profile created successfully:', expertData);
+      } else {
             const { error: profileError } = await supabase
               .from('profiles')
               .insert({
