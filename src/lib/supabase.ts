@@ -38,6 +38,7 @@ export const supabase = createClient(validatedUrl, supabaseAnonKey, {
     storage: window.localStorage,
     storageKey: 'supabase-auth-token',
     flowType: 'pkce',
+    debug: process.env.NODE_ENV === 'development',
   },
   global: {
     headers: {
@@ -46,13 +47,18 @@ export const supabase = createClient(validatedUrl, supabaseAnonKey, {
   }
 });
 
-// Only add listeners in development
+// Only log auth state changes in development, and only if they represent actual changes
 if (process.env.NODE_ENV === 'development') {
+  let previousAuthState = null;
   supabase.auth.onAuthStateChange((event, session) => {
-    if (event === 'SIGNED_IN') {
-      console.log('Successfully authenticated:', session?.user?.email);
-    } else if (event === 'SIGNED_OUT') {
-      console.log('User signed out');
+    // Only log if the auth state actually changed
+    if (event !== previousAuthState) {
+      if (event === 'SIGNED_IN') {
+        console.log('Successfully authenticated:', session?.user?.email);
+      } else if (event === 'SIGNED_OUT') {
+        console.log('User signed out');
+      }
+      previousAuthState = event;
     }
   });
 }
