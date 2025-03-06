@@ -1,4 +1,3 @@
-
 import { createClient } from '@supabase/supabase-js';
 
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL?.trim();
@@ -54,8 +53,8 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
     storage: window.localStorage,
   },
   global: {
-    fetch: (...args) => {
-      return fetch(...args).catch(err => {
+    fetch: (url: RequestInfo | URL, init?: RequestInit) => {
+      return fetch(url, init).catch(err => {
         if (err.message === 'Failed to fetch') {
           throw new Error('Network error: Please check your internet connection');
         }
