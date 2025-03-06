@@ -210,44 +210,38 @@ const Auth = () => {
             .select()
             .single();
 
-        if (expertError) {
-          console.error('Expert profile creation detailed error:', expertError);
-          throw new Error(`Failed to create consultant profile: ${expertError.message}`);
-        }
-        
-        console.log('Consultant profile created successfully:', expertData);
-      } else {
-            const { error: profileError } = await supabase
-              .from('profiles')
-              .insert({
-                id: signUpData.user.id,
-                first_name: firstName,
-                last_name: lastName,
-                date_of_birth: dateOfBirth?.toISOString(),
-                cycle_length: cycleLength ? parseInt(cycleLength) : null,
-                last_period_date: lastPeriodDate?.toISOString(),
-                fertility_goals: fertilityGoals,
-                medical_conditions: medicalConditions.split(',').map(c => c.trim()).filter(Boolean),
-                medications: medications.split(',').map(m => m.trim()).filter(Boolean),
-              });
-
-            if (profileError) {
-              console.error('Profile creation error:', profileError);
-              throw new Error(`Failed to create profile: ${profileError.message}`);
-            }
+          if (expertError) {
+            console.error('Expert profile creation detailed error:', expertError);
+            throw new Error(`Failed to create consultant profile: ${expertError.message}`);
           }
+          
+          console.log('Consultant profile created successfully:', expertData);
+        } else {
+          const { error: profileError } = await supabase
+            .from('profiles')
+            .insert({
+              id: signUpData.user.id,
+              first_name: firstName,
+              last_name: lastName,
+              date_of_birth: dateOfBirth?.toISOString(),
+              cycle_length: cycleLength ? parseInt(cycleLength) : null,
+              last_period_date: lastPeriodDate?.toISOString(),
+              fertility_goals: fertilityGoals,
+              medical_conditions: medicalConditions.split(',').map(c => c.trim()).filter(Boolean),
+              medications: medications.split(',').map(m => m.trim()).filter(Boolean),
+            });
 
-          toast({
-            title: "✨ Account Created!",
-            description: "Please check your email to verify your account.",
-          });
-          localStorage.setItem("hasCompletedOnboarding", "true");
-        } catch (signUpError: any) {
-          if (signUpError.message?.includes('Failed to fetch') || !navigator.onLine) {
-            throw new Error('Network error: Please check your internet connection and try again');
+          if (profileError) {
+            console.error('Profile creation error:', profileError);
+            throw new Error(`Failed to create profile: ${profileError.message}`);
           }
-          throw signUpError;
         }
+
+        toast({
+          title: "✨ Account Created!",
+          description: "Please check your email to verify your account.",
+        });
+        localStorage.setItem("hasCompletedOnboarding", "true");
       } else {
         const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
           email,
