@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -77,9 +76,23 @@ export const ExpertProfile = () => {
 
       const fileExt = file.name.split('.').pop();
       const fileName = `${user.id}-${Date.now()}.${fileExt}`;
+      
+      // First remove old image if it exists
+      if (profile.profileImage) {
+        const oldFileName = profile.profileImage.split('/').pop();
+        if (oldFileName) {
+          await supabase.storage
+            .from('consultant-images')
+            .remove([oldFileName]);
+        }
+      }
+
       const { error: uploadError, data } = await supabase.storage
         .from('consultant-images')
-        .upload(fileName, file);
+        .upload(fileName, file, {
+          contentType: file.type,
+          upsert: true
+        });
 
       if (uploadError) throw uploadError;
 
@@ -94,9 +107,10 @@ export const ExpertProfile = () => {
         description: "Profile picture uploaded successfully",
       });
     } catch (error: any) {
+      console.error('Image upload error:', error);
       toast({
         title: "Error",
-        description: error.message,
+        description: error.message || "Failed to upload image",
         variant: "destructive",
       });
     } finally {
@@ -162,7 +176,7 @@ export const ExpertProfile = () => {
           <form onSubmit={handleSubmit} className="space-y-6">
             <div className="flex flex-col items-center space-y-4">
               <Avatar className="h-32 w-32">
-                <AvatarImage src={profile.profileImage} />
+                <AvatarImage src={profile.profileImage} alt="Profile" />
                 <AvatarFallback>{profile.firstName?.[0]}{profile.lastName?.[0]}</AvatarFallback>
               </Avatar>
               
@@ -173,13 +187,14 @@ export const ExpertProfile = () => {
                   onChange={handleImageUpload}
                   className="hidden"
                   id="profile-image"
+                  disabled={loading}
                 />
                 <Label
                   htmlFor="profile-image"
-                  className="cursor-pointer flex items-center gap-2 bg-secondary text-secondary-foreground px-4 py-2 rounded-md hover:bg-secondary/80"
+                  className={`cursor-pointer flex items-center gap-2 bg-secondary text-secondary-foreground px-4 py-2 rounded-md hover:bg-secondary/80 ${loading ? 'opacity-50 cursor-not-allowed' : ''}`}
                 >
                   <Upload className="h-4 w-4" />
-                  Upload Photo
+                  {loading ? "Uploading..." : "Upload Photo"}
                 </Label>
               </div>
             </div>
