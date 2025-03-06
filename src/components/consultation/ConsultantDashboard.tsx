@@ -6,6 +6,7 @@ import { CalendarIcon, UserIcon, ImageIcon, Settings } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
+import { EmbryoSubmissionForm } from "./EmbryoSubmissionForm";
 
 export const ConsultantDashboard = () => {
   const navigate = useNavigate();
@@ -113,8 +114,47 @@ export const ConsultantDashboard = () => {
           </div>
         </TabsContent>
 
-        <TabsContent value="embryo" className="mt-6">
+        <TabsContent value="patients" className="mt-6">
           <div className="grid gap-4">
+            {consultations?.map((consultation) => (
+              <Card key={consultation.id}>
+                <CardHeader>
+                  <CardTitle>
+                    {consultation.patient?.first_name} {consultation.patient?.last_name}
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <p>Last Visit: {new Date(consultation.scheduled_for).toLocaleDateString()}</p>
+                  <Button 
+                    className="mt-4"
+                    onClick={() => navigate(`/patient/${consultation.patient_id}`)}
+                  >
+                    View Patient History
+                  </Button>
+                </CardContent>
+              </Card>
+            ))}
+            {!consultations?.length && (
+              <Card>
+                <CardContent className="py-8 text-center text-muted-foreground">
+                  No patients yet
+                </CardContent>
+              </Card>
+            )}
+          </div>
+        </TabsContent>
+
+        <TabsContent value="embryo" className="mt-6">
+          <Card>
+            <CardHeader>
+              <CardTitle>Submit New Embryo Analysis</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <EmbryoSubmissionForm />
+            </CardContent>
+          </Card>
+
+          <div className="grid gap-4 mt-6">
             {embryoAnalyses?.map((analysis) => (
               <Card key={analysis.id}>
                 <CardHeader>
@@ -143,37 +183,7 @@ export const ConsultantDashboard = () => {
             {embryoAnalyses?.length === 0 && (
               <Card>
                 <CardContent className="py-8 text-center text-muted-foreground">
-                  No embryo analyses yet
-                </CardContent>
-              </Card>
-            )}
-          </div>
-        </TabsContent>
-
-        <TabsContent value="patients" className="mt-6">
-          <div className="grid gap-4">
-            {consultations?.map((consultation) => (
-              <Card key={consultation.id}>
-                <CardHeader>
-                  <CardTitle>
-                    {consultation.patient?.first_name} {consultation.patient?.last_name}
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <p>Last Visit: {new Date(consultation.scheduled_for).toLocaleDateString()}</p>
-                  <Button 
-                    className="mt-4"
-                    onClick={() => navigate(`/patient/${consultation.patient_id}`)}
-                  >
-                    View Patient History
-                  </Button>
-                </CardContent>
-              </Card>
-            ))}
-            {!consultations?.length && (
-              <Card>
-                <CardContent className="py-8 text-center text-muted-foreground">
-                  No patients yet
+                  No embryo analyses yet. Submit your first analysis above.
                 </CardContent>
               </Card>
             )}
