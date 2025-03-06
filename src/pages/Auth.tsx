@@ -187,6 +187,9 @@ const Auth = () => {
           throw new Error("User ID not returned from signup");
         }
 
+        // Wait for session to be established
+        const { data: sessionData } = await supabase.auth.getSession();
+        
         if (selectedRole === 'consultant') {
           console.log('Creating consultant profile with data:', {
             user_id: signUpData.user.id,
@@ -195,6 +198,11 @@ const Auth = () => {
             years_of_experience: formData.yearsOfExperience,
             bio: formData.bio
           });
+
+          // Ensure we have a valid session before proceeding
+          if (!sessionData.session?.access_token) {
+            throw new Error("No valid session found");
+          }
         
           const { data: expertData, error: expertError } = await supabase
             .from('expert_profiles')

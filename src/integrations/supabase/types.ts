@@ -9,13 +9,223 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
-      [_ in never]: never
+      consultations: {
+        Row: {
+          consultation_fee: number
+          created_at: string | null
+          expert_id: string | null
+          id: string
+          notes: string | null
+          patient_id: string | null
+          payment_intent_id: string | null
+          payment_status: string
+          rating: number | null
+          review: string | null
+          scheduled_for: string
+          status: string
+          updated_at: string | null
+        }
+        Insert: {
+          consultation_fee?: number
+          created_at?: string | null
+          expert_id?: string | null
+          id?: string
+          notes?: string | null
+          patient_id?: string | null
+          payment_intent_id?: string | null
+          payment_status?: string
+          rating?: number | null
+          review?: string | null
+          scheduled_for: string
+          status?: string
+          updated_at?: string | null
+        }
+        Update: {
+          consultation_fee?: number
+          created_at?: string | null
+          expert_id?: string | null
+          id?: string
+          notes?: string | null
+          patient_id?: string | null
+          payment_intent_id?: string | null
+          payment_status?: string
+          rating?: number | null
+          review?: string | null
+          scheduled_for?: string
+          status?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      embryo_data: {
+        Row: {
+          ai_score: number | null
+          consultation_id: string | null
+          created_at: string | null
+          expert_id: string | null
+          grade: string | null
+          id: string
+          image_url: string | null
+          notes: string | null
+          patient_id: string | null
+          text_description: string | null
+        }
+        Insert: {
+          ai_score?: number | null
+          consultation_id?: string | null
+          created_at?: string | null
+          expert_id?: string | null
+          grade?: string | null
+          id?: string
+          image_url?: string | null
+          notes?: string | null
+          patient_id?: string | null
+          text_description?: string | null
+        }
+        Update: {
+          ai_score?: number | null
+          consultation_id?: string | null
+          created_at?: string | null
+          expert_id?: string | null
+          grade?: string | null
+          id?: string
+          image_url?: string | null
+          notes?: string | null
+          patient_id?: string | null
+          text_description?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "embryo_data_consultation_id_fkey"
+            columns: ["consultation_id"]
+            isOneToOne: false
+            referencedRelation: "consultations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      expert_profiles: {
+        Row: {
+          availability: Json
+          bio: string
+          consultation_fee: number
+          created_at: string | null
+          id: string
+          profile_image: string | null
+          qualifications: string[]
+          rating: number | null
+          specialization: string
+          total_reviews: number | null
+          updated_at: string | null
+          user_id: string | null
+          years_of_experience: number
+        }
+        Insert: {
+          availability: Json
+          bio: string
+          consultation_fee: number
+          created_at?: string | null
+          id?: string
+          profile_image?: string | null
+          qualifications: string[]
+          rating?: number | null
+          specialization: string
+          total_reviews?: number | null
+          updated_at?: string | null
+          user_id?: string | null
+          years_of_experience: number
+        }
+        Update: {
+          availability?: Json
+          bio?: string
+          consultation_fee?: number
+          created_at?: string | null
+          id?: string
+          profile_image?: string | null
+          qualifications?: string[]
+          rating?: number | null
+          specialization?: string
+          total_reviews?: number | null
+          updated_at?: string | null
+          user_id?: string | null
+          years_of_experience?: number
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          created_at: string | null
+          cycle_length: number | null
+          date_of_birth: string | null
+          fertility_goals: string | null
+          first_name: string | null
+          id: string
+          last_name: string | null
+          last_period_date: string | null
+          medical_conditions: string[] | null
+          medications: string[] | null
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          cycle_length?: number | null
+          date_of_birth?: string | null
+          fertility_goals?: string | null
+          first_name?: string | null
+          id: string
+          last_name?: string | null
+          last_period_date?: string | null
+          medical_conditions?: string[] | null
+          medications?: string[] | null
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          cycle_length?: number | null
+          date_of_birth?: string | null
+          fertility_goals?: string | null
+          first_name?: string | null
+          id?: string
+          last_name?: string | null
+          last_period_date?: string | null
+          medical_conditions?: string[] | null
+          medications?: string[] | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      user_roles: {
+        Row: {
+          created_at: string
+          id: string
+          role: string
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          role: string
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          role?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      is_admin: {
+        Args: {
+          user_id: string
+        }
+        Returns: boolean
+      }
     }
     Enums: {
       [_ in never]: never
