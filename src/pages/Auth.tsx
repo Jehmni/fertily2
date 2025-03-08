@@ -1,3 +1,4 @@
+<lov-code>
 import { useState, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { supabase } from "@/lib/supabase";
@@ -20,6 +21,8 @@ import {
 import { cn } from "@/lib/utils";
 import { CalendarIcon } from "lucide-react";
 import { Textarea } from "@/components/ui/textarea";
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
+import { Upload } from "lucide-react";
 
 const onboardingSlides = [
   {
@@ -78,6 +81,8 @@ const Auth = () => {
     consultationFee: "",
     bio: "",
   });
+  const [profileImage, setProfileImage] = useState<string>("");
+  const [uploadingImage, setUploadingImage] = useState(false);
 
   useEffect(() => {
     const hasCompletedOnboarding = localStorage.getItem("hasCompletedOnboarding");
@@ -145,6 +150,47 @@ const Auth = () => {
     return !Object.values(newErrors).some(error => error !== "");
   };
 
+  const handleProfileImageUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    try {
+      const file = event.target.files?.[0];
+      if (!file) return;
+
+      setUploadingImage(true);
+      
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${Date.now()}.${fileExt}`;
+      
+      const { error: uploadError, data } = await supabase.storage
+        .from('consultant-images')
+        .upload(fileName, file, {
+          contentType: file.type,
+          upsert: true
+        });
+
+      if (uploadError) throw uploadError;
+
+      const { data: { publicUrl } } = supabase.storage
+        .from('consultant-images')
+        .getPublicUrl(fileName);
+
+      setProfileImage(publicUrl);
+
+      toast({
+        title: "Success",
+        description: "Profile picture uploaded successfully",
+      });
+    } catch (error: any) {
+      console.error('Image upload error:', error);
+      toast({
+        title: "Error",
+        description: error.message || "Failed to upload image",
+        variant: "destructive",
+      });
+    } finally {
+      setUploadingImage(false);
+    }
+  };
+
   const handleAuth = async (e: React.FormEvent) => {
     e.preventDefault();
     
@@ -210,7 +256,10 @@ const Auth = () => {
               years_of_experience: parseInt(formData.yearsOfExperience),
               consultation_fee: 0,
               availability: { "weekdays": ["Monday", "Wednesday", "Friday"] },
-              bio: formData.bio
+              bio: formData.bio,
+              profile_image: profileImage,
+              first_name: firstName,
+              last_name: lastName
             }])
             .select()
             .single();
@@ -341,6 +390,8 @@ const Auth = () => {
       consultationFee: "",
       bio: "",
     });
+    setProfileImage("");
+    setUploadingImage(false);
   };
 
   if (showOnboarding) {
@@ -445,6 +496,195 @@ const Auth = () => {
               className="text-sm text-primary hover:underline"
             >
               Already have an account? Sign in
+            </button>
+          </div>
+        </Card>
+      </div>
+    );
+  }
+
+  if (showSignUpForm && selectedRole === 'consultant') {
+    return (
+      <div className="min-h-screen bg-gradient-to-b from-primary/10 to-background flex flex-col items-center justify-center p-4">
+        <div className="mb-6">
+          <img 
+            src="/lovable-uploads/27ff8345-8e52-4baf-a8f5-d267b1b7c37f.png"
+            alt="Fertily Logo"
+            className="w-20 h-20 object-contain bg-white rounded-full"
+          />
+        </div>
+        <Card className="w-full max-w-md p-8 space-y-6 shadow-lg animate-fadeIn bg-white/95 backdrop-blur-sm">
+          <h1 className="text-3xl font-bold text-center text-primary">
+            {showSignUpForm ? (selectedRole === 'consultant' ? "Medical Consultant Registration" : "Create Account") : "Welcome Back"}
+          </h1>
+          <form onSubmit={handleAuth} className="space-y-4">
+            <div className="flex flex-col items-center space-y-4 mb-6">
+              <Avatar className="h-24 w-24">
+                <AvatarImage src={profileImage} alt="Profile" />
+                <AvatarFallback>{firstName?.[0]}{lastName?.[0]}</AvatarFallback>
+              </Avatar>
+              <div className="flex items-center gap-2">
+                <Input
+                  type="file"
+                  accept="image/*"
+                  onChange={handleProfileImageUpload}
+                  className="hidden"
+                  id="profile-image"
+                  disabled={uploadingImage}
+                />
+                <Label
+                  htmlFor="profile-image"
+                  className={`cursor-pointer flex items-center gap-2 bg-secondary text-secondary-foreground px-4 py-2 rounded-md hover:bg-secondary/80 ${uploadingImage ? 'opacity-50 cursor-not-allowed' : ''}`}
+                >
+                  <Upload className="h-4 w-4" />
+                  {uploadingImage ? "Uploading..." : "Upload Photo"}
+                </Label>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="firstName">First Name</Label>
+                <Input
+                  id="firstName"
+                  value={firstName}
+                  onChange={(e) => setFirstName(e.target.value)}
+                  className={errors.firstName ? "border-red-500" : ""}
+                  required
+                />
+                {errors.firstName && (
+                  <p className="text-sm text-red-500">{errors.firstName}</p>
+                )}
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="lastName">Last Name</Label>
+                <Input
+                  id="lastName"
+                  value={lastName}
+                  onChange={(e) => setLastName(e.target.value)}
+                  className={errors.lastName ? "border-red-500" : ""}
+                  required
+                />
+                {errors.lastName && (
+                  <p className="text-sm text-red-500">{errors.lastName}</p>
+                )}
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="specialization">Specialization</Label>
+              <Input
+                id="specialization"
+                placeholder="e.g., Reproductive Endocrinology"
+                value={formData.specialization}
+                onChange={(e) => setFormData({...formData, specialization: e.target.value})}
+                required
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="qualifications">Qualifications (comma-separated)</Label>
+              <Input
+                id="qualifications"
+                placeholder="MD, PhD, FACOG"
+                value={formData.qualifications}
+                onChange={(e) => setFormData({...formData, qualifications: e.target.value})}
+                required
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="yearsOfExperience">Years of Experience</Label>
+              <Input
+                id="yearsOfExperience"
+                type="number"
+                min="0"
+                value={formData.yearsOfExperience}
+                onChange={(e) => setFormData({...formData, yearsOfExperience: e.target.value})}
+                required
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="bio">Professional Bio</Label>
+              <Textarea
+                id="bio"
+                placeholder="Write about your experience and expertise..."
+                className="h-32"
+                value={formData.bio}
+                onChange={(e) => setFormData({...formData, bio: e.target.value})}
+                required
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="email">Email</Label>
+              <Input
+                id="email"
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                className={errors.email ? "border-red-500" : ""}
+                required
+              />
+              {errors.email && (
+                <p className="text-sm text-red-500">{errors.email}</p>
+              )}
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="password">Password</Label>
+              <Input
+                id="password"
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                className={errors.password ? "border-red-500" : ""}
+                required
+              />
+              {errors.password && (
+                <p className="text-sm text-red-500">{errors.password}</p>
+              )}
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="confirmPassword">Confirm Password</Label>
+              <Input
+                id="confirmPassword"
+                type="password"
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                className={errors.confirmPassword ? "border-red-500" : ""}
+                required
+              />
+              {errors.confirmPassword && (
+                <p className="text-sm text-red-500">{errors.confirmPassword}</p>
+              )}
+            </div>
+
+            <Button 
+              type="submit" 
+              className="w-full"
+              disabled={loading}
+            >
+              {loading ? (
+                <div className="flex items-center justify-center gap-2">
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  <span>{showSignUpForm ? "Creating Account..." : "Signing In..."}</span>
+                </div>
+              ) : (
+                <span>{showSignUpForm ? "Create Account" : "Sign In"}</span>
+              )}
+            </Button>
+          </form>
+
+          <div className="text-center pt-4">
+            <button
+              type="button"
+              onClick={() => toggleAuthMode()}
+              className="text-sm text-primary hover:underline"
+            >
+              {showSignUpForm ? "Already have an account? Sign in" : "Need an account? Create one"}
             </button>
           </div>
         </Card>
@@ -663,126 +903,4 @@ const Auth = () => {
                       className={errors.cycleLength ? "border-red-500" : ""}
                     />
                     {errors.cycleLength && (
-                      <p className="text-sm text-red-500">{errors.cycleLength}</p>
-                    )}
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="lastPeriodDate">Last Period Start Date</Label>
-                    <Popover>
-                      <PopoverTrigger asChild>
-                        <Button
-                          variant="outline"
-                          className={cn(
-                            "w-full justify-start text-left font-normal",
-                            !lastPeriodDate && "text-muted-foreground"
-                          )}
-                        >
-                          <CalendarIcon className="mr-2 h-4 w-4" />
-                          {lastPeriodDate ? format(lastPeriodDate, "PPP") : "Pick a date"}
-                        </Button>
-                      </PopoverTrigger>
-                      <PopoverContent className="w-auto p-0" align="start">
-                        <Calendar
-                          mode="single"
-                          selected={lastPeriodDate}
-                          onSelect={setLastPeriodDate}
-                          disabled={(date) => date > new Date()}
-                          initialFocus
-                        />
-                      </PopoverContent>
-                    </Popover>
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="fertilityGoals">Fertility Goals</Label>
-                    <Input
-                      id="fertilityGoals"
-                      value={fertilityGoals}
-                      onChange={(e) => setFertilityGoals(e.target.value)}
-                      placeholder="e.g., Trying to conceive, tracking cycle, etc."
-                    />
-                  </div>
-                </>
-              )}
-            </>
-          )}
-
-          <div className="space-y-2">
-            <Label htmlFor="email">Email</Label>
-            <Input
-              id="email"
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              className={errors.email ? "border-red-500" : ""}
-              required
-            />
-            {errors.email && (
-              <p className="text-sm text-red-500">{errors.email}</p>
-            )}
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="password">Password</Label>
-            <Input
-              id="password"
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              className={errors.password ? "border-red-500" : ""}
-              required
-            />
-            {errors.password && (
-              <p className="text-sm text-red-500">{errors.password}</p>
-            )}
-          </div>
-
-          {showSignUpForm && (
-            <div className="space-y-2">
-              <Label htmlFor="confirmPassword">Confirm Password</Label>
-              <Input
-                id="confirmPassword"
-                type="password"
-                value={confirmPassword}
-                onChange={(e) => setConfirmPassword(e.target.value)}
-                className={errors.confirmPassword ? "border-red-500" : ""}
-                required
-              />
-              {errors.confirmPassword && (
-                <p className="text-sm text-red-500">{errors.confirmPassword}</p>
-              )}
-            </div>
-          )}
-
-          <Button 
-            type="submit" 
-            className="w-full"
-            disabled={loading}
-          >
-            {loading ? (
-              <div className="flex items-center justify-center gap-2">
-                <Loader2 className="h-4 w-4 animate-spin" />
-                <span>{showSignUpForm ? "Creating Account..." : "Signing In..."}</span>
-              </div>
-            ) : (
-              <span>{showSignUpForm ? "Create Account" : "Sign In"}</span>
-            )}
-          </Button>
-        </form>
-
-        <div className="text-center pt-4">
-          <button
-            type="button"
-            onClick={() => toggleAuthMode()}
-            className="text-sm text-primary hover:underline"
-          >
-            {showSignUpForm ? "Already have an account? Sign in" : "Need an account? Create one"}
-          </button>
-        </div>
-      </Card>
-    </div>
-  );
-};
-
-export default Auth;
+                      <p className="text-sm text

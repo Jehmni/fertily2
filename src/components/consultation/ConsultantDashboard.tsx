@@ -7,9 +7,27 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 import { EmbryoSubmissionForm } from "./EmbryoSubmissionForm";
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 
 export const ConsultantDashboard = () => {
   const navigate = useNavigate();
+
+  const { data: expertProfile, isLoading: profileLoading } = useQuery({
+    queryKey: ['expertProfile'],
+    queryFn: async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error('No user found');
+
+      const { data, error } = await supabase
+        .from('expert_profiles')
+        .select('*')
+        .eq('user_id', user.id)
+        .single();
+
+      if (error) throw error;
+      return data;
+    }
+  });
   
   const { data: consultations, isLoading: consultationsLoading } = useQuery({
     queryKey: ['consultantConsultations'],
@@ -51,7 +69,7 @@ export const ConsultantDashboard = () => {
     }
   });
 
-  if (consultationsLoading || embryoLoading) {
+  if (profileLoading || consultationsLoading || embryoLoading) {
     return <div className="space-y-4">
       <Skeleton className="h-12 w-full" />
       <Skeleton className="h-48 w-full" />
@@ -61,7 +79,18 @@ export const ConsultantDashboard = () => {
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
-        <h1 className="text-3xl font-bold">Consultant Dashboard</h1>
+        <div className="flex items-center gap-4">
+          <Avatar className="h-12 w-12">
+            <AvatarImage src={expertProfile?.profile_image} alt="Profile" />
+            <AvatarFallback>{expertProfile?.first_name?.[0]}{expertProfile?.last_name?.[0]}</AvatarFallback>
+          </Avatar>
+          <div>
+            <h1 className="text-3xl font-bold">Consultant Dashboard</h1>
+            <p className="text-muted-foreground">
+              Welcome back, {expertProfile?.first_name} {expertProfile?.last_name}
+            </p>
+          </div>
+        </div>
         <Button onClick={() => navigate("/expert/profile")}>
           <Settings className="w-4 h-4 mr-2" />
           Edit Profile
