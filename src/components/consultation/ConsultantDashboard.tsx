@@ -24,11 +24,16 @@ export const ConsultantDashboard = () => {
         .eq('user_id', user.id)
         .single();
 
-      if (error) throw error;
+      if (error) {
+        console.error('Error fetching expert profile:', error);
+        throw error;
+      }
+      
+      console.log('Expert profile data:', data); // Debug log
       return data;
     }
   });
-  
+
   const { data: consultations, isLoading: consultationsLoading } = useQuery({
     queryKey: ['consultantConsultations'],
     queryFn: async () => {
@@ -76,13 +81,27 @@ export const ConsultantDashboard = () => {
     </div>;
   }
 
+  // Check if we have the profile image
+  console.log('Profile image URL:', expertProfile?.profile_image); // Debug log
+
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <div className="flex items-center gap-4">
           <Avatar className="h-12 w-12">
-            <AvatarImage src={expertProfile?.profile_image} alt="Profile" />
-            <AvatarFallback>{expertProfile?.first_name?.[0]}{expertProfile?.last_name?.[0]}</AvatarFallback>
+            {expertProfile?.profile_image ? (
+              <AvatarImage 
+                src={expertProfile.profile_image} 
+                alt={`${expertProfile.first_name} ${expertProfile.last_name}`}
+                onError={(e) => {
+                  console.error('Error loading avatar image:', e);
+                  (e.target as HTMLImageElement).style.display = 'none';
+                }}
+              />
+            ) : null}
+            <AvatarFallback>
+              {expertProfile?.first_name?.[0]}{expertProfile?.last_name?.[0]}
+            </AvatarFallback>
           </Avatar>
           <div>
             <h1 className="text-3xl font-bold">Consultant Dashboard</h1>
@@ -96,7 +115,7 @@ export const ConsultantDashboard = () => {
           Edit Profile
         </Button>
       </div>
-      
+
       <Tabs defaultValue="appointments" className="w-full">
         <TabsList>
           <TabsTrigger value="appointments">
