@@ -535,7 +535,7 @@ const Auth = () => {
                   className={`cursor-pointer flex items-center gap-2 bg-secondary text-secondary-foreground px-4 py-2 rounded-md hover:bg-secondary/80 ${uploadingImage ? 'opacity-50 cursor-not-allowed' : ''}`}
                 >
                   <Upload className="h-4 w-4" />
-                  {uploadingImage ? "Uploading..." : "Upload Photo"}
+                  {uploadingImage ? "Uploading...\" : \"Upload Photo"}
                 </Label>
               </div>
             </div>
@@ -905,4 +905,4 @@ const Auth = () => {
                     )}
                   </div>
 
-                  <div className
+                  <div
