@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -25,6 +24,7 @@ export const ExpertProfile = () => {
     consultationFee: "",
     bio: "",
     profileImage: "",
+    availability: {}, // Added availability field with default empty object
   });
 
   useEffect(() => {
@@ -65,6 +65,7 @@ export const ExpertProfile = () => {
           consultationFee: data.consultation_fee?.toString() || "",
           bio: data.bio || "",
           profileImage: data.profile_image || "",
+          availability: data.availability || {},
         });
       }
     } catch (error: any) {
@@ -142,7 +143,8 @@ export const ExpertProfile = () => {
       if (!user) throw new Error("Not authenticated");
 
       // Validate required fields
-      if (!profile.firstName || !profile.lastName || !profile.specialization || !profile.consultationFee) {
+      if (!profile.firstName || !profile.lastName || !profile.specialization || 
+          !profile.consultationFee || !profile.bio || !profile.yearsOfExperience) {
         throw new Error("Please fill in all required fields");
       }
 
@@ -158,6 +160,7 @@ export const ExpertProfile = () => {
           consultation_fee: parseFloat(profile.consultationFee) || 0,
           bio: profile.bio,
           profile_image: profile.profileImage,
+          availability: profile.availability, // Ensure availability is included in the update
         });
 
       if (error) throw error;
@@ -310,13 +313,14 @@ export const ExpertProfile = () => {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="bio">Professional Bio</Label>
+              <Label htmlFor="bio">Professional Bio *</Label>
               <Textarea
                 id="bio"
                 value={profile.bio}
                 onChange={(e) => setProfile(p => ({ ...p, bio: e.target.value }))}
                 placeholder="Tell us about your professional background and expertise..."
                 className="min-h-[100px]"
+                required
                 disabled={loading}
               />
             </div>
