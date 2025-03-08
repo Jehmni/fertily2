@@ -1,3 +1,4 @@
+<lov-code>
 import { useState, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { supabase } from "@/lib/supabase";
@@ -41,7 +42,6 @@ const onboardingSlides = [
   },
 ];
 
-// Add new type for user role
 type UserRole = 'patient' | 'consultant';
 
 const Auth = () => {
@@ -340,7 +340,7 @@ const Auth = () => {
       setCurrentSlide(prev => prev + 1);
     } else {
       setShowOnboarding(false);
-      setShowRoleSelection(true); // Show role selection instead of sign up form directly
+      setShowRoleSelection(true);
     }
   };
 
@@ -362,7 +362,6 @@ const Auth = () => {
       setCurrentSlide(0);
     }
     
-    // Reset all form fields
     setEmail("");
     setPassword("");
     setConfirmPassword("");
@@ -902,4 +901,8 @@ const Auth = () => {
                       className={errors.cycleLength ? "border-red-500" : ""}
                     />
                     {errors.cycleLength && (
-                      <p className="text-sm text-red-
+                      <p className="text-sm text-red-500">{errors.cycleLength}</p>
+                    )}
+                  </div>
+
+                  <div className
