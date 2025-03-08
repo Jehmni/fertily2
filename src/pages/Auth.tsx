@@ -1,4 +1,3 @@
-<lov-code>
 import { useState, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { supabase } from "@/lib/supabase";
@@ -905,3 +904,4 @@ const Auth = () => {
                     )}
                   </div>
                 </>
+              )}
