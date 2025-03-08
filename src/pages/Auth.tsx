@@ -1,4 +1,3 @@
-<lov-code>
 import { useState, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { supabase } from "@/lib/supabase";
@@ -903,4 +902,4 @@ const Auth = () => {
                       className={errors.cycleLength ? "border-red-500" : ""}
                     />
                     {errors.cycleLength && (
-                      <p className="text-sm text
+                      <p className="text-sm text-red-
