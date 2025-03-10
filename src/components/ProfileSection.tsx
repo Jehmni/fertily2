@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { PersonalInfoForm } from "./profile/PersonalInfoForm";
@@ -8,10 +7,11 @@ import { AvatarForm } from "./profile/AvatarForm";
 import { useProfile } from "@/hooks/useProfile";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { CalendarIcon, UserIcon, ImageIcon } from "lucide-react";
+import { CalendarIcon, UserIcon, ImageIcon, Settings } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/lib/supabase";
 import { useNavigate } from "react-router-dom";
+import { EmbryoSubmissionForm } from "./consultation/EmbryoSubmissionForm";
 
 export const ProfileSection = () => {
   const navigate = useNavigate();
@@ -79,25 +79,77 @@ export const ProfileSection = () => {
     }
   });
 
+  const { data: userRole } = useQuery({
+    queryKey: ['userRole'],
+    queryFn: async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return null;
+      return user.user_metadata?.role || 'patient';
+    }
+  });
+
+  const { data: expertProfile } = useQuery({
+    queryKey: ['expertProfile'],
+    enabled: userRole === 'consultant',
+    queryFn: async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error('No user found');
+
+      const { data, error } = await supabase
+        .from('expert_profiles')
+        .select('*')
+        .eq('user_id', user.id)
+        .single();
+
+      if (error) throw error;
+      return data;
+    }
+  });
+
   useEffect(() => {
     loadProfile();
   }, []);
 
   return (
     <div className="space-y-6">
+      <div className="flex justify-between items-center">
+        <div>
+          <h1 className="text-3xl font-bold">Welcome Back</h1>
+          <p className="text-muted-foreground">
+            {profile?.first_name} {profile?.last_name}
+          </p>
+        </div>
+        {userRole === 'consultant' && (
+          <Button onClick={() => navigate("/expert/profile")}>
+            <Settings className="w-4 h-4 mr-2" />
+            Edit Expert Profile
+          </Button>
+        )}
+      </div>
+
       <Tabs defaultValue="profile" className="w-full">
         <TabsList>
           <TabsTrigger value="profile">
             <UserIcon className="w-4 h-4 mr-2" />
             Profile
           </TabsTrigger>
-          <TabsTrigger value="consultants">
+          <TabsTrigger value="chat">
             <CalendarIcon className="w-4 h-4 mr-2" />
-            Find Consultants
+            Chat
           </TabsTrigger>
+          <TabsTrigger value="community">
+            <UserIcon className="w-4 h-4 mr-2" />
+            Community
+          </TabsTrigger>
+          {userRole === 'patient' && (
+            <TabsTrigger value="consultants">
+              <CalendarIcon className="w-4 h-4 mr-2" />
+              Find Consultants
+            </TabsTrigger>
+          )}
           <TabsTrigger value="consultations">
             <CalendarIcon className="w-4 h-4 mr-2" />
-            My Consultations
+            {userRole === 'consultant' ? 'Appointments' : 'My Consultations'}
           </TabsTrigger>
           <TabsTrigger value="embryo">
             <ImageIcon className="w-4 h-4 mr-2" />
@@ -149,28 +201,38 @@ export const ProfileSection = () => {
           </form>
         </TabsContent>
 
-        <TabsContent value="consultants">
-          <div className="grid gap-4">
-            {consultants?.map((consultant) => (
-              <Card key={consultant.id}>
-                <CardHeader>
-                  <CardTitle>{consultant.first_name} {consultant.last_name}</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <p>{consultant.specialization}</p>
-                  <p>{consultant.years_of_experience} years of experience</p>
-                  <p className="mt-2">{consultant.bio}</p>
-                  <Button 
-                    className="mt-4"
-                    onClick={() => navigate(`/book-consultation/${consultant.user_id}`)}
-                  >
-                    Book Consultation
-                  </Button>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
+        <TabsContent value="chat">
+          Chat Component
         </TabsContent>
+
+        <TabsContent value="community">
+          Community Component
+        </TabsContent>
+
+        {userRole === 'patient' && (
+          <TabsContent value="consultants">
+            <div className="grid gap-4">
+              {consultants?.map((consultant) => (
+                <Card key={consultant.id}>
+                  <CardHeader>
+                    <CardTitle>{consultant.first_name} {consultant.last_name}</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <p>{consultant.specialization}</p>
+                    <p>{consultant.years_of_experience} years of experience</p>
+                    <p className="mt-2">{consultant.bio}</p>
+                    <Button 
+                      className="mt-4"
+                      onClick={() => navigate(`/book-consultation/${consultant.user_id}`)}
+                    >
+                      Book Consultation
+                    </Button>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          </TabsContent>
+        )}
 
         <TabsContent value="consultations">
           <div className="grid gap-4">
@@ -191,33 +253,74 @@ export const ProfileSection = () => {
         </TabsContent>
 
         <TabsContent value="embryo">
-          <div className="grid gap-4">
-            {myEmbryoAnalyses?.map((analysis) => (
-              <Card key={analysis.id}>
+          {userRole === 'consultant' ? (
+            <>
+              <Card>
                 <CardHeader>
-                  <CardTitle>Embryo Analysis #{analysis.id.slice(0, 8)}</CardTitle>
+                  <CardTitle>Submit New Embryo Analysis</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  {analysis.image_url && (
-                    <img 
-                      src={analysis.image_url} 
-                      alt="Embryo" 
-                      className="w-full h-48 object-cover rounded-md mb-4"
-                    />
-                  )}
-                  <p>Grade: {analysis.grade}</p>
-                  <p>AI Score: {analysis.ai_score}</p>
-                  {analysis.notes && <p className="mt-2">{analysis.notes}</p>}
-                  <Button 
-                    className="mt-4"
-                    onClick={() => navigate(`/embryo-analysis/${analysis.id}`)}
-                  >
-                    View Details
-                  </Button>
+                  <EmbryoSubmissionForm />
                 </CardContent>
               </Card>
-            ))}
-          </div>
+
+              <div className="grid gap-4 mt-6">
+                {myEmbryoAnalyses?.map((analysis) => (
+                  <Card key={analysis.id}>
+                    <CardHeader>
+                      <CardTitle>Embryo Analysis #{analysis.id.slice(0, 8)}</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      {analysis.image_url && (
+                        <img 
+                          src={analysis.image_url} 
+                          alt="Embryo" 
+                          className="w-full h-48 object-cover rounded-md mb-4"
+                        />
+                      )}
+                      <p>Grade: {analysis.grade}</p>
+                      <p>AI Score: {analysis.ai_score}</p>
+                      {analysis.notes && <p className="mt-2">{analysis.notes}</p>}
+                      <Button 
+                        className="mt-4"
+                        onClick={() => navigate(`/embryo-analysis/${analysis.id}`)}
+                      >
+                        View Details
+                      </Button>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            </>
+          ) : (
+            <div className="grid gap-4">
+              {myEmbryoAnalyses?.map((analysis) => (
+                <Card key={analysis.id}>
+                  <CardHeader>
+                    <CardTitle>Embryo Analysis #{analysis.id.slice(0, 8)}</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    {analysis.image_url && (
+                      <img 
+                        src={analysis.image_url} 
+                        alt="Embryo" 
+                        className="w-full h-48 object-cover rounded-md mb-4"
+                      />
+                    )}
+                    <p>Grade: {analysis.grade}</p>
+                    <p>AI Score: {analysis.ai_score}</p>
+                    {analysis.notes && <p className="mt-2">{analysis.notes}</p>}
+                    <Button 
+                      className="mt-4"
+                      onClick={() => navigate(`/embryo-analysis/${analysis.id}`)}
+                    >
+                      View Details
+                    </Button>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          )}
         </TabsContent>
       </Tabs>
     </div>
