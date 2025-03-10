@@ -104,10 +104,10 @@ export const ExpertProfile = () => {
         }
       }
 
-      const { error: uploadError } = await supabase.storage
+      const { error: uploadError, data } = await supabase.storage
         .from('consultant-images')
         .upload(fileName, file, {
-          contentType: file.type,
+          cacheControl: '3600',
           upsert: true
         });
 
@@ -116,6 +116,8 @@ export const ExpertProfile = () => {
       const { data: { publicUrl } } = supabase.storage
         .from('consultant-images')
         .getPublicUrl(fileName);
+
+      console.log('Uploaded image URL:', publicUrl);
 
       setProfile(prev => ({ ...prev, profileImage: publicUrl }));
 
@@ -211,7 +213,18 @@ export const ExpertProfile = () => {
           <form onSubmit={handleSubmit} className="space-y-6">
             <div className="flex flex-col items-center space-y-4">
               <Avatar className="h-32 w-32">
-                <AvatarImage src={profile.profileImage} alt="Profile" />
+                <AvatarImage 
+                  src={profile.profileImage} 
+                  alt="Profile"
+                  onError={(e) => {
+                    console.error('Error loading avatar image:', e);
+                    toast({
+                      title: "Image Error",
+                      description: "Failed to load profile image",
+                      variant: "destructive",
+                    });
+                  }}
+                />
                 <AvatarFallback>{profile.firstName?.[0]}{profile.lastName?.[0]}</AvatarFallback>
               </Avatar>
               

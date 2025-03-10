@@ -8,13 +8,16 @@ import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 import { EmbryoSubmissionForm } from "./EmbryoSubmissionForm";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
+import { useToast } from "@/hooks/use-toast";
 
 export const ConsultantDashboard = () => {
   const navigate = useNavigate();
+  const { toast } = useToast();
 
   const { data: expertProfile, isLoading: profileLoading } = useQuery({
     queryKey: ['expertProfile'],
     queryFn: async () => {
+      console.log('Fetching expert profile...');
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error('No user found');
 
@@ -29,7 +32,7 @@ export const ConsultantDashboard = () => {
         throw error;
       }
       
-      console.log('Expert profile data:', data); // Debug log
+      console.log('Expert profile data:', data);
       return data;
     }
   });
@@ -74,15 +77,21 @@ export const ConsultantDashboard = () => {
     }
   });
 
-  if (profileLoading || consultationsLoading || embryoLoading) {
+  if (profileLoading) {
     return <div className="space-y-4">
       <Skeleton className="h-12 w-full" />
       <Skeleton className="h-48 w-full" />
     </div>;
   }
 
-  // Check if we have the profile image
-  console.log('Profile image URL:', expertProfile?.profile_image); // Debug log
+  const handleImageError = () => {
+    console.error('Error loading profile image');
+    toast({
+      title: "Image Error",
+      description: "Failed to load profile image",
+      variant: "destructive",
+    });
+  };
 
   return (
     <div className="space-y-6">
@@ -91,12 +100,9 @@ export const ConsultantDashboard = () => {
           <Avatar className="h-12 w-12">
             {expertProfile?.profile_image ? (
               <AvatarImage 
-                src={expertProfile.profile_image} 
+                src={expertProfile.profile_image}
                 alt={`${expertProfile.first_name} ${expertProfile.last_name}`}
-                onError={(e) => {
-                  console.error('Error loading avatar image:', e);
-                  (e.target as HTMLImageElement).style.display = 'none';
-                }}
+                onError={handleImageError}
               />
             ) : null}
             <AvatarFallback>
