@@ -944,3 +944,88 @@ const Auth = () => {
               <span className="text-sm text-muted-foreground">Track your fertility journey</span>
             </Button>
             <Button
+              variant="outline"
+              className="h-24 flex flex-col items-center justify-center hover:border-primary hover:bg-primary/5"
+              onClick={() => handleRoleSelect('consultant')}
+            >
+              <span className="text-lg font-semibold">Join as a Consultant</span>
+              <span className="text-sm text-muted-foreground">Help others on their journey</span>
+            </Button>
+          </div>
+          <div className="text-center">
+            <p className="text-sm text-muted-foreground">
+              Already have an account?{" "}
+              <button
+                type="button"
+                onClick={() => {
+                  setShowRoleSelection(false);
+                  setShowSignUpForm(false);
+                }}
+                className="text-primary hover:underline"
+              >
+                Sign in
+              </button>
+            </p>
+          </div>
+        </Card>
+      </div>
+    );
+  }
+
+  if (showPatientSignUpForm) {
+    return (
+      <div className="min-h-screen bg-gradient-to-b from-primary/10 to-background flex items-center justify-center p-4">
+        <Card className="w-full max-w-md p-8 space-y-6">
+          {renderPatientSignUpForm()}
+          <div className="text-center">
+            <button
+              type="button"
+              onClick={toggleAuthMode}
+              className="text-sm text-muted-foreground hover:text-primary"
+            >
+              Already have an account? Sign in
+            </button>
+          </div>
+        </Card>
+      </div>
+    );
+  }
+
+  if (showConsultantSignUpForm) {
+    return (
+      <div className="min-h-screen bg-gradient-to-b from-primary/10 to-background flex items-center justify-center p-4">
+        <Card className="w-full max-w-md p-8 space-y-6">
+          {renderConsultantSignUpForm()}
+          <div className="text-center">
+            <button
+              type="button"
+              onClick={toggleAuthMode}
+              className="text-sm text-muted-foreground hover:text-primary"
+            >
+              Already have an account? Sign in
+            </button>
+          </div>
+        </Card>
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen bg-gradient-to-b from-primary/10 to-background flex items-center justify-center p-4">
+      <Card className="w-full max-w-md p-8 space-y-6">
+        {renderSignInForm()}
+        <div className="text-center">
+          <button
+            type="button"
+            onClick={toggleAuthMode}
+            className="text-sm text-muted-foreground hover:text-primary"
+          >
+            Don't have an account? Sign up
+          </button>
+        </div>
+      </Card>
+    </div>
+  );
+};
+
+export default Auth;
