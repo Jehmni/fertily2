@@ -81,6 +81,8 @@ const Auth = () => {
   });
   const [profileImage, setProfileImage] = useState<string>("");
   const [uploadingImage, setUploadingImage] = useState(false);
+  const [showPatientSignUpForm, setShowPatientSignUpForm] = useState(false);
+  const [showConsultantSignUpForm, setShowConsultantSignUpForm] = useState(false);
 
   useEffect(() => {
     const hasCompletedOnboarding = localStorage.getItem("hasCompletedOnboarding");
@@ -346,7 +348,11 @@ const Auth = () => {
   const handleRoleSelect = (role: UserRole) => {
     setSelectedRole(role);
     setShowRoleSelection(false);
-    setShowSignUpForm(true);
+    if (role === 'patient') {
+      setShowPatientSignUpForm(true);
+    } else {
+      setShowConsultantSignUpForm(true);
+    }
     localStorage.setItem("hasCompletedOnboarding", "true");
   };
 
@@ -389,7 +395,422 @@ const Auth = () => {
     });
     setProfileImage("");
     setUploadingImage(false);
+    setShowPatientSignUpForm(false);
+    setShowConsultantSignUpForm(false);
   };
+
+  const handlePatientAuth = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!validateForm()) {
+      return;
+    }
+
+    setLoading(true);
+
+    try {
+      const signUpOptions = {
+        email,
+        password,
+        options: {
+          data: {
+            first_name: firstName,
+            last_name: lastName,
+            role: 'patient',
+          },
+          emailRedirectTo: `${window.location.origin}/auth/callback`
+        }
+      };
+
+      const { data: signUpData, error: signUpError } = await supabase.auth.signUp(signUpOptions);
+    
+      if (signUpError) throw signUpError;
+
+      if (!signUpData.user?.id) {
+        throw new Error("User ID not returned from signup");
+      }
+
+      const { error: profileError } = await supabase
+        .from('profiles')
+        .insert({
+          id: signUpData.user.id,
+          first_name: firstName,
+          last_name: lastName,
+          date_of_birth: dateOfBirth?.toISOString(),
+          cycle_length: cycleLength ? parseInt(cycleLength) : null,
+          last_period_date: lastPeriodDate?.toISOString(),
+          fertility_goals: fertilityGoals,
+          medical_conditions: medicalConditions.split(',').map(c => c.trim()).filter(Boolean),
+          medications: medications.split(',').map(m => m.trim()).filter(Boolean),
+        });
+
+      if (profileError) {
+        throw new Error(`Failed to create profile: ${profileError.message}`);
+      }
+
+      toast({
+        title: "✨ Account Created!",
+        description: "Please check your email to verify your account.",
+      });
+      localStorage.setItem("hasCompletedOnboarding", "true");
+    } catch (error: any) {
+      console.error("Authentication error:", error);
+      toast({
+        title: "Error",
+        description: error.message || "An error occurred during signup",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const renderPatientSignUpForm = () => (
+    <form onSubmit={handlePatientAuth} className="space-y-4">
+      <div className="grid grid-cols-2 gap-4">
+        <div className="space-y-2">
+          <Label htmlFor="firstName">First Name</Label>
+          <Input
+            id="firstName"
+            value={firstName}
+            onChange={(e) => setFirstName(e.target.value)}
+            className={errors.firstName ? "border-red-500" : ""}
+            required
+          />
+          {errors.firstName && (
+            <p className="text-sm text-red-500">{errors.firstName}</p>
+          )}
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="lastName">Last Name</Label>
+          <Input
+            id="lastName"
+            value={lastName}
+            onChange={(e) => setLastName(e.target.value)}
+            className={errors.lastName ? "border-red-500" : ""}
+            required
+          />
+          {errors.lastName && (
+            <p className="text-sm text-red-500">{errors.lastName}</p>
+          )}
+        </div>
+      </div>
+
+      <div className="space-y-2">
+        <Label htmlFor="dateOfBirth">Date of Birth</Label>
+        <Popover>
+          <PopoverTrigger asChild>
+            <Button
+              variant="outline"
+              className={cn(
+                "w-full justify-start text-left font-normal",
+                !dateOfBirth && "text-muted-foreground"
+              )}
+            >
+              <CalendarIcon className="mr-2 h-4 w-4" />
+              {dateOfBirth ? format(dateOfBirth, "PPP") : "Pick a date"}
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent className="w-auto p-0" align="start">
+            <Calendar
+              mode="single"
+              selected={dateOfBirth}
+              onSelect={setDateOfBirth}
+              disabled={(date) =>
+                date > new Date() || date < new Date("1900-01-01")
+              }
+              initialFocus
+            />
+          </PopoverContent>
+        </Popover>
+      </div>
+
+      <div className="space-y-2">
+        <TooltipProvider>
+          <div className="flex items-center gap-2">
+            <Label htmlFor="medicalConditions">Medical Conditions</Label>
+            <Tooltip>
+              <TooltipTrigger>
+                <Info className="h-4 w-4 text-muted-foreground" />
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>Enter any medical conditions, separated by commas</p>
+                <p>Example: PCOS, Endometriosis</p>
+              </TooltipContent>
+            </Tooltip>
+          </div>
+        </TooltipProvider>
+        <Input
+          id="medicalConditions"
+          value={medicalConditions}
+          onChange={(e) => setMedicalConditions(e.target.value)}
+          placeholder="e.g., PCOS, Endometriosis"
+        />
+      </div>
+
+      <div className="space-y-2">
+        <TooltipProvider>
+          <div className="flex items-center gap-2">
+            <Label htmlFor="medications">Medications</Label>
+            <Tooltip>
+              <TooltipTrigger>
+                <Info className="h-4 w-4 text-muted-foreground" />
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>Enter any medications you're taking, separated by commas</p>
+              </TooltipContent>
+            </Tooltip>
+          </div>
+        </TooltipProvider>
+        <Input
+          id="medications"
+          value={medications}
+          onChange={(e) => setMedications(e.target.value)}
+          placeholder="Enter medications, separated by commas"
+        />
+      </div>
+
+      <div className="space-y-2">
+        <Label htmlFor="cycleLength">Average Cycle Length (days)</Label>
+        <Input
+          id="cycleLength"
+          type="number"
+          value={cycleLength}
+          onChange={(e) => setCycleLength(e.target.value)}
+          min="20"
+          max="40"
+          placeholder="e.g., 28"
+          className={errors.cycleLength ? "border-red-500" : ""}
+        />
+        {errors.cycleLength && (
+          <p className="text-sm text-red-500">{errors.cycleLength}</p>
+        )}
+      </div>
+
+      <div className="space-y-2">
+        <Label htmlFor="email">Email</Label>
+        <Input
+          id="email"
+          type="email"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          className={errors.email ? "border-red-500" : ""}
+          required
+        />
+        {errors.email && (
+          <p className="text-sm text-red-500">{errors.email}</p>
+        )}
+      </div>
+
+      <div className="space-y-2">
+        <Label htmlFor="password">Password</Label>
+        <Input
+          id="password"
+          type="password"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+          className={errors.password ? "border-red-500" : ""}
+          required
+        />
+        {errors.password && (
+          <p className="text-sm text-red-500">{errors.password}</p>
+        )}
+      </div>
+
+      <div className="space-y-2">
+        <Label htmlFor="confirmPassword">Confirm Password</Label>
+        <Input
+          id="confirmPassword"
+          type="password"
+          value={confirmPassword}
+          onChange={(e) => setConfirmPassword(e.target.value)}
+          className={errors.confirmPassword ? "border-red-500" : ""}
+          required
+        />
+        {errors.confirmPassword && (
+          <p className="text-sm text-red-500">{errors.confirmPassword}</p>
+        )}
+      </div>
+
+      <Button 
+        type="submit" 
+        className="w-full"
+        disabled={loading}
+      >
+        {loading ? (
+          <div className="flex items-center justify-center gap-2">
+            <Loader2 className="h-4 w-4 animate-spin" />
+            <span>Creating Account...</span>
+          </div>
+        ) : (
+          <span>Create Account</span>
+        )}
+      </Button>
+    </form>
+  );
+
+  const renderConsultantSignUpForm = () => (
+    <form onSubmit={handleAuth} className="space-y-4">
+      <div className="flex flex-col items-center space-y-4 mb-6">
+        <Avatar className="h-24 w-24">
+          <AvatarImage src={profileImage} alt="Profile" />
+          <AvatarFallback>{firstName?.[0]}{lastName?.[0]}</AvatarFallback>
+        </Avatar>
+        <div className="flex items-center gap-2">
+          <Input
+            type="file"
+            accept="image/*"
+            onChange={handleProfileImageUpload}
+            className="hidden"
+            id="profile-image"
+            disabled={uploadingImage}
+          />
+          <Label
+            htmlFor="profile-image"
+            className={`cursor-pointer flex items-center gap-2 bg-secondary text-secondary-foreground px-4 py-2 rounded-md hover:bg-secondary/80 ${uploadingImage ? 'opacity-50 cursor-not-allowed' : ''}`}
+          >
+            <Upload className="h-4 w-4" />
+            {uploadingImage ? "Uploading..." : "Upload Photo"}
+          </Label>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-2 gap-4">
+        <div className="space-y-2">
+          <Label htmlFor="firstName">First Name</Label>
+          <Input
+            id="firstName"
+            value={firstName}
+            onChange={(e) => setFirstName(e.target.value)}
+            className={errors.firstName ? "border-red-500" : ""}
+            required
+          />
+          {errors.firstName && (
+            <p className="text-sm text-red-500">{errors.firstName}</p>
+          )}
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="lastName">Last Name</Label>
+          <Input
+            id="lastName"
+            value={lastName}
+            onChange={(e) => setLastName(e.target.value)}
+            className={errors.lastName ? "border-red-500" : ""}
+            required
+          />
+          {errors.lastName && (
+            <p className="text-sm text-red-500">{errors.lastName}</p>
+          )}
+        </div>
+      </div>
+
+      <div className="space-y-2">
+        <Label htmlFor="specialization">Specialization</Label>
+        <Input
+          id="specialization"
+          placeholder="e.g., Reproductive Endocrinology"
+          value={formData.specialization}
+          onChange={(e) => setFormData({...formData, specialization: e.target.value})}
+          required
+        />
+      </div>
+
+      <div className="space-y-2">
+        <Label htmlFor="qualifications">Qualifications (comma-separated)</Label>
+        <Input
+          id="qualifications"
+          placeholder="MD, PhD, FACOG"
+          value={formData.qualifications}
+          onChange={(e) => setFormData({...formData, qualifications: e.target.value})}
+          required
+        />
+      </div>
+
+      <div className="space-y-2">
+        <Label htmlFor="yearsOfExperience">Years of Experience</Label>
+        <Input
+          id="yearsOfExperience"
+          type="number"
+          min="0"
+          value={formData.yearsOfExperience}
+          onChange={(e) => setFormData({...formData, yearsOfExperience: e.target.value})}
+          required
+        />
+      </div>
+
+      <div className="space-y-2">
+        <Label htmlFor="bio">Professional Bio</Label>
+        <Textarea
+          id="bio"
+          placeholder="Write about your experience and expertise..."
+          className="h-32"
+          value={formData.bio}
+          onChange={(e) => setFormData({...formData, bio: e.target.value})}
+          required
+        />
+      </div>
+
+      <div className="space-y-2">
+        <Label htmlFor="email">Email</Label>
+        <Input
+          id="email"
+          type="email"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          className={errors.email ? "border-red-500" : ""}
+          required
+        />
+        {errors.email && (
+          <p className="text-sm text-red-500">{errors.email}</p>
+        )}
+      </div>
+
+      <div className="space-y-2">
+        <Label htmlFor="password">Password</Label>
+        <Input
+          id="password"
+          type="password"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+          className={errors.password ? "border-red-500" : ""}
+          required
+        />
+        {errors.password && (
+          <p className="text-sm text-red-500">{errors.password}</p>
+        )}
+      </div>
+
+      <div className="space-y-2">
+        <Label htmlFor="confirmPassword">Confirm Password</Label>
+        <Input
+          id="confirmPassword"
+          type="password"
+          value={confirmPassword}
+          onChange={(e) => setConfirmPassword(e.target.value)}
+          className={errors.confirmPassword ? "border-red-500" : ""}
+          required
+        />
+        {errors.confirmPassword && (
+          <p className="text-sm text-red-500">{errors.confirmPassword}</p>
+        )}
+      </div>
+
+      <Button 
+        type="submit" 
+        className="w-full"
+        disabled={loading}
+      >
+        {loading ? (
+          <div className="flex items-center justify-center gap-2">
+            <Loader2 className="h-4 w-4 animate-spin" />
+            <span>Creating Account...</span>
+          </div>
+        ) : (
+          <span>Create Account</span>
+        )}
+      </Button>
+    </form>
+  );
 
   const renderSignInForm = () => (
     <form onSubmit={handleAuth} className="space-y-4">
@@ -523,390 +944,3 @@ const Auth = () => {
               <span className="text-sm text-muted-foreground">Track your fertility journey</span>
             </Button>
             <Button
-              variant="outline"
-              className="h-24 flex flex-col items-center justify-center hover:border-primary hover:bg-primary/5"
-              onClick={() => handleRoleSelect('consultant')}
-            >
-              <span className="text-lg font-semibold">Join as a Medical Consultant</span>
-              <span className="text-sm text-muted-foreground">Help patients with expert advice</span>
-            </Button>
-          </div>
-          <div className="text-center pt-4">
-            <button
-              type="button"
-              onClick={() => {
-                setShowRoleSelection(false);
-                setShowSignUpForm(false);
-                setShowOnboarding(false);
-              }}
-              className="text-sm text-primary hover:underline"
-            >
-              Already have an account? Sign in
-            </button>
-          </div>
-        </Card>
-      </div>
-    );
-  }
-
-  if (showSignUpForm && selectedRole === 'consultant') {
-    return (
-      <div className="min-h-screen bg-gradient-to-b from-primary/10 to-background flex flex-col items-center justify-center p-4">
-        <div className="mb-6">
-          <img 
-            src="/lovable-uploads/27ff8345-8e52-4baf-a8f5-d267b1b7c37f.png"
-            alt="Fertily Logo"
-            className="w-20 h-20 object-contain bg-white rounded-full"
-          />
-        </div>
-        <Card className="w-full max-w-md p-8 space-y-6 shadow-lg animate-fadeIn bg-white/95 backdrop-blur-sm">
-          <h1 className="text-3xl font-bold text-center text-primary">
-            Medical Consultant Registration
-          </h1>
-          <form onSubmit={handleAuth} className="space-y-4">
-            <div className="flex flex-col items-center space-y-4 mb-6">
-              <Avatar className="h-24 w-24">
-                <AvatarImage src={profileImage} alt="Profile" />
-                <AvatarFallback>{firstName?.[0]}{lastName?.[0]}</AvatarFallback>
-              </Avatar>
-              <div className="flex items-center gap-2">
-                <Input
-                  type="file"
-                  accept="image/*"
-                  onChange={handleProfileImageUpload}
-                  className="hidden"
-                  id="profile-image"
-                  disabled={uploadingImage}
-                />
-                <Label
-                  htmlFor="profile-image"
-                  className={`cursor-pointer flex items-center gap-2 bg-secondary text-secondary-foreground px-4 py-2 rounded-md hover:bg-secondary/80 ${uploadingImage ? 'opacity-50 cursor-not-allowed' : ''}`}
-                >
-                  <Upload className="h-4 w-4" />
-                  {uploadingImage ? "Uploading..." : "Upload Photo"}
-                </Label>
-              </div>
-            </div>
-
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="firstName">First Name</Label>
-                <Input
-                  id="firstName"
-                  value={firstName}
-                  onChange={(e) => setFirstName(e.target.value)}
-                  className={errors.firstName ? "border-red-500" : ""}
-                  required
-                />
-                {errors.firstName && (
-                  <p className="text-sm text-red-500">{errors.firstName}</p>
-                )}
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="lastName">Last Name</Label>
-                <Input
-                  id="lastName"
-                  value={lastName}
-                  onChange={(e) => setLastName(e.target.value)}
-                  className={errors.lastName ? "border-red-500" : ""}
-                  required
-                />
-                {errors.lastName && (
-                  <p className="text-sm text-red-500">{errors.lastName}</p>
-                )}
-              </div>
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="specialization">Specialization</Label>
-              <Input
-                id="specialization"
-                placeholder="e.g., Reproductive Endocrinology"
-                value={formData.specialization}
-                onChange={(e) => setFormData({...formData, specialization: e.target.value})}
-                required
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="qualifications">Qualifications (comma-separated)</Label>
-              <Input
-                id="qualifications"
-                placeholder="MD, PhD, FACOG"
-                value={formData.qualifications}
-                onChange={(e) => setFormData({...formData, qualifications: e.target.value})}
-                required
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="yearsOfExperience">Years of Experience</Label>
-              <Input
-                id="yearsOfExperience"
-                type="number"
-                min="0"
-                value={formData.yearsOfExperience}
-                onChange={(e) => setFormData({...formData, yearsOfExperience: e.target.value})}
-                required
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="bio">Professional Bio</Label>
-              <Textarea
-                id="bio"
-                placeholder="Write about your experience and expertise..."
-                className="h-32"
-                value={formData.bio}
-                onChange={(e) => setFormData({...formData, bio: e.target.value})}
-                required
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
-              <Input
-                id="email"
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                className={errors.email ? "border-red-500" : ""}
-                required
-              />
-              {errors.email && (
-                <p className="text-sm text-red-500">{errors.email}</p>
-              )}
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="password">Password</Label>
-              <Input
-                id="password"
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                className={errors.password ? "border-red-500" : ""}
-                required
-              />
-              {errors.password && (
-                <p className="text-sm text-red-500">{errors.password}</p>
-              )}
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="confirmPassword">Confirm Password</Label>
-              <Input
-                id="confirmPassword"
-                type="password"
-                value={confirmPassword}
-                onChange={(e) => setConfirmPassword(e.target.value)}
-                className={errors.confirmPassword ? "border-red-500" : ""}
-                required
-              />
-              {errors.confirmPassword && (
-                <p className="text-sm text-red-500">{errors.confirmPassword}</p>
-              )}
-            </div>
-
-            <Button 
-              type="submit" 
-              className="w-full"
-              disabled={loading}
-            >
-              {loading ? (
-                <div className="flex items-center justify-center gap-2">
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                  <span>Creating Account...</span>
-                </div>
-              ) : (
-                <span>Create Account</span>
-              )}
-            </Button>
-          </form>
-
-          <div className="text-center pt-4">
-            <button
-              type="button"
-              onClick={toggleAuthMode}
-              className="text-sm text-primary hover:underline"
-            >
-              Already have an account? Sign in
-            </button>
-          </div>
-        </Card>
-      </div>
-    );
-  }
-
-  return (
-    <div className="min-h-screen bg-gradient-to-b from-primary/10 to-background flex flex-col items-center justify-center p-4">
-      <div className="mb-6">
-        <img 
-          src="/lovable-uploads/27ff8345-8e52-4baf-a8f5-d267b1b7c37f.png"
-          alt="Fertily Logo"
-          className="w-20 h-20 object-contain bg-white rounded-full"
-        />
-      </div>
-      <Card className="w-full max-w-md p-8 space-y-6 shadow-lg animate-fadeIn bg-white/95 backdrop-blur-sm">
-        <h1 className="text-3xl font-bold text-center text-primary">
-          {showSignUpForm ? "Create Account" : "Welcome Back"}
-        </h1>
-        
-        {showSignUpForm ? (
-          <form onSubmit={handleAuth} className="space-y-4">
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="firstName">First Name</Label>
-                <Input
-                  id="firstName"
-                  value={firstName}
-                  onChange={(e) => setFirstName(e.target.value)}
-                  className={errors.firstName ? "border-red-500" : ""}
-                  required
-                />
-                {errors.firstName && (
-                  <p className="text-sm text-red-500">{errors.firstName}</p>
-                )}
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="lastName">Last Name</Label>
-                <Input
-                  id="lastName"
-                  value={lastName}
-                  onChange={(e) => setLastName(e.target.value)}
-                  className={errors.lastName ? "border-red-500" : ""}
-                  required
-                />
-                {errors.lastName && (
-                  <p className="text-sm text-red-500">{errors.lastName}</p>
-                )}
-              </div>
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="dateOfBirth">Date of Birth</Label>
-              <Popover>
-                <PopoverTrigger asChild>
-                  <Button
-                    variant="outline"
-                    className={cn(
-                      "w-full justify-start text-left font-normal",
-                      !dateOfBirth && "text-muted-foreground"
-                    )}
-                  >
-                    <CalendarIcon className="mr-2 h-4 w-4" />
-                    {dateOfBirth ? format(dateOfBirth, "PPP") : "Pick a date"}
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-auto p-0" align="start">
-                  <Calendar
-                    mode="single"
-                    selected={dateOfBirth}
-                    onSelect={setDateOfBirth}
-                    disabled={(date) =>
-                      date > new Date() || date < new Date("1900-01-01")
-                    }
-                    initialFocus
-                  />
-                </PopoverContent>
-              </Popover>
-            </div>
-
-            <div className="space-y-2">
-              <TooltipProvider>
-                <div className="flex items-center gap-2">
-                  <Label htmlFor="medicalConditions">Medical Conditions</Label>
-                  <Tooltip>
-                    <TooltipTrigger>
-                      <Info className="h-4 w-4 text-muted-foreground" />
-                    </TooltipTrigger>
-                    <TooltipContent>
-                      <p>Enter any medical conditions, separated by commas</p>
-                      <p>Example: PCOS, Endometriosis</p>
-                    </TooltipContent>
-                  </Tooltip>
-                </div>
-              </TooltipProvider>
-              <Input
-                id="medicalConditions"
-                value={medicalConditions}
-                onChange={(e) => setMedicalConditions(e.target.value)}
-                placeholder="e.g., PCOS, Endometriosis"
-              />
-            </div>
-
-            <div className="space-y-2">
-              <TooltipProvider>
-                <div className="flex items-center gap-2">
-                  <Label htmlFor="medications">Medications</Label>
-                  <Tooltip>
-                    <TooltipTrigger>
-                      <Info className="h-4 w-4 text-muted-foreground" />
-                    </TooltipTrigger>
-                    <TooltipContent>
-                      <p>Enter any medications you're taking, separated by commas</p>
-                    </TooltipContent>
-                  </Tooltip>
-                </div>
-              </TooltipProvider>
-              <Input
-                id="medications"
-                value={medications}
-                onChange={(e) => setMedications(e.target.value)}
-                placeholder="Enter medications, separated by commas"
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="cycleLength">Average Cycle Length (days)</Label>
-              <Input
-                id="cycleLength"
-                type="number"
-                value={cycleLength}
-                onChange={(e) => setCycleLength(e.target.value)}
-                min="20"
-                max="40"
-                placeholder="e.g., 28"
-                className={errors.cycleLength ? "border-red-500" : ""}
-              />
-              {errors.cycleLength && (
-                <p className="text-sm text-red-500">{errors.cycleLength}</p>
-              )}
-            </div>
-
-            <Button 
-              type="submit" 
-              className="w-full"
-              disabled={loading}
-            >
-              {loading ? (
-                <div className="flex items-center justify-center gap-2">
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                  <span>Creating Account...</span>
-                </div>
-              ) : (
-                <span>Create Account</span>
-              )}
-            </Button>
-          </form>
-        ) : (
-          <>
-            {renderSignInForm()}
-          </>
-        )}
-
-        <div className="text-center pt-4">
-          <button
-            type="button"
-            onClick={toggleAuthMode}
-            className="text-sm text-primary hover:underline"
-          >
-            {showSignUpForm ? "Already have an account? Sign in" : "Need an account? Create one"}
-          </button>
-        </div>
-      </Card>
-    </div>
-  );
-};
-
-export default Auth;
