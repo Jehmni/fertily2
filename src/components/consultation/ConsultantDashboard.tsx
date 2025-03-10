@@ -2,7 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/lib/supabase";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { CalendarIcon, UserIcon, ImageIcon, Settings } from "lucide-react";
+import { CalendarIcon, UserIcon, ImageIcon, Settings, LogOut } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
@@ -77,6 +77,25 @@ export const ConsultantDashboard = () => {
     }
   });
 
+  const handleSignOut = async () => {
+    try {
+      const { error } = await supabase.auth.signOut();
+      if (error) throw error;
+      
+      navigate("/auth");
+      toast({
+        title: "Signed out successfully",
+        description: "You have been signed out of your account.",
+      });
+    } catch (error: any) {
+      toast({
+        title: "Error signing out",
+        description: error.message,
+        variant: "destructive",
+      });
+    }
+  };
+
   if (profileLoading) {
     return <div className="space-y-4">
       <Skeleton className="h-12 w-full" />
@@ -116,10 +135,16 @@ export const ConsultantDashboard = () => {
             </p>
           </div>
         </div>
-        <Button onClick={() => navigate("/expert/profile")}>
-          <Settings className="w-4 h-4 mr-2" />
-          Edit Profile
-        </Button>
+        <div className="flex gap-2">
+          <Button onClick={() => navigate("/expert/profile")}>
+            <Settings className="w-4 h-4 mr-2" />
+            Edit Profile
+          </Button>
+          <Button variant="outline" onClick={handleSignOut}>
+            <LogOut className="w-4 h-4 mr-2" />
+            Sign Out
+          </Button>
+        </div>
       </div>
 
       <Tabs defaultValue="appointments" className="w-full">
