@@ -20,11 +20,13 @@ function Calendar({
   ];
   const years = Array.from({ length: 124 }, (_, i) => new Date().getFullYear() - i);
 
-  const [displayDate, setDisplayDate] = React.useState(props.selected || new Date());
+  const [displayDate, setDisplayDate] = React.useState<Date>(
+    props.selected instanceof Date ? props.selected : new Date()
+  );
 
   // Update display date when selected date changes
   React.useEffect(() => {
-    if (props.selected) {
+    if (props.selected instanceof Date) {
       setDisplayDate(props.selected);
     }
   }, [props.selected]);
@@ -86,7 +88,7 @@ function Calendar({
       components={{
         IconLeft: ({ ..._props }) => <ChevronLeft className="h-4 w-4" />,
         IconRight: ({ ..._props }) => <ChevronRight className="h-4 w-4" />,
-        Caption: ({ displayMonth }) => (
+        Caption: () => (
           <div className="flex justify-center gap-2 items-center">
             <Select
               value={displayDate.getFullYear().toString()}
