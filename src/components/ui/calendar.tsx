@@ -1,7 +1,7 @@
 
 import * as React from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
-import { DayPicker, SelectSingleEventHandler } from "react-day-picker";
+import { DayPicker } from "react-day-picker";
 import { cn } from "@/lib/utils";
 import { buttonVariants } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -20,10 +20,38 @@ function Calendar({
   ];
   const years = Array.from({ length: 124 }, (_, i) => new Date().getFullYear() - i);
 
+  const [displayDate, setDisplayDate] = React.useState(props.selected || new Date());
+
+  // Update display date when selected date changes
+  React.useEffect(() => {
+    if (props.selected) {
+      setDisplayDate(props.selected);
+    }
+  }, [props.selected]);
+
+  const handleMonthChange = (monthStr: string) => {
+    const newDate = new Date(displayDate);
+    newDate.setMonth(parseInt(monthStr));
+    setDisplayDate(newDate);
+    if (props.onMonthChange) {
+      props.onMonthChange(newDate);
+    }
+  };
+
+  const handleYearChange = (yearStr: string) => {
+    const newDate = new Date(displayDate);
+    newDate.setFullYear(parseInt(yearStr));
+    setDisplayDate(newDate);
+    if (props.onMonthChange) {
+      props.onMonthChange(newDate);
+    }
+  };
+
   return (
     <DayPicker
       showOutsideDays={showOutsideDays}
       className={cn("p-3 pointer-events-auto", className)}
+      month={displayDate}
       classNames={{
         months: "flex flex-col sm:flex-row space-y-4 sm:space-x-4 sm:space-y-0",
         month: "space-y-4",
@@ -45,7 +73,6 @@ function Calendar({
           buttonVariants({ variant: "ghost" }),
           "h-9 w-9 p-0 font-normal aria-selected:opacity-100"
         ),
-        day_range_end: "day-range-end",
         day_selected: "bg-primary text-primary-foreground hover:bg-primary hover:text-primary-foreground focus:bg-primary focus:text-primary-foreground",
         day_today: "bg-accent text-accent-foreground",
         day_outside: "day-outside text-muted-foreground opacity-50 aria-selected:bg-accent/50 aria-selected:text-muted-foreground aria-selected:opacity-30",
@@ -62,17 +89,11 @@ function Calendar({
         Caption: ({ displayMonth }) => (
           <div className="flex justify-center gap-2 items-center">
             <Select
-              value={displayMonth.getFullYear().toString()}
-              onValueChange={(year) => {
-                const newDate = new Date(displayMonth);
-                newDate.setFullYear(parseInt(year));
-                if (props.onMonthChange) {
-                  props.onMonthChange(newDate);
-                }
-              }}
+              value={displayDate.getFullYear().toString()}
+              onValueChange={handleYearChange}
             >
               <SelectTrigger className="w-[100px]">
-                <SelectValue>{displayMonth.getFullYear()}</SelectValue>
+                <SelectValue>{displayDate.getFullYear()}</SelectValue>
               </SelectTrigger>
               <SelectContent>
                 {years.map((year) => (
@@ -84,18 +105,12 @@ function Calendar({
             </Select>
 
             <Select
-              value={displayMonth.getMonth().toString()}
-              onValueChange={(month) => {
-                const newDate = new Date(displayMonth);
-                newDate.setMonth(parseInt(month));
-                if (props.onMonthChange) {
-                  props.onMonthChange(newDate);
-                }
-              }}
+              value={displayDate.getMonth().toString()}
+              onValueChange={handleMonthChange}
             >
               <SelectTrigger className="w-[130px]">
                 <SelectValue>
-                  {months[displayMonth.getMonth()]}
+                  {months[displayDate.getMonth()]}
                 </SelectValue>
               </SelectTrigger>
               <SelectContent>
