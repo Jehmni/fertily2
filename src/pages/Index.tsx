@@ -1,5 +1,5 @@
 
-import { FertilityDashboard } from "@/components/FertilityDashboard";
+import { ProfileSection } from "@/components/ProfileSection";
 import { ExpertDashboard } from "@/components/consultation/ExpertDashboard";
 import { useAuth } from "@/hooks/useAuth";
 import { useQuery } from "@tanstack/react-query";
@@ -19,9 +19,8 @@ const Index = () => {
     return <div>Loading...</div>;
   }
 
-  // Show expert dashboard for consultants, fertility dashboard for patients
-  return userRole === 'consultant' ? <ExpertDashboard /> : <FertilityDashboard />;
+  // Show expert dashboard for consultants, existing ProfileSection for patients
+  return userRole === 'consultant' ? <ExpertDashboard /> : <ProfileSection />;
 };
 
 export default Index;
-
