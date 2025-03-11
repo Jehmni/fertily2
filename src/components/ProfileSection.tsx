@@ -116,7 +116,7 @@ export const ProfileSection = () => {
         <div>
           <h1 className="text-3xl font-bold">Welcome Back</h1>
           <p className="text-muted-foreground">
-            {profile?.first_name} {profile?.last_name}
+            {profile?.firstName} {profile?.lastName}
           </p>
         </div>
         {userRole === 'consultant' && (
