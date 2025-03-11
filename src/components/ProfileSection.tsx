@@ -7,11 +7,13 @@ import { AvatarForm } from "./profile/AvatarForm";
 import { useProfile } from "@/hooks/useProfile";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { CalendarIcon, UserIcon, ImageIcon, Settings } from "lucide-react";
+import { CalendarIcon, UserIcon, ImageIcon, Settings, HeartPulse, TestTube } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/lib/supabase";
 import { useNavigate } from "react-router-dom";
 import { EmbryoSubmissionForm } from "./consultation/EmbryoSubmissionForm";
+import { FertilityCalendar } from "./FertilityCalendar";
+import { IVFPredictionDashboard } from "./ivf/IVFPredictionDashboard";
 
 export const ProfileSection = () => {
   const navigate = useNavigate();
@@ -133,13 +135,13 @@ export const ProfileSection = () => {
             <UserIcon className="w-4 h-4 mr-2" />
             Profile
           </TabsTrigger>
-          <TabsTrigger value="chat">
-            <CalendarIcon className="w-4 h-4 mr-2" />
-            Chat
+          <TabsTrigger value="fertility">
+            <HeartPulse className="w-4 h-4 mr-2" />
+            Fertility Tracking
           </TabsTrigger>
-          <TabsTrigger value="community">
-            <UserIcon className="w-4 h-4 mr-2" />
-            Community
+          <TabsTrigger value="ivf">
+            <TestTube className="w-4 h-4 mr-2" />
+            IVF Prediction
           </TabsTrigger>
           {userRole === 'patient' && (
             <TabsTrigger value="consultants">
@@ -199,6 +201,14 @@ export const ProfileSection = () => {
               {loading ? "Saving..." : (isUpdate ? "Update Profile" : "Save Profile")}
             </Button>
           </form>
+        </TabsContent>
+
+        <TabsContent value="fertility">
+          <FertilityCalendar />
+        </TabsContent>
+
+        <TabsContent value="ivf">
+          <IVFPredictionDashboard />
         </TabsContent>
 
         <TabsContent value="chat">
