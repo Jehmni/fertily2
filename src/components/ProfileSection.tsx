@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { PersonalInfoForm } from "./profile/PersonalInfoForm";
@@ -142,6 +143,14 @@ export const ProfileSection = () => {
           <TabsTrigger value="ivf">
             <TestTube className="w-4 h-4 mr-2" />
             IVF Prediction
+          </TabsTrigger>
+          <TabsTrigger value="chat">
+            <CalendarIcon className="w-4 h-4 mr-2" />
+            Chat
+          </TabsTrigger>
+          <TabsTrigger value="community">
+            <UserIcon className="w-4 h-4 mr-2" />
+            Community
           </TabsTrigger>
           {userRole === 'patient' && (
             <TabsTrigger value="consultants">
