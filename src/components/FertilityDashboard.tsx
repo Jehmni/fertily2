@@ -1,159 +1,179 @@
 
-import { useEffect, useState } from "react";
-import { format, addDays } from "date-fns";
-import { useToast } from "@/hooks/use-toast";
+import { useState } from "react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { useNavigate } from "react-router-dom";
+import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/lib/supabase";
-import { FertilityInsightCard } from "./fertility/FertilityInsightCard";
-import { IVFPredictionDashboard } from "./ivf/IVFPredictionDashboard";
-import { Button } from "./ui/button";
-import { Calendar, Heart, Droplet, Activity } from "lucide-react";
-import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
-
-interface InsightData {
-  nextPeriod: string | null;
-  fertileWindow: {
-    start: string;
-    end: string;
-  } | null;
-  cycleLength: number | null;
-  lastPeriod: string | null;
-}
+import { ChatWindow } from "./ChatWindow";
+import { Community } from "./Community";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { CalendarIcon, UserIcon, ImageIcon } from "lucide-react";
 
 export const FertilityDashboard = () => {
-  const { toast } = useToast();
-  const [showIVF, setShowIVF] = useState(false);
-  const [insights, setInsights] = useState<InsightData>({
-    nextPeriod: null,
-    fertileWindow: null,
-    cycleLength: null,
-    lastPeriod: null,
+  const navigate = useNavigate();
+  const [activeTab, setActiveTab] = useState("chat");
+
+  const { data: consultants } = useQuery({
+    queryKey: ['consultants'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('expert_profiles')
+        .select(`
+          *,
+          user:user_id (
+            id,
+            email
+          )
+        `);
+      if (error) throw error;
+      return data;
+    }
   });
 
-  const loadInsights = async () => {
-    try {
+  const { data: myConsultations } = useQuery({
+    queryKey: ['myConsultations'],
+    queryFn: async () => {
       const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
+      if (!user) throw new Error('No user found');
 
-      const { data: profileData, error: profileError } = await supabase
-        .from('profiles')
-        .select('cycle_length, last_period_date')
-        .eq('id', user.id)
-        .single();
-
-      if (profileError) throw profileError;
-
-      if (profileData?.last_period_date && profileData?.cycle_length) {
-        const lastPeriod = new Date(profileData.last_period_date);
-        const nextPeriod = addDays(lastPeriod, profileData.cycle_length);
-        const ovulationDay = addDays(lastPeriod, profileData.cycle_length - 14);
-        const fertileStart = addDays(ovulationDay, -5);
-        const fertileEnd = ovulationDay;
-
-        setInsights({
-          nextPeriod: format(nextPeriod, 'PPP'),
-          fertileWindow: {
-            start: format(fertileStart, 'PPP'),
-            end: format(fertileEnd, 'PPP'),
-          },
-          cycleLength: profileData.cycle_length,
-          lastPeriod: format(lastPeriod, 'PPP'),
-        });
-      }
-    } catch (error: any) {
-      console.error('Error loading insights:', error);
-      toast({
-        title: "Error",
-        description: "Failed to load insights",
-        variant: "destructive",
-      });
+      const { data, error } = await supabase
+        .from('consultations')
+        .select(`
+          *,
+          expert:expert_id (
+            id,
+            email
+          )
+        `)
+        .eq('patient_id', user.id)
+        .order('scheduled_for', { ascending: false });
+      if (error) throw error;
+      return data;
     }
-  };
+  });
 
-  useEffect(() => {
-    loadInsights();
+  const { data: myEmbryoAnalyses } = useQuery({
+    queryKey: ['myEmbryoAnalyses'],
+    queryFn: async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error('No user found');
 
-    const channel = supabase
-      .channel('profile-changes')
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'profiles',
-        },
-        () => {
-          loadInsights();
-        }
-      )
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, []);
-
-  if (showIVF) {
-    return (
-      <div className="space-y-4">
-        <Button 
-          variant="outline" 
-          onClick={() => setShowIVF(false)}
-          className="mb-4"
-        >
-          ← Back to Fertility Dashboard
-        </Button>
-        <IVFPredictionDashboard />
-      </div>
-    );
-  }
+      const { data, error } = await supabase
+        .from('embryo_data')
+        .select('*')
+        .eq('patient_id', user.id)
+        .order('created_at', { ascending: false });
+      if (error) throw error;
+      return data;
+    }
+  });
 
   return (
-    <div className="space-y-6">
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        <FertilityInsightCard 
-          title="Next Period" 
-          content={insights.nextPeriod || 'Not available'} 
-          icon={Calendar}
-        />
-        <FertilityInsightCard 
-          title="Fertile Window" 
-          content={
-            insights.fertileWindow
-              ? `${insights.fertileWindow.start} - ${insights.fertileWindow.end}`
-              : 'Not available'
-          } 
-          icon={Heart}
-        />
-        <FertilityInsightCard 
-          title="Cycle Length" 
-          content={insights.cycleLength ? `${insights.cycleLength} days` : 'Not set'} 
-          icon={Droplet}
-        />
-        <FertilityInsightCard 
-          title="Last Period" 
-          content={insights.lastPeriod || 'Not recorded'} 
-          icon={Calendar}
-        />
-      </div>
+    <div className="container mx-auto py-6 space-y-6">
+      <Tabs defaultValue="chat" value={activeTab} onValueChange={setActiveTab}>
+        <TabsList>
+          <TabsTrigger value="chat">
+            <UserIcon className="w-4 h-4 mr-2" />
+            AI Chat
+          </TabsTrigger>
+          <TabsTrigger value="community">
+            <UserIcon className="w-4 h-4 mr-2" />
+            Community
+          </TabsTrigger>
+          <TabsTrigger value="consultants">
+            <CalendarIcon className="w-4 h-4 mr-2" />
+            Find Consultants
+          </TabsTrigger>
+          <TabsTrigger value="consultations">
+            <CalendarIcon className="w-4 h-4 mr-2" />
+            My Consultations
+          </TabsTrigger>
+          <TabsTrigger value="embryo">
+            <ImageIcon className="w-4 h-4 mr-2" />
+            Embryo Analyses
+          </TabsTrigger>
+        </TabsList>
 
-      <Card className="bg-accent hover:shadow-md transition-all duration-200">
-        <CardHeader className="flex flex-row items-center gap-2">
-          <Activity className="w-5 h-5 text-primary" />
-          <CardTitle className="text-lg">IVF Success Prediction</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <p className="mb-4 text-muted-foreground">
-            Discover your personalized IVF success rates based on your unique profile and medical history.
-          </p>
-          <Button 
-            onClick={() => setShowIVF(true)}
-            className="w-full"
-          >
-            <Activity className="w-4 h-4 mr-2" />
-            Explore IVF Prediction
-          </Button>
-        </CardContent>
-      </Card>
+        <TabsContent value="chat">
+          <ChatWindow />
+        </TabsContent>
+
+        <TabsContent value="community">
+          <Community />
+        </TabsContent>
+
+        <TabsContent value="consultants">
+          <div className="grid gap-4">
+            {consultants?.map((consultant) => (
+              <Card key={consultant.id}>
+                <CardHeader>
+                  <CardTitle>{consultant.firstName} {consultant.lastName}</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <p>{consultant.specialization}</p>
+                  <p>{consultant.years_of_experience} years of experience</p>
+                  <p className="mt-2">{consultant.bio}</p>
+                  <Button 
+                    className="mt-4"
+                    onClick={() => navigate(`/book-consultation/${consultant.user_id}`)}
+                  >
+                    Book Consultation
+                  </Button>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        </TabsContent>
+
+        <TabsContent value="consultations">
+          <div className="grid gap-4">
+            {myConsultations?.map((consultation) => (
+              <Card key={consultation.id}>
+                <CardHeader>
+                  <CardTitle>
+                    Consultation on {new Date(consultation.scheduled_for).toLocaleDateString()}
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <p>Status: {consultation.status}</p>
+                  {consultation.notes && <p className="mt-2">{consultation.notes}</p>}
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        </TabsContent>
+
+        <TabsContent value="embryo">
+          <div className="grid gap-4">
+            {myEmbryoAnalyses?.map((analysis) => (
+              <Card key={analysis.id}>
+                <CardHeader>
+                  <CardTitle>Embryo Analysis #{analysis.id.slice(0, 8)}</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  {analysis.image_url && (
+                    <img 
+                      src={analysis.image_url} 
+                      alt="Embryo" 
+                      className="w-full h-48 object-cover rounded-md mb-4"
+                    />
+                  )}
+                  <p>Grade: {analysis.grade}</p>
+                  <p>AI Score: {analysis.ai_score}</p>
+                  {analysis.notes && <p className="mt-2">{analysis.notes}</p>}
+                  <Button 
+                    className="mt-4"
+                    onClick={() => navigate(`/embryo-analysis/${analysis.id}`)}
+                  >
+                    View Details
+                  </Button>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        </TabsContent>
+      </Tabs>
     </div>
   );
 };
